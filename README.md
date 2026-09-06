@@ -122,8 +122,8 @@ mano — hoy "Verificar" requiere pegar el hash de transacción primero.
 - [x] Nivel de confianza real (EXIF, no un valor de respaldo)
 - [x] Detección de duplicados + copia de seguridad exportable/importable
 - [x] Detalle de certificado dentro de la app (sin salir al navegador)
-- [ ] Abrir la app directo en la cámara (reducir fricción de uso)
-- [ ] Onboarding de 3 pantallas explicando por qué se sella dentro de la app
+- [x] Abrir la app directo en la cámara (reducir fricción de uso)
+- [x] Onboarding de 3 pantallas explicando por qué se sella dentro de la app
 - [ ] Paywall visual de RevenueCat + trial configurado para jueces
 - [ ] Página pública de verificación (`verification/[id].html`)
 - [ ] Backend simple (`backend/`) para verificar por archivo sin número de sello
