@@ -28,11 +28,15 @@ import { ethers } from 'ethers';
 
 const PRIVATE_KEY_STORAGE_KEY = 'verity_device_wallet_pk';
 
-// Polygon Amoy testnet — RPC público. Para producción real del MVP,
-// mover esto a una variable de entorno (ver .env.example: AMOY_RPC_URL)
-// y usar un proveedor con más cuota (Alchemy/Infura free tier).
+// Polygon Amoy testnet — RPC público. El endpoint oficial de Polygon
+// (rpc-amoy.polygon.technology) resultó no resolver por DNS en pruebas
+// reales en dispositivo (UnknownHostException en algunas redes/operadores),
+// así que el valor por defecto usa publicnode.com, un proveedor de RPC
+// públicos gratuito y confiable. Se puede sobreescribir con
+// EXPO_PUBLIC_AMOY_RPC_URL en .env (ver .env.example) si se prefiere un
+// proveedor con cuota propia (Alchemy/Infura free tier).
 const AMOY_RPC_URL =
-  process.env.EXPO_PUBLIC_AMOY_RPC_URL ?? 'https://rpc-amoy.polygon.technology';
+  process.env.EXPO_PUBLIC_AMOY_RPC_URL ?? 'https://polygon-amoy-bor-rpc.publicnode.com';
 const AMOY_CHAIN_ID = 80002;
 
 export interface AnchorResult {
