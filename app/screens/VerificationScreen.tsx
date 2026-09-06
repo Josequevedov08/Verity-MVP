@@ -26,6 +26,7 @@ import {
   FlatList,
   Image,
   Pressable,
+  Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
@@ -63,7 +64,21 @@ export default function VerificationScreen() {
   }
 
   async function handlePickFromGallery() {
-    if (!txHash.trim()) return;
+    // Antes esto simplemente no hacía nada visible si faltaba el número
+    // de sello, y parecía que el botón estaba roto. Ahora avisa.
+    if (!txHash.trim()) {
+      Alert.alert(
+        'Falta el número de sello',
+        'Pega primero el número de sello (0x...) antes de elegir el archivo a comprobar.'
+      );
+      return;
+    }
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso necesario', 'Verity necesita acceso a tus fotos para verificarlas.');
+      return;
+    }
 
     const picked = await ImagePicker.launchImageLibraryAsync({ quality: 1 });
     if (picked.canceled || !picked.assets[0]) return;

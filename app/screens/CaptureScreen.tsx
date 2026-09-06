@@ -101,9 +101,19 @@ export default function CaptureScreen() {
       // Metadatos disponibles. GPS solo se intenta pedir cuando la captura
       // viene de la cámara de la app (nivel ALTO), para no pedir permisos
       // de ubicación innecesarios si el usuario solo sube algo de galería.
+      //
+      // IMPORTANTE: capturedAt solo se llena con una fecha real:
+      // - Si viene de la cámara de la app, la hora del dispositivo AHORA
+      //   MISMO es un dato real y verificable (se acaba de tomar la foto).
+      // - Si viene de galería, solo cuenta si el archivo trae EXIF con
+      //   fecha de captura real. Antes esto tenía un valor de respaldo
+      //   (new Date()) para AMBOS casos, lo que hacía que un archivo sin
+      //   ningún metadato terminara igual con "capturedAt" relleno y
+      //   nunca calificara como BAJO — quedaba siempre en MEDIO.
       const metadata: CaptureMetadata = {
         source,
-        capturedAt: asset.exif?.DateTimeOriginal ?? new Date().toISOString(),
+        capturedAt:
+          source === 'camera' ? new Date().toISOString() : asset.exif?.DateTimeOriginal,
       };
 
       if (source === 'camera') {
