@@ -10,11 +10,13 @@ import { FlatList, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 import CertificateCard from '../components/CertificateCard';
+import CertificateDetailModal from '../components/CertificateDetailModal';
 import { getCertificates } from '../utils/cryptoUtils';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 export default function CertificatesScreen() {
   const [certificates, setCertificates] = useState<VerityCertificate[]>([]);
+  const [selected, setSelected] = useState<VerityCertificate | null>(null);
 
   // Recarga el historial cada vez que se entra a esta pestaña, para
   // reflejar sellos hechos recién en "Sellar".
@@ -30,11 +32,19 @@ export default function CertificatesScreen() {
       <FlatList
         data={certificates}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <CertificateCard certificate={item} />}
+        renderItem={({ item }) => (
+          <CertificateCard certificate={item} onPress={() => setSelected(item)} />
+        )}
         ListEmptyComponent={
           <Text style={styles.empty}>Todavía no has sellado ninguna foto.</Text>
         }
         contentContainerStyle={{ paddingBottom: 40 }}
+      />
+
+      <CertificateDetailModal
+        certificate={selected}
+        visible={!!selected}
+        onClose={() => setSelected(null)}
       />
     </SafeAreaView>
   );

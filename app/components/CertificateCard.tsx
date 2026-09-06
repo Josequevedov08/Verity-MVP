@@ -1,23 +1,29 @@
 /**
  * CertificateCard.tsx
  * ---------------------------------------------------------------------------
- * Muestra el resultado final de un sello: miniatura, nivel de confianza,
- * y el enlace al registro público (blockchain) para que cualquiera pueda
- * verificarlo sin depender de Verity. Se usa tanto en CaptureScreen (recién
- * sellado) como en CertificatesScreen (historial).
+ * Muestra el resultado de un sello: miniatura, nivel de confianza y datos
+ * básicos. Al tocar la tarjeta se abre el detalle completo DENTRO de la
+ * app (ver CertificateDetailModal.tsx) — ya no se sale directo al
+ * navegador. Se usa tanto en CaptureScreen (recién sellado) como en
+ * CertificatesScreen (historial).
  */
 import React from 'react';
-import { View, Text, Image, StyleSheet, Linking, Pressable } from 'react-native';
+import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import TrustLevelBadge from './TrustLevelBadge';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 export default function CertificateCard({
   certificate,
+  onPress,
 }: {
   certificate: VerityCertificate;
+  /** Si se pasa, la tarjeta es tocable y abre el detalle completo. */
+  onPress?: () => void;
 }) {
+  const CardWrapper = onPress ? Pressable : View;
+
   return (
-    <View style={styles.card}>
+    <CardWrapper style={styles.card} onPress={onPress}>
       {certificate.thumbnailUri && (
         <Image source={{ uri: certificate.thumbnailUri }} style={styles.thumbnail} />
       )}
@@ -35,11 +41,9 @@ export default function CertificateCard({
           {new Date(certificate.anchor.anchoredAt).toLocaleString()}
         </Text>
 
-        <Pressable onPress={() => Linking.openURL(certificate.anchor.explorerUrl)}>
-          <Text style={styles.link}>Ver en el registro público →</Text>
-        </Pressable>
+        {onPress && <Text style={styles.link}>Ver detalle completo →</Text>}
       </View>
-    </View>
+    </CardWrapper>
   );
 }
 

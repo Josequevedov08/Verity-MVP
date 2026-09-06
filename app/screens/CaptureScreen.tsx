@@ -4,9 +4,11 @@
  * Pantalla principal de "Sellar". Flujo (sin jerga técnica para el usuario):
  *
  *   1. Elegir foto (cámara de la app o galería)
- *   2. Calcular su "huella digital" en el propio teléfono (hashService)
- *   3. Registrarla en el "registro público" (blockchainService → Polygon Amoy)
- *   4. Mostrar el certificado con su nivel de confianza
+ *   2. Si viene de la cámara, se guarda también en la galería del
+ *      dispositivo (así queda disponible después para probarla en "Verificar")
+ *   3. Calcular su "huella digital" en el propio teléfono (hashService)
+ *   4. Registrarla en el "registro público" (blockchainService → Polygon Amoy)
+ *   5. Mostrar el certificado con su nivel de confianza
  *
  * El archivo original NUNCA se sube a ningún servidor — ver hashService.ts.
  */
@@ -19,15 +21,18 @@ import {
   ActivityIndicator,
   Alert,
   SafeAreaView,
+  Pressable,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import * as MediaLibrary from 'expo-media-library';
 import { randomUUID } from 'expo-crypto';
 
 import { hashFile } from '../services/hashService';
 import { anchorHashOnChain } from '../services/blockchainService';
 import CameraButton from '../components/CameraButton';
 import CertificateCard from '../components/CertificateCard';
+import CertificateDetailModal from '../components/CertificateDetailModal';
 import type {
   CaptureMetadata,
   TrustLevel,
@@ -41,6 +46,7 @@ export default function CaptureScreen() {
   const [step, setStep] = useState<CaptureStep>('idle');
   const [certificate, setCertificate] = useState<VerityCertificate | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [detailVisible, setDetailVisible] = useState(false);
 
   /** Calcula el nivel de confianza según el origen del archivo y sus metadatos. */
   function computeTrustLevel(metadata: CaptureMetadata): TrustLevel {
@@ -51,6 +57,28 @@ export default function CaptureScreen() {
       return 'MEDIO';
     }
     return 'BAJO';
+  }
+
+  /**
+   * Guarda una foto tomada con la cámara de la app en la galería del
+   * dispositivo. Sin esto, la foto solo existe en una caché temporal y
+   * desaparece — dejando al usuario sin forma de volver a elegirla más
+   * tarde en la pestaña "Verificar". Si el usuario no da el permiso, el
+   * sello se sigue completando igual (solo que la miniatura y la
+   * posibilidad de re-verificar esa foto puntual quedan limitadas a esta
+   * sesión).
+   */
+  async function saveToDeviceGallery(uri: string): Promise<string> {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') return uri;
+
+      const asset = await MediaLibrary.Asset.create(uri);
+      return await asset.getUri();
+    } catch (error) {
+      console.warn('No se pudo guardar la foto en la galería:', error);
+      return uri;
+    }
   }
 
   /** Punto de entrada compartido tanto para cámara como para galería. */
@@ -80,21 +108,28 @@ export default function CaptureScreen() {
         }
       }
 
-      // 1) Huella digital, calculada 100% en el dispositivo.
+      // 1) Huella digital, calculada 100% en el dispositivo (sobre el
+      // archivo original, antes de moverlo a ningún lado).
       const hashResult = await hashFile(asset.uri);
 
-      // 2) Registro en el "registro público" (Polygon Amoy testnet).
+      // 2) Si viene de la cámara, guardarla en la galería del dispositivo
+      // para que el usuario pueda volver a elegirla en "Verificar" más
+      // adelante. Si viene de galería, ya está ahí.
+      const persistentUri =
+        source === 'camera' ? await saveToDeviceGallery(asset.uri) : asset.uri;
+
+      // 3) Registro en el "registro público" (Polygon Amoy testnet).
       setStep('anchoring');
       const anchor = await anchorHashOnChain(hashResult.sha256);
 
-      // 3) Armar el certificado y guardarlo en el historial local.
+      // 4) Armar el certificado y guardarlo en el historial local.
       const newCertificate: VerityCertificate = {
         id: randomUUID(),
         sha256: hashResult.sha256,
         trustLevel: computeTrustLevel(metadata),
         metadata,
         anchor,
-        thumbnailUri: asset.uri,
+        thumbnailUri: persistentUri,
       };
 
       await saveCertificate(newCertificate);
@@ -144,6 +179,13 @@ export default function CaptureScreen() {
     }
   }
 
+  /** Vuelve a la pantalla inicial para poder sellar otra foto. */
+  function handleSealAnother() {
+    setStep('idle');
+    setCertificate(null);
+    setErrorMessage(null);
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Sellar contenido</Text>
@@ -174,7 +216,19 @@ export default function CaptureScreen() {
         <Text style={styles.errorText}>{errorMessage}</Text>
       )}
 
-      {step === 'done' && certificate && <CertificateCard certificate={certificate} />}
+      {step === 'done' && certificate && (
+        <>
+          <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
+          <Pressable style={styles.sealAnotherButton} onPress={handleSealAnother}>
+            <Text style={styles.sealAnotherText}>Sellar otra foto</Text>
+          </Pressable>
+          <CertificateDetailModal
+            certificate={certificate}
+            visible={detailVisible}
+            onClose={() => setDetailVisible(false)}
+          />
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -187,4 +241,12 @@ const styles = StyleSheet.create({
   loadingBox: { alignItems: 'center', marginTop: 40, gap: 12 },
   loadingText: { fontSize: 14, color: '#555' },
   errorText: { color: '#c0392b', marginTop: 16 },
+  sealAnotherButton: {
+    marginTop: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    backgroundColor: '#eef2f7',
+  },
+  sealAnotherText: { color: '#1a73e8', fontWeight: '600' },
 });
