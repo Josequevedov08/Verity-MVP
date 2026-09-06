@@ -25,7 +25,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import * as MediaLibrary from 'expo-media-library';
+import { Directory, File, Paths } from 'expo-file-system';
 import { randomUUID } from 'expo-crypto';
 
 import { hashFile } from '../services/hashService';
@@ -60,23 +60,30 @@ export default function CaptureScreen() {
   }
 
   /**
-   * Guarda una foto tomada con la cámara de la app en la galería del
-   * dispositivo. Sin esto, la foto solo existe en una caché temporal y
-   * desaparece — dejando al usuario sin forma de volver a elegirla más
-   * tarde en la pestaña "Verificar". Si el usuario no da el permiso, el
-   * sello se sigue completando igual (solo que la miniatura y la
-   * posibilidad de re-verificar esa foto puntual quedan limitadas a esta
-   * sesión).
+   * Copia una foto tomada con la cámara de la app a una carpeta propia y
+   * permanente de Verity (fuera de la caché temporal que usa la cámara).
+   *
+   * Nota: se evaluó guardarla directamente en la galería del sistema con
+   * expo-media-library, pero su API actual (SDK 57) requiere un
+   * "development build" nativo propio — no funciona dentro de Expo Go,
+   * que es como se prueba este MVP. Por eso se usa almacenamiento propio
+   * de la app (funciona en Expo Go sin builds nativas) + la pestaña
+   * "Verificar" ofrece elegir directamente de "Mis sellos" para cerrar
+   * el ciclo sin depender de la galería del sistema.
    */
-  async function saveToDeviceGallery(uri: string): Promise<string> {
+  async function saveCapturePermanently(uri: string, fileName: string): Promise<string> {
     try {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') return uri;
+      const capturesDir = new Directory(Paths.document, 'verity-captures');
+      if (!capturesDir.exists) {
+        capturesDir.create({ intermediates: true });
+      }
 
-      const asset = await MediaLibrary.Asset.create(uri);
-      return await asset.getUri();
+      const destination = new File(capturesDir, fileName);
+      const source = new File(uri);
+      await source.copy(destination);
+      return destination.uri;
     } catch (error) {
-      console.warn('No se pudo guardar la foto en la galería:', error);
+      console.warn('No se pudo guardar la copia permanente de la foto:', error);
       return uri;
     }
   }
@@ -108,15 +115,20 @@ export default function CaptureScreen() {
         }
       }
 
+      const certificateId = randomUUID();
+
       // 1) Huella digital, calculada 100% en el dispositivo (sobre el
       // archivo original, antes de moverlo a ningún lado).
       const hashResult = await hashFile(asset.uri);
 
-      // 2) Si viene de la cámara, guardarla en la galería del dispositivo
-      // para que el usuario pueda volver a elegirla en "Verificar" más
-      // adelante. Si viene de galería, ya está ahí.
+      // 2) Si viene de la cámara, copiarla a una carpeta propia y
+      // permanente de la app (la caché de la cámara se puede borrar en
+      // cualquier momento). Si viene de galería, ya vive en un lugar
+      // persistente del sistema.
       const persistentUri =
-        source === 'camera' ? await saveToDeviceGallery(asset.uri) : asset.uri;
+        source === 'camera'
+          ? await saveCapturePermanently(asset.uri, `${certificateId}.jpg`)
+          : asset.uri;
 
       // 3) Registro en el "registro público" (Polygon Amoy testnet).
       setStep('anchoring');
@@ -124,7 +136,7 @@ export default function CaptureScreen() {
 
       // 4) Armar el certificado y guardarlo en el historial local.
       const newCertificate: VerityCertificate = {
-        id: randomUUID(),
+        id: certificateId,
         sha256: hashResult.sha256,
         trustLevel: computeTrustLevel(metadata),
         metadata,

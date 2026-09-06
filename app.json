@@ -23,14 +23,6 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Verity usa tu ubicación solo para fotos tomadas con la cámara de la app, y así darles el nivel de confianza más alto."
         }
-      ],
-      [
-        "expo-media-library",
-        {
-          "photosPermission": "Verity guarda en tu galería las fotos que tomas con la cámara de la app, para que puedas verificarlas más adelante.",
-          "savePhotosPermission": "Verity guarda en tu galería las fotos que tomas con la cámara de la app, para que puedas verificarlas más adelante.",
-          "isAccessMediaLocationEnabled": false
-        }
       ]
     ]
   }
