@@ -16,7 +16,7 @@
  */
 
 import * as Crypto from 'expo-crypto';
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system';
 
 /** Resultado de hashear un archivo, listo para mostrar o anclar en blockchain. */
 export interface HashResult {
@@ -38,20 +38,22 @@ export interface HashResult {
  * suficiente para el MVP. Si en el futuro se soportan videos largos, esto
  * debería migrarse a un hash por streaming/chunks.
  *
+ * Nota: usa la API de expo-file-system@57 (clase `File`), que reemplazó a
+ * las funciones sueltas `getInfoAsync`/`readAsStringAsync` de versiones
+ * anteriores del SDK.
+ *
  * @param fileUri URI local del archivo (nunca una URL remota).
  */
 export async function hashFile(fileUri: string): Promise<HashResult> {
-  const fileInfo = await FileSystem.getInfoAsync(fileUri, { size: true });
+  const file = new File(fileUri);
 
-  if (!fileInfo.exists) {
+  if (!file.exists) {
     throw new Error('El archivo no existe en el dispositivo.');
   }
 
   // Leemos el contenido como base64. Esto SOLO ocurre en memoria local,
   // nunca se envía a ningún servidor.
-  const base64Content = await FileSystem.readAsStringAsync(fileUri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+  const base64Content = await file.base64();
 
   const sha256 = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
@@ -61,7 +63,7 @@ export async function hashFile(fileUri: string): Promise<HashResult> {
 
   return {
     sha256,
-    fileSizeBytes: fileInfo.size ?? 0,
+    fileSizeBytes: file.size ?? 0,
     hashedAt: new Date().toISOString(),
   };
 }
