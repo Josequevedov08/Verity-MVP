@@ -13,7 +13,10 @@
  * montaje), así que la fricción real termina siendo mínima.
  */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+// SafeAreaView de 'react-native' está deprecado; se usa el de
+// react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Slide {
   title: string;
