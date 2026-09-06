@@ -133,3 +133,43 @@ export async function verifyAnchor(
 
   return tx.data.toLowerCase() === expected;
 }
+
+export interface AnchorLookupResult {
+  /** true si existe una transacción con ese hash y tiene forma de sello de Verity. */
+  exists: boolean;
+  /** La huella digital (SHA-256) que quedó anclada en esa transacción, si existe. */
+  sha256?: string;
+  explorerUrl?: string;
+}
+
+/**
+ * Busca un número de sello (hash de transacción) directamente en la
+ * blockchain, SIN necesitar un archivo para comparar. Responde solo
+ * "¿este sello existe?" — se usa cuando el usuario escribe un número de
+ * sello a mano y quiere confirmar que es real, sin tener (o sin querer
+ * elegir todavía) el archivo correspondiente.
+ */
+export async function lookupAnchorByTxHash(txHash: string): Promise<AnchorLookupResult> {
+  const provider = new ethers.JsonRpcProvider(AMOY_RPC_URL, AMOY_CHAIN_ID);
+  const cleanTxHash = txHash.trim();
+
+  try {
+    const tx = await provider.getTransaction(cleanTxHash);
+
+    // Un sello de Verity siempre tiene 32 bytes de datos (un SHA-256) y
+    // ningún valor transferido. Si la transacción existe pero no tiene
+    // esa forma, no es (o no parece) un sello válido.
+    if (!tx || !tx.data || tx.data === '0x') {
+      return { exists: false };
+    }
+
+    return {
+      exists: true,
+      sha256: tx.data,
+      explorerUrl: `https://amoy.polygonscan.com/tx/${cleanTxHash}`,
+    };
+  } catch (error) {
+    console.warn('Error buscando el número de sello en la blockchain:', error);
+    return { exists: false };
+  }
+}

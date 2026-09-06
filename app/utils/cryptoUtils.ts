@@ -56,6 +56,21 @@ export async function findCertificateByHash(
 }
 
 /**
+ * Busca en el historial local un certificado por su NÚMERO DE SELLO (hash
+ * de transacción), no por el hash del archivo. Se usa en "Verificar" para
+ * la búsqueda manual: si el sello que el usuario escribió corresponde a
+ * algo sellado en este mismo dispositivo, se puede mostrar el certificado
+ * completo (con foto) en vez de solo confirmar que existe en la blockchain.
+ */
+export async function findCertificateByTxHash(
+  txHash: string
+): Promise<VerityCertificate | null> {
+  const all = await getCertificates();
+  const normalized = txHash.trim().toLowerCase();
+  return all.find((c) => c.anchor.txHash.toLowerCase() === normalized) ?? null;
+}
+
+/**
  * Arma el objeto de respaldo a partir del historial local actual (ver
  * CertificatesBackup en verity-protocol.ts para el porqué de su formato
  * deliberadamente mínimo: nunca incluye la foto, solo hashes y metadatos).

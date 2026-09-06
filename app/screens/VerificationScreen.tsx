@@ -1,23 +1,19 @@
 /**
  * VerificationScreen.tsx
  * ---------------------------------------------------------------------------
- * Pestaña "Verificar". Flujo pensado de la forma más natural posible:
+ * Pestaña "Verificar". Tiene DOS formas de buscar, independientes entre sí:
  *
- *   1. Elegir el archivo primero (de la galería o de "Mis sellos").
- *   2. Verity calcula su huella digital y busca sola si coincide con
- *      algún sello guardado en el historial local de este dispositivo.
- *   3. Si lo encuentra: muestra el número de sello automáticamente.
- *      Si NO lo encuentra localmente: no significa que el archivo no
- *      esté sellado — puede haberse sellado desde OTRO dispositivo, cuyo
- *      historial este teléfono no puede ver (no hay servidor central).
- *      En ese caso se le pide al usuario el número de sello (si lo
- *      tiene, por ejemplo porque se lo pasó la otra persona) para
- *      comprobarlo directamente contra el registro público.
+ * 1) Por ARCHIVO: eliges una foto (de tu galería o de "Mis sellos") y
+ *    Verity la hashea y busca sola si coincide con algo en tu historial
+ *    local. Responde "¿ya sellé esto?".
  *
- * Antes, este flujo pedía el número de sello ANTES de elegir el archivo,
- * lo cual era confuso: la mayoría de las veces uno quiere comprobar "¿yo
- * ya sellé esto?", no "yo sé el número de sello, ¿coincide con este
- * archivo?". Ahora cubre ambos casos, en el orden natural.
+ * 2) Por NÚMERO DE SELLO: escribes un número de sello a mano y tocas
+ *    "Buscar". Responde "¿este sello existe?" —
+ *      - Si corresponde a un sello de ESTE dispositivo, se muestra el
+ *        certificado completo, con foto, igual que en "Mis sellos".
+ *      - Si no, se consulta directamente la blockchain: si existe, se
+ *        confirma que es real (mostrando la huella digital que quedó
+ *        anclada), sin necesitar ningún archivo para compararlo.
  */
 import React, { useCallback, useState } from 'react';
 import {
@@ -39,24 +35,37 @@ import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { hashFile } from '../services/hashService';
-import { verifyAnchor } from '../services/blockchainService';
-import { getCertificates, findCertificateByHash } from '../utils/cryptoUtils';
+import { lookupAnchorByTxHash } from '../services/blockchainService';
+import { getCertificates, findCertificateByHash, findCertificateByTxHash } from '../utils/cryptoUtils';
 import CameraButton from '../components/CameraButton';
+import CertificateCard from '../components/CertificateCard';
+import CertificateDetailModal from '../components/CertificateDetailModal';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
-type VerifyResult =
+type FileSearchResult =
+  | { status: 'idle' }
+  | { status: 'checking' }
+  | { status: 'found'; certificate: VerityCertificate }
+  | { status: 'not-found' };
+
+type HashSearchResult =
   | { status: 'idle' }
   | { status: 'checking' }
   | { status: 'found-local'; certificate: VerityCertificate }
-  | { status: 'not-found-local' }
-  | { status: 'match-manual' }
-  | { status: 'no-match-manual' };
+  | { status: 'found-on-chain'; sha256: string; explorerUrl: string }
+  | { status: 'not-found' };
 
 export default function VerificationScreen() {
-  const [manualHash, setManualHash] = useState('');
-  const [result, setResult] = useState<VerifyResult>({ status: 'idle' });
+  // --- Búsqueda por archivo ---
+  const [fileResult, setFileResult] = useState<FileSearchResult>({ status: 'idle' });
   const [pickerVisible, setPickerVisible] = useState(false);
   const [certificates, setCertificates] = useState<VerityCertificate[]>([]);
+  const [fileDetailVisible, setFileDetailVisible] = useState(false);
+
+  // --- Búsqueda por número de sello ---
+  const [sealInput, setSealInput] = useState('');
+  const [hashResult, setHashResult] = useState<HashSearchResult>({ status: 'idle' });
+  const [hashDetailVisible, setHashDetailVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -64,37 +73,17 @@ export default function VerificationScreen() {
     }, [])
   );
 
-  /**
-   * Punto de entrada único: hashea el archivo elegido y primero busca en
-   * el historial LOCAL (gratis, instantáneo, no depende de internet).
-   * Solo si no encuentra nada ahí, y el usuario ya escribió un número de
-   * sello manualmente, lo compara contra el registro público.
-   */
+  // ---------------- Búsqueda por archivo ----------------
+
   async function checkFile(uri: string) {
-    setResult({ status: 'checking' });
+    setFileResult({ status: 'checking' });
     try {
       const { sha256 } = await hashFile(uri);
-
       const localMatch = await findCertificateByHash(sha256);
-      if (localMatch) {
-        setManualHash(localMatch.anchor.txHash);
-        setResult({ status: 'found-local', certificate: localMatch });
-        return;
-      }
-
-      // No está en el historial de este dispositivo. Si el usuario ya
-      // tenía un número de sello escrito (por ejemplo, se lo pasó otra
-      // persona), lo comprobamos directamente contra la blockchain.
-      if (manualHash.trim()) {
-        const isMatch = await verifyAnchor(manualHash.trim(), sha256);
-        setResult(isMatch ? { status: 'match-manual' } : { status: 'no-match-manual' });
-        return;
-      }
-
-      setResult({ status: 'not-found-local' });
+      setFileResult(localMatch ? { status: 'found', certificate: localMatch } : { status: 'not-found' });
     } catch (error) {
-      console.error('Error al verificar:', error);
-      setResult({ status: 'not-found-local' });
+      console.error('Error al verificar el archivo:', error);
+      setFileResult({ status: 'not-found' });
     }
   }
 
@@ -117,14 +106,45 @@ export default function VerificationScreen() {
     checkFile(certificate.thumbnailUri);
   }
 
+  // ---------------- Búsqueda por número de sello ----------------
+
+  async function handleSearchBySeal() {
+    const seal = sealInput.trim();
+    if (!seal) {
+      Alert.alert('Falta el número de sello', 'Escribe el número de sello (0x...) a buscar.');
+      return;
+    }
+
+    setHashResult({ status: 'checking' });
+
+    // 1) ¿Es un sello hecho en ESTE dispositivo? Si sí, mostramos el
+    // certificado completo (con foto), sin necesidad de consultar la
+    // blockchain — ya lo tenemos guardado localmente.
+    const localMatch = await findCertificateByTxHash(seal);
+    if (localMatch) {
+      setHashResult({ status: 'found-local', certificate: localMatch });
+      return;
+    }
+
+    // 2) No es de este dispositivo. Puede ser un sello real hecho desde
+    // otro teléfono — lo consultamos directo en la blockchain, sin
+    // necesitar ningún archivo para comparar, solo para confirmar que
+    // existe.
+    const lookup = await lookupAnchorByTxHash(seal);
+    if (lookup.exists && lookup.sha256 && lookup.explorerUrl) {
+      setHashResult({ status: 'found-on-chain', sha256: lookup.sha256, explorerUrl: lookup.explorerUrl });
+    } else {
+      setHashResult({ status: 'not-found' });
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Verificar contenido</Text>
-      <Text style={styles.subtitle}>
-        Elige una foto y Verity revisa sola si ya la sellaste. Si no la
-        reconoce, puedes escribir un número de sello (por ejemplo, uno que
-        te haya pasado otra persona) para comprobarlo directamente.
-      </Text>
+
+      {/* ---------------- Sección 1: por archivo ---------------- */}
+      <Text style={styles.sectionTitle}>Por archivo</Text>
+      <Text style={styles.subtitle}>Elige una foto y Verity revisa sola si ya la sellaste.</Text>
 
       <View style={styles.actions}>
         <CameraButton label="Elegir de mi galería" onPress={handlePickFromGallery} />
@@ -135,52 +155,90 @@ export default function VerificationScreen() {
         />
       </View>
 
-      {result.status === 'checking' && (
+      {fileResult.status === 'checking' && (
+        <View style={styles.resultBox}>
+          <ActivityIndicator />
+        </View>
+      )}
+      {fileResult.status === 'found' && (
+        <Pressable style={styles.resultBox} onPress={() => setFileDetailVisible(true)}>
+          <Text style={styles.matchText}>
+            ✅ Esta foto ya está sellada. Toca para ver el certificado completo.
+          </Text>
+        </Pressable>
+      )}
+      {fileResult.status === 'not-found' && (
+        <Text style={[styles.noMatchText, styles.resultBox]}>
+          No encontramos esta foto en tu historial local. Si crees que fue sellada
+          desde otro dispositivo, usa "Por número de sello" más abajo.
+        </Text>
+      )}
+
+      {fileResult.status === 'found' && (
+        <CertificateDetailModal
+          certificate={fileResult.certificate}
+          visible={fileDetailVisible}
+          onClose={() => setFileDetailVisible(false)}
+        />
+      )}
+
+      <View style={styles.divider} />
+
+      {/* ---------------- Sección 2: por número de sello ---------------- */}
+      <Text style={styles.sectionTitle}>Por número de sello</Text>
+      <Text style={styles.subtitle}>
+        Escribe un número de sello (por ejemplo, uno que te haya pasado otra
+        persona) para confirmar si existe de verdad.
+      </Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Número de sello (0x...)"
+        value={sealInput}
+        onChangeText={setSealInput}
+        autoCapitalize="none"
+      />
+      <Pressable style={styles.searchButton} onPress={handleSearchBySeal}>
+        <Text style={styles.searchButtonText}>Buscar</Text>
+      </Pressable>
+
+      {hashResult.status === 'checking' && (
         <View style={styles.resultBox}>
           <ActivityIndicator />
         </View>
       )}
 
-      {result.status === 'found-local' && (
+      {hashResult.status === 'found-local' && (
         <View style={styles.resultBox}>
-          <Text style={styles.matchText}>
-            ✅ Esta foto ya está sellada — coincide con el sello de tu historial.
-          </Text>
-          <Text style={styles.hashLabel}>Número de sello</Text>
-          <Text style={styles.hashValue} selectable>
-            {result.certificate.anchor.txHash}
-          </Text>
-        </View>
-      )}
-
-      {result.status === 'not-found-local' && (
-        <View style={styles.resultBox}>
-          <Text style={styles.noMatchText}>
-            No encontramos ese archivo en tu historial local.
-          </Text>
-          <Text style={styles.hint}>
-            Eso no significa que no esté sellado: puede haberse sellado desde
-            otro dispositivo. Si tienes el número de sello (te lo puede pasar
-            quien lo selló), escríbelo aquí y vuelve a elegir el archivo:
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Número de sello (0x...)"
-            value={manualHash}
-            onChangeText={setManualHash}
-            autoCapitalize="none"
+          <Text style={styles.matchText}>✅ Este sello es de tu dispositivo:</Text>
+          <CertificateCard
+            certificate={hashResult.certificate}
+            onPress={() => setHashDetailVisible(true)}
+          />
+          <CertificateDetailModal
+            certificate={hashResult.certificate}
+            visible={hashDetailVisible}
+            onClose={() => setHashDetailVisible(false)}
           />
         </View>
       )}
 
-      {result.status === 'match-manual' && (
-        <Text style={styles.matchText}>
-          ✅ Este archivo coincide con el número de sello indicado.
-        </Text>
+      {hashResult.status === 'found-on-chain' && (
+        <View style={styles.resultBox}>
+          <Text style={styles.matchText}>
+            ✅ Este número de sello existe en el registro público (no es de este
+            dispositivo, así que no tenemos la foto para mostrarte).
+          </Text>
+          <Text style={styles.hashLabel}>Huella digital anclada</Text>
+          <Text style={styles.hashValue} selectable>
+            {hashResult.sha256}
+          </Text>
+        </View>
       )}
-      {result.status === 'no-match-manual' && (
-        <Text style={styles.noMatchText}>
-          ❌ Este archivo NO coincide con el número de sello indicado.
+
+      {hashResult.status === 'not-found' && (
+        <Text style={[styles.noMatchText, styles.resultBox]}>
+          ❌ No se encontró ninguna transacción con ese número de sello.
         </Text>
       )}
 
@@ -220,21 +278,29 @@ export default function VerificationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: '700', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: '#555', marginBottom: 24 },
+  title: { fontSize: 24, fontWeight: '700', marginBottom: 16 },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1a73e8', marginBottom: 4 },
+  subtitle: { fontSize: 13, color: '#555', marginBottom: 14 },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 12,
     padding: 14,
-    marginTop: 12,
+    marginBottom: 12,
   },
+  searchButton: {
+    backgroundColor: '#1a73e8',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  searchButtonText: { color: '#fff', fontWeight: '700' },
   actions: { gap: 12 },
-  resultBox: { marginTop: 24 },
-  matchText: { color: '#1e8e3e', fontSize: 16, fontWeight: '600' },
-  noMatchText: { color: '#c0392b', fontSize: 15, fontWeight: '600' },
-  hint: { color: '#555', fontSize: 13, marginTop: 8, lineHeight: 19 },
-  hashLabel: { fontSize: 12, color: '#888', marginTop: 12 },
+  divider: { height: 1, backgroundColor: '#eee', marginVertical: 28 },
+  resultBox: { marginTop: 20 },
+  matchText: { color: '#1e8e3e', fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  noMatchText: { color: '#c0392b', fontSize: 13, fontWeight: '600', lineHeight: 19 },
+  hashLabel: { fontSize: 12, color: '#888', marginTop: 8 },
   hashValue: { fontSize: 12, fontFamily: 'monospace', color: '#222', marginTop: 4 },
   pickerContainer: { flex: 1, backgroundColor: '#fff', padding: 24 },
   closeButton: { alignSelf: 'flex-end', marginBottom: 12 },
