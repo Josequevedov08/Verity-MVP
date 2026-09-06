@@ -40,6 +40,8 @@ import { getCertificates, findCertificateByHash, findCertificateByTxHash } from 
 import CameraButton from '../components/CameraButton';
 import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
+import SettingsButton from '../components/SettingsButton';
+import { useTheme } from '../theme/ThemeContext';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 type FileSearchResult =
@@ -56,6 +58,7 @@ type HashSearchResult =
   | { status: 'not-found' };
 
 export default function VerificationScreen() {
+  const { colors } = useTheme();
   // --- Búsqueda por archivo ---
   const [fileResult, setFileResult] = useState<FileSearchResult>({ status: 'idle' });
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -139,12 +142,17 @@ export default function VerificationScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Verificar contenido</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Verificar contenido</Text>
+        <SettingsButton />
+      </View>
 
       {/* ---------------- Sección 1: por archivo ---------------- */}
-      <Text style={styles.sectionTitle}>Por archivo</Text>
-      <Text style={styles.subtitle}>Elige una foto y Verity revisa sola si ya la sellaste.</Text>
+      <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por archivo</Text>
+      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+        Elige una foto y Verity revisa sola si ya la sellaste.
+      </Text>
 
       <View style={styles.actions}>
         <CameraButton label="Elegir de mi galería" onPress={handlePickFromGallery} />
@@ -157,18 +165,18 @@ export default function VerificationScreen() {
 
       {fileResult.status === 'checking' && (
         <View style={styles.resultBox}>
-          <ActivityIndicator />
+          <ActivityIndicator color={colors.accent} />
         </View>
       )}
       {fileResult.status === 'found' && (
         <Pressable style={styles.resultBox} onPress={() => setFileDetailVisible(true)}>
-          <Text style={styles.matchText}>
+          <Text style={[styles.matchText, { color: colors.success }]}>
             ✅ Esta foto ya está sellada. Toca para ver el certificado completo.
           </Text>
         </Pressable>
       )}
       {fileResult.status === 'not-found' && (
-        <Text style={[styles.noMatchText, styles.resultBox]}>
+        <Text style={[styles.noMatchText, { color: colors.danger }, styles.resultBox]}>
           No encontramos esta foto en tu historial local. Si crees que fue sellada
           desde otro dispositivo, usa "Por número de sello" más abajo.
         </Text>
@@ -182,35 +190,36 @@ export default function VerificationScreen() {
         />
       )}
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
       {/* ---------------- Sección 2: por número de sello ---------------- */}
-      <Text style={styles.sectionTitle}>Por número de sello</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por número de sello</Text>
+      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
         Escribe un número de sello (por ejemplo, uno que te haya pasado otra
         persona) para confirmar si existe de verdad.
       </Text>
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: colors.border, color: colors.text }]}
         placeholder="Número de sello (0x...)"
+        placeholderTextColor={colors.textMuted}
         value={sealInput}
         onChangeText={setSealInput}
         autoCapitalize="none"
       />
-      <Pressable style={styles.searchButton} onPress={handleSearchBySeal}>
-        <Text style={styles.searchButtonText}>Buscar</Text>
+      <Pressable style={[styles.searchButton, { backgroundColor: colors.accent }]} onPress={handleSearchBySeal}>
+        <Text style={[styles.searchButtonText, { color: colors.accentText }]}>Buscar</Text>
       </Pressable>
 
       {hashResult.status === 'checking' && (
         <View style={styles.resultBox}>
-          <ActivityIndicator />
+          <ActivityIndicator color={colors.accent} />
         </View>
       )}
 
       {hashResult.status === 'found-local' && (
         <View style={styles.resultBox}>
-          <Text style={styles.matchText}>✅ Este sello es de tu dispositivo:</Text>
+          <Text style={[styles.matchText, { color: colors.success }]}>Este sello es de tu dispositivo:</Text>
           <CertificateCard
             certificate={hashResult.certificate}
             onPress={() => setHashDetailVisible(true)}
@@ -225,29 +234,29 @@ export default function VerificationScreen() {
 
       {hashResult.status === 'found-on-chain' && (
         <View style={styles.resultBox}>
-          <Text style={styles.matchText}>
+          <Text style={[styles.matchText, { color: colors.success }]}>
             ✅ Este número de sello existe en el registro público (no es de este
             dispositivo, así que no tenemos la foto para mostrarte).
           </Text>
-          <Text style={styles.hashLabel}>Huella digital anclada</Text>
-          <Text style={styles.hashValue} selectable>
+          <Text style={[styles.hashLabel, { color: colors.textMuted }]}>Huella digital anclada</Text>
+          <Text style={[styles.hashValue, { color: colors.text }]} selectable>
             {hashResult.sha256}
           </Text>
         </View>
       )}
 
       {hashResult.status === 'not-found' && (
-        <Text style={[styles.noMatchText, styles.resultBox]}>
+        <Text style={[styles.noMatchText, { color: colors.danger }, styles.resultBox]}>
           ❌ No se encontró ninguna transacción con ese número de sello.
         </Text>
       )}
 
       <Modal visible={pickerVisible} animationType="slide" onRequestClose={() => setPickerVisible(false)}>
-        <SafeAreaView style={styles.pickerContainer}>
+        <SafeAreaView style={[styles.pickerContainer, { backgroundColor: colors.background }]}>
           <Pressable onPress={() => setPickerVisible(false)} style={styles.closeButton}>
-            <Text style={styles.closeText}>Cerrar ✕</Text>
+            <Text style={[styles.closeText, { color: colors.accent }]}>Cerrar ✕</Text>
           </Pressable>
-          <Text style={styles.title}>Elegir de Mis sellos</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Elegir de Mis sellos</Text>
           <FlatList
             data={certificates}
             keyExtractor={(item) => item.id}
@@ -257,17 +266,19 @@ export default function VerificationScreen() {
                   <Image source={{ uri: item.thumbnailUri }} style={styles.pickerThumbnail} />
                 )}
                 <View style={{ flex: 1 }}>
-                  <Text numberOfLines={1} style={styles.pickerHash}>
+                  <Text numberOfLines={1} style={[styles.pickerHash, { color: colors.text }]}>
                     {item.sha256}
                   </Text>
-                  <Text style={styles.pickerDate}>
+                  <Text style={[styles.pickerDate, { color: colors.textMuted }]}>
                     {new Date(item.anchor.anchoredAt).toLocaleString()}
                   </Text>
                 </View>
               </Pressable>
             )}
             ListEmptyComponent={
-              <Text style={styles.empty}>Todavía no has sellado ninguna foto.</Text>
+              <Text style={[styles.empty, { color: colors.textMuted }]}>
+                Todavía no has sellado ninguna foto.
+              </Text>
             }
           />
         </SafeAreaView>
@@ -277,37 +288,36 @@ export default function VerificationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: '700', marginBottom: 16 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1a73e8', marginBottom: 4 },
-  subtitle: { fontSize: 13, color: '#555', marginBottom: 14 },
+  container: { flex: 1, padding: 24 },
+  header: { position: 'relative', paddingRight: 48, marginBottom: 16 },
+  title: { fontSize: 24, fontWeight: '700' },
+  sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
+  subtitle: { fontSize: 13, marginBottom: 14 },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
   },
   searchButton: {
-    backgroundColor: '#1a73e8',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  searchButtonText: { color: '#fff', fontWeight: '700' },
+  searchButtonText: { fontWeight: '700' },
   actions: { gap: 12 },
-  divider: { height: 1, backgroundColor: '#eee', marginVertical: 28 },
+  divider: { height: 1, marginVertical: 28 },
   resultBox: { marginTop: 20 },
-  matchText: { color: '#1e8e3e', fontSize: 14, fontWeight: '600', marginBottom: 8 },
-  noMatchText: { color: '#c0392b', fontSize: 13, fontWeight: '600', lineHeight: 19 },
-  hashLabel: { fontSize: 12, color: '#888', marginTop: 8 },
-  hashValue: { fontSize: 12, fontFamily: 'monospace', color: '#222', marginTop: 4 },
-  pickerContainer: { flex: 1, backgroundColor: '#fff', padding: 24 },
+  matchText: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  noMatchText: { fontSize: 13, fontWeight: '600', lineHeight: 19 },
+  hashLabel: { fontSize: 12, marginTop: 8 },
+  hashValue: { fontSize: 12, fontFamily: 'monospace', marginTop: 4 },
+  pickerContainer: { flex: 1, padding: 24 },
   closeButton: { alignSelf: 'flex-end', marginBottom: 12 },
-  closeText: { fontSize: 15, color: '#1a73e8', fontWeight: '600' },
+  closeText: { fontSize: 15, fontWeight: '600' },
   pickerRow: { flexDirection: 'row', gap: 12, paddingVertical: 12, alignItems: 'center' },
   pickerThumbnail: { width: 56, height: 56, borderRadius: 10 },
-  pickerHash: { fontSize: 12, fontFamily: 'monospace', color: '#222' },
-  pickerDate: { fontSize: 12, color: '#888', marginTop: 2 },
-  empty: { color: '#888', marginTop: 40, textAlign: 'center' },
+  pickerHash: { fontSize: 12, fontFamily: 'monospace' },
+  pickerDate: { fontSize: 12, marginTop: 2 },
+  empty: { marginTop: 40, textAlign: 'center' },
 });

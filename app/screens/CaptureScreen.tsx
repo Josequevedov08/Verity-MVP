@@ -35,6 +35,8 @@ import { anchorHashOnChain } from '../services/blockchainService';
 import CameraButton from '../components/CameraButton';
 import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
+import SettingsButton from '../components/SettingsButton';
+import { useTheme } from '../theme/ThemeContext';
 import type {
   CaptureMetadata,
   TrustLevel,
@@ -45,6 +47,7 @@ import { saveCertificate, findCertificateByHash } from '../utils/cryptoUtils';
 type CaptureStep = 'idle' | 'hashing' | 'anchoring' | 'done' | 'error';
 
 export default function CaptureScreen() {
+  const { colors } = useTheme();
   const [step, setStep] = useState<CaptureStep>('idle');
   const [certificate, setCertificate] = useState<VerityCertificate | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -243,12 +246,15 @@ export default function CaptureScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Sellar contenido</Text>
-      <Text style={styles.subtitle}>
-        Crea una huella digital única de tu foto y regístrala en un registro
-        público, sin subir el archivo a ningún lado.
-      </Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Sellar contenido</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          Crea una huella digital única de tu foto y regístrala en un registro
+          público, sin subir el archivo a ningún lado.
+        </Text>
+        <SettingsButton />
+      </View>
 
       {step === 'idle' || step === 'error' ? (
         <View style={styles.actions}>
@@ -259,8 +265,8 @@ export default function CaptureScreen() {
 
       {(step === 'hashing' || step === 'anchoring') && (
         <View style={styles.loadingBox}>
-          <ActivityIndicator size="large" />
-          <Text style={styles.loadingText}>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={[styles.loadingText, { color: colors.textMuted }]}>
             {step === 'hashing'
               ? 'Calculando huella digital...'
               : 'Registrando en el registro público...'}
@@ -269,20 +275,23 @@ export default function CaptureScreen() {
       )}
 
       {step === 'error' && errorMessage && (
-        <Text style={styles.errorText}>{errorMessage}</Text>
+        <Text style={[styles.errorText, { color: colors.danger }]}>{errorMessage}</Text>
       )}
 
       {step === 'done' && certificate && (
         <>
           {isDuplicate && (
-            <Text style={styles.duplicateText}>
+            <Text style={[styles.duplicateText, { color: colors.warning, backgroundColor: colors.surfaceAlt }]}>
               Ya habías sellado este archivo antes — aquí está tu certificado. No se
               generó un sello nuevo ni se gastó gas de nuevo.
             </Text>
           )}
           <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
-          <Pressable style={styles.sealAnotherButton} onPress={handleSealAnother}>
-            <Text style={styles.sealAnotherText}>Sellar otra foto</Text>
+          <Pressable
+            style={[styles.sealAnotherButton, { backgroundColor: colors.surfaceAlt }]}
+            onPress={handleSealAnother}
+          >
+            <Text style={[styles.sealAnotherText, { color: colors.accent }]}>Sellar otra foto</Text>
           </Pressable>
           <CertificateDetailModal
             certificate={certificate}
@@ -296,16 +305,15 @@ export default function CaptureScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: '#fff' },
+  container: { flex: 1, padding: 24 },
+  header: { position: 'relative', paddingRight: 48, marginBottom: 24 },
   title: { fontSize: 24, fontWeight: '700', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: '#555', marginBottom: 24 },
+  subtitle: { fontSize: 14 },
   actions: { gap: 16 },
   loadingBox: { alignItems: 'center', marginTop: 40, gap: 12 },
-  loadingText: { fontSize: 14, color: '#555' },
-  errorText: { color: '#c0392b', marginTop: 16 },
+  loadingText: { fontSize: 14 },
+  errorText: { marginTop: 16 },
   duplicateText: {
-    color: '#8a6d00',
-    backgroundColor: '#fff6d9',
     padding: 12,
     borderRadius: 10,
     marginBottom: 4,
@@ -316,7 +324,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: 'center',
-    backgroundColor: '#eef2f7',
   },
-  sealAnotherText: { color: '#1a73e8', fontWeight: '600' },
+  sealAnotherText: { fontWeight: '600' },
 });

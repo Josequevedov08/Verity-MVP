@@ -28,7 +28,8 @@
           "locationAlwaysAndWhenInUsePermission": "Verity usa tu ubicación solo para fotos tomadas con la cámara de la app, y así darles el nivel de confianza más alto."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "expo-font"
     ]
   }
 }

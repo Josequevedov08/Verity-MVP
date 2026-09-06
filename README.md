@@ -71,6 +71,12 @@ se evitaron deliberadamente en este MVP (ver decisión documentada en
   sección "Respaldo y recuperación" abajo).
 - Modelo freemium con RevenueCat: 10 sellos gratis/mes, PRO $4.99/mes
   (stub funcional, sin API keys reales todavía).
+- Diseño con una sola identidad visual (ver `app/theme/`): modo Claro,
+  Oscuro y Sistema (sigue el modo del teléfono), seleccionable desde el
+  ícono de engranaje en cualquiera de las 3 pantallas. Íconos reales en
+  la barra de pestañas (antes salían rotos, sin `tabBarIcon` definido) y
+  una breve animación de apertura (logo con movimiento) en vez del logo
+  estático de antes.
 
 ## Qué NO incluye (a propósito)
 

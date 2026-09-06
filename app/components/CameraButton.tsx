@@ -7,6 +7,7 @@
  */
 import React from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
+import { useTheme } from '../theme/ThemeContext';
 
 interface CameraButtonProps {
   label: string;
@@ -15,32 +16,31 @@ interface CameraButtonProps {
 }
 
 export default function CameraButton({ label, onPress, secondary }: CameraButtonProps) {
+  const { colors } = useTheme();
+
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.button, secondary && styles.secondaryButton]}
+      style={[
+        styles.button,
+        { backgroundColor: secondary ? colors.surfaceAlt : colors.accent },
+      ]}
     >
-      <Text style={[styles.label, secondary && styles.secondaryLabel]}>{label}</Text>
+      <Text style={[styles.label, { color: secondary ? colors.accent : colors.accentText }]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#1a73e8',
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: 'center',
   },
-  secondaryButton: {
-    backgroundColor: '#eef2f7',
-  },
   label: {
-    color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-  },
-  secondaryLabel: {
-    color: '#1a73e8',
   },
 });

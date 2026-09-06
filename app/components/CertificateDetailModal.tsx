@@ -10,6 +10,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, Modal, Pressable, Linking, ScrollView } from 'react-native';
 import TrustLevelBadge from './TrustLevelBadge';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function CertificateDetailModal({
   certificate,
@@ -20,16 +21,21 @@ export default function CertificateDetailModal({
   visible: boolean;
   onClose: () => void;
 }) {
+  const { colors } = useTheme();
+
   return (
     <Modal visible={visible && !!certificate} animationType="slide" onRequestClose={onClose}>
-      <ScrollView style={styles.container} contentContainerStyle={{ padding: 24 }}>
+      <ScrollView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        contentContainerStyle={{ padding: 24 }}
+      >
         <Pressable onPress={onClose} style={styles.closeButton}>
-          <Text style={styles.closeText}>Cerrar ✕</Text>
+          <Text style={[styles.closeText, { color: colors.accent }]}>Cerrar ✕</Text>
         </Pressable>
 
         {certificate && (
           <>
-            <Text style={styles.title}>Detalle del sello</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Detalle del sello</Text>
 
             {certificate.thumbnailUri && (
               <Image source={{ uri: certificate.thumbnailUri }} style={styles.thumbnail} />
@@ -53,10 +59,12 @@ export default function CertificateDetailModal({
             <Row label="Wallet del dispositivo" value={certificate.anchor.walletAddress} mono />
 
             <Pressable
-              style={styles.externalButton}
+              style={[styles.externalButton, { backgroundColor: colors.surfaceAlt }]}
               onPress={() => Linking.openURL(certificate.anchor.explorerUrl)}
             >
-              <Text style={styles.externalButtonText}>Abrir en el navegador (registro público) ↗</Text>
+              <Text style={[styles.externalButtonText, { color: colors.accent }]}>
+                Abrir en el navegador (registro público) ↗
+              </Text>
             </Pressable>
           </>
         )}
@@ -66,10 +74,11 @@ export default function CertificateDetailModal({
 }
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={[styles.rowValue, mono && styles.mono]} selectable>
+      <Text style={[styles.rowLabel, { color: colors.textMuted }]}>{label}</Text>
+      <Text style={[styles.rowValue, { color: colors.text }, mono && styles.mono]} selectable>
         {value}
       </Text>
     </View>
@@ -77,21 +86,20 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   closeButton: { alignSelf: 'flex-end', marginBottom: 12 },
-  closeText: { fontSize: 15, color: '#1a73e8', fontWeight: '600' },
+  closeText: { fontSize: 15, fontWeight: '600' },
   title: { fontSize: 22, fontWeight: '700', marginBottom: 16 },
   thumbnail: { width: '100%', height: 220, borderRadius: 16, marginBottom: 16 },
   row: { marginTop: 16 },
-  rowLabel: { fontSize: 12, color: '#888', marginBottom: 4 },
-  rowValue: { fontSize: 14, color: '#222' },
+  rowLabel: { fontSize: 12, marginBottom: 4 },
+  rowValue: { fontSize: 14 },
   mono: { fontFamily: 'monospace' },
   externalButton: {
     marginTop: 28,
-    backgroundColor: '#eef2f7',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  externalButtonText: { color: '#1a73e8', fontWeight: '600' },
+  externalButtonText: { fontWeight: '600' },
 });

@@ -26,10 +26,13 @@ import { File, Paths } from 'expo-file-system';
 
 import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
+import SettingsButton from '../components/SettingsButton';
+import { useTheme } from '../theme/ThemeContext';
 import { getCertificates, buildBackup, importBackup } from '../utils/cryptoUtils';
 import type { VerityCertificate, CertificatesBackup } from '../../documentation/technical/verity-protocol';
 
 export default function CertificatesScreen() {
+  const { colors } = useTheme();
   const [certificates, setCertificates] = useState<VerityCertificate[]>([]);
   const [selected, setSelected] = useState<VerityCertificate | null>(null);
 
@@ -101,15 +104,28 @@ export default function CertificatesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Mis sellos</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Mis sellos</Text>
+        <SettingsButton />
+      </View>
 
       <View style={styles.backupRow}>
-        <Pressable style={styles.backupButton} onPress={handleExport}>
-          <Text style={styles.backupButtonText}>Exportar copia de seguridad</Text>
+        <Pressable
+          style={[styles.backupButton, { backgroundColor: colors.surfaceAlt }]}
+          onPress={handleExport}
+        >
+          <Text style={[styles.backupButtonText, { color: colors.accent }]}>
+            Exportar copia de seguridad
+          </Text>
         </Pressable>
-        <Pressable style={styles.backupButton} onPress={handleImport}>
-          <Text style={styles.backupButtonText}>Importar copia de seguridad</Text>
+        <Pressable
+          style={[styles.backupButton, { backgroundColor: colors.surfaceAlt }]}
+          onPress={handleImport}
+        >
+          <Text style={[styles.backupButtonText, { color: colors.accent }]}>
+            Importar copia de seguridad
+          </Text>
         </Pressable>
       </View>
 
@@ -120,7 +136,9 @@ export default function CertificatesScreen() {
           <CertificateCard certificate={item} onPress={() => setSelected(item)} />
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>Todavía no has sellado ninguna foto.</Text>
+          <Text style={[styles.empty, { color: colors.textMuted }]}>
+            Todavía no has sellado ninguna foto.
+          </Text>
         }
         contentContainerStyle={{ paddingBottom: 40 }}
       />
@@ -135,16 +153,16 @@ export default function CertificatesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: '700', marginBottom: 12 },
+  container: { flex: 1, padding: 24 },
+  header: { position: 'relative', paddingRight: 48, marginBottom: 12 },
+  title: { fontSize: 24, fontWeight: '700' },
   backupRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   backupButton: {
     flex: 1,
-    backgroundColor: '#eef2f7',
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: 'center',
   },
-  backupButtonText: { color: '#1a73e8', fontWeight: '600', fontSize: 12, textAlign: 'center' },
-  empty: { color: '#888', marginTop: 40, textAlign: 'center' },
+  backupButtonText: { fontWeight: '600', fontSize: 12, textAlign: 'center' },
+  empty: { marginTop: 40, textAlign: 'center' },
 });
