@@ -7,7 +7,10 @@
  * ningún servidor — coherente con "la app funciona sin cuenta".
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
+import type {
+  VerityCertificate,
+  CertificatesBackup,
+} from '../../documentation/technical/verity-protocol';
 
 const CERTIFICATES_STORAGE_KEY = 'verity_certificates_history';
 
@@ -37,4 +40,55 @@ export async function countSealsThisMonth(): Promise<number> {
     const date = new Date(c.anchor.anchoredAt);
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   }).length;
+}
+
+/**
+ * Busca en el historial local si un hash ya fue sellado antes. Se usa para
+ * evitar sellar (y pagar gas) dos veces el mismo archivo por accidente, y
+ * para poder avisarle al usuario "ya sellaste esto" en vez de dejarlo con
+ * dos certificados sin saber cuál es cuál.
+ */
+export async function findCertificateByHash(
+  sha256: string
+): Promise<VerityCertificate | null> {
+  const all = await getCertificates();
+  return all.find((c) => c.sha256 === sha256) ?? null;
+}
+
+/**
+ * Arma el objeto de respaldo a partir del historial local actual (ver
+ * CertificatesBackup en verity-protocol.ts para el porqué de su formato
+ * deliberadamente mínimo: nunca incluye la foto, solo hashes y metadatos).
+ */
+export async function buildBackup(): Promise<CertificatesBackup> {
+  const all = await getCertificates();
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    // Se omite thumbnailUri a propósito: es una ruta local del dispositivo
+    // (no una foto en sí) que de todos modos no existirá en otro teléfono,
+    // y así queda explícito que el respaldo no contiene ninguna imagen.
+    certificates: all.map(({ thumbnailUri, ...rest }) => rest),
+  };
+}
+
+/**
+ * Combina un respaldo importado con el historial local actual, sin
+ * duplicar certificados que ya existan (comparando por id y por hash).
+ * Devuelve cuántos certificados nuevos se agregaron.
+ */
+export async function importBackup(backup: CertificatesBackup): Promise<number> {
+  const existing = await getCertificates();
+  const existingIds = new Set(existing.map((c) => c.id));
+  const existingHashes = new Set(existing.map((c) => c.sha256));
+
+  const newOnes = backup.certificates.filter(
+    (c) => !existingIds.has(c.id) && !existingHashes.has(c.sha256)
+  );
+
+  if (newOnes.length === 0) return 0;
+
+  const merged = [...newOnes, ...existing];
+  await AsyncStorage.setItem(CERTIFICATES_STORAGE_KEY, JSON.stringify(merged));
+  return newOnes.length;
 }

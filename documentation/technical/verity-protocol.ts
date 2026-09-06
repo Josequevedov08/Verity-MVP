@@ -81,6 +81,19 @@ export interface VerityCertificate {
 }
 
 /**
+ * Formato del archivo de copia de seguridad exportable del historial local
+ * (ver cryptoUtils.ts: buildBackup/importBackup). Deliberadamente NO
+ * incluye la foto ni su miniatura — solo hashes, números de sello y
+ * metadatos — así que por sí solo no prueba autoría de una imagen, solo
+ * restaura el índice local de "qué se selló y cuándo".
+ */
+export interface CertificatesBackup {
+  version: 1;
+  exportedAt: string;
+  certificates: Omit<VerityCertificate, 'thumbnailUri'>[];
+}
+
+/**
  * Límites del modelo freemium para Shipaton (ver revenuecatService.ts).
  * PRO no cambia el protocolo, solo levanta el límite mensual de sellos.
  */

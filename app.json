@@ -8,7 +8,11 @@
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.verity.mvp",
-      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "READ_MEDIA_IMAGES"]
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "READ_MEDIA_IMAGES"
+      ]
     },
     "plugins": [
       [
@@ -23,7 +27,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Verity usa tu ubicación solo para fotos tomadas con la cámara de la app, y así darles el nivel de confianza más alto."
         }
-      ]
+      ],
+      "expo-sharing"
     ]
   }
 }

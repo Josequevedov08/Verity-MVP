@@ -38,7 +38,7 @@ import type {
   TrustLevel,
   VerityCertificate,
 } from '../../documentation/technical/verity-protocol';
-import { saveCertificate } from '../utils/cryptoUtils';
+import { saveCertificate, findCertificateByHash } from '../utils/cryptoUtils';
 
 type CaptureStep = 'idle' | 'hashing' | 'anchoring' | 'done' | 'error';
 
@@ -47,6 +47,7 @@ export default function CaptureScreen() {
   const [certificate, setCertificate] = useState<VerityCertificate | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
+  const [isDuplicate, setIsDuplicate] = useState(false);
 
   /** Calcula el nivel de confianza según el origen del archivo y sus metadatos. */
   function computeTrustLevel(metadata: CaptureMetadata): TrustLevel {
@@ -96,6 +97,7 @@ export default function CaptureScreen() {
     try {
       setErrorMessage(null);
       setCertificate(null);
+      setIsDuplicate(false);
       setStep('hashing');
 
       // Metadatos disponibles. GPS solo se intenta pedir cuando la captura
@@ -130,6 +132,18 @@ export default function CaptureScreen() {
       // 1) Huella digital, calculada 100% en el dispositivo (sobre el
       // archivo original, antes de moverlo a ningún lado).
       const hashResult = await hashFile(asset.uri);
+
+      // 1.5) ¿Ya se selló este mismo archivo antes? Si sí, mostramos el
+      // certificado existente en vez de anclar (y pagar gas) de nuevo —
+      // evita terminar con dos certificados distintos para la misma foto
+      // sin saberlo.
+      const existing = await findCertificateByHash(hashResult.sha256);
+      if (existing) {
+        setCertificate(existing);
+        setIsDuplicate(true);
+        setStep('done');
+        return;
+      }
 
       // 2) Si viene de la cámara, copiarla a una carpeta propia y
       // permanente de la app (la caché de la cámara se puede borrar en
@@ -206,6 +220,7 @@ export default function CaptureScreen() {
     setStep('idle');
     setCertificate(null);
     setErrorMessage(null);
+    setIsDuplicate(false);
   }
 
   return (
@@ -240,6 +255,12 @@ export default function CaptureScreen() {
 
       {step === 'done' && certificate && (
         <>
+          {isDuplicate && (
+            <Text style={styles.duplicateText}>
+              Ya habías sellado este archivo antes — aquí está tu certificado. No se
+              generó un sello nuevo ni se gastó gas de nuevo.
+            </Text>
+          )}
           <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
           <Pressable style={styles.sealAnotherButton} onPress={handleSealAnother}>
             <Text style={styles.sealAnotherText}>Sellar otra foto</Text>
@@ -263,6 +284,14 @@ const styles = StyleSheet.create({
   loadingBox: { alignItems: 'center', marginTop: 40, gap: 12 },
   loadingText: { fontSize: 14, color: '#555' },
   errorText: { color: '#c0392b', marginTop: 16 },
+  duplicateText: {
+    color: '#8a6d00',
+    backgroundColor: '#fff6d9',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 4,
+    fontSize: 13,
+  },
   sealAnotherButton: {
     marginTop: 16,
     paddingVertical: 14,
