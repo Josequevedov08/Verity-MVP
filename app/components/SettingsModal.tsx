@@ -7,7 +7,10 @@
  */
 import React from 'react';
 import { View, Text, Modal, Pressable, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// Import directo al submódulo (ver SettingsButton.tsx para el porqué:
+// el barrel de @expo/vector-icons carga las 15 familias de íconos de
+// una sola vez, ~3MB de fuentes de más).
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme, type ThemePreference } from '../theme/ThemeContext';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [

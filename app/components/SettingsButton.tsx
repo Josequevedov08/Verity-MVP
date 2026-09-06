@@ -6,7 +6,12 @@
  */
 import React, { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// Import directo al submódulo (no desde el paquete raíz): el barrel de
+// @expo/vector-icons carga las 15 familias de íconos de una sola vez
+// (~3MB de fuentes), incluso "solo" para usar Ionicons. Esto hacía que
+// la app tardara mucho en transferirse al teléfono por Metro,
+// especialmente con señal móvil débil.
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import SettingsModal from './SettingsModal';
 

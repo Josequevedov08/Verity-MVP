@@ -10,7 +10,10 @@
 import React from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+// Import directo al submódulo (ver SettingsButton.tsx para el porqué:
+// el barrel de @expo/vector-icons carga las 15 familias de íconos de
+// una sola vez, ~3MB de fuentes de más).
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import CaptureScreen from './CaptureScreen';
 import CertificatesScreen from './CertificatesScreen';
