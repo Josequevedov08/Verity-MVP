@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Verity",
+    "slug": "verity-mvp",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icons/app-icon.png",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.verity.mvp",
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "READ_MEDIA_IMAGES"]
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Verity necesita acceso a tus fotos para sellarlas.",
+          "cameraPermission": "Verity necesita acceso a la cámara para sellar fotos nuevas."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Verity usa tu ubicación solo para fotos tomadas con la cámara de la app, y así darles el nivel de confianza más alto."
+        }
+      ]
+    ]
+  }
+}

@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verity (VRT) — Que nadie diga que tu trabajo es fake</title>
+<meta name="description" content="Verity sella tu autoría en blockchain en 60 segundos. Protege tu obra del robo, blinda tu reputación y cobra por contenido verificado. El notario digital del mundo hispano." />
+<meta name="theme-color" content="#0B1220" />
+<meta property="og:title" content="Verity (VRT) — Que nadie diga que tu trabajo es fake" />
+<meta property="og:description" content="No detenemos la IA. Te damos tu escudo. Protege, prueba y cobra por tu autenticidad." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B1220; --ink-2:#0E1830; --ink-3:#12203c; --line:rgba(120,160,220,.14);
+  --blue:#1E3A8A; --blue-l:#3b62c9; --cyan:#06B6D4; --cyan-l:#3fd6ec;
+  --green:#10B981; --green-l:#3ee0a8; --red:#ef4444; --red-l:#ff7a7a; --amber:#f59e0b; --violet:#8b5cf6;
+  --paper:#F9FAFB;
+  --text:#E7EEF8; --muted:#93A4BD; --muted-2:#6c7d97;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;
+  --ui:"Space Grotesk",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --maxw:1240px; --r:18px; --r-sm:12px;
+  --shadow:0 30px 80px -30px rgba(0,0,0,.7);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--cyan);color:#04222a}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.02;margin:0;letter-spacing:-.02em;font-weight:800}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan-l);display:inline-flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--cyan)}
+.muted{color:var(--muted)} .mono{font-family:var(--mono)}
+.accent-c{color:var(--cyan-l)} .accent-g{color:var(--green-l)}
+.section{padding:clamp(72px,11vw,140px) 0;position:relative}
+.section-head{max-width:800px;margin-bottom:54px}
+.section-head h2{font-size:clamp(34px,5.4vw,62px);margin:18px 0 16px}
+.section-head p{color:var(--muted);font-size:clamp(16px,1.4vw,19px);max-width:66ch}
+.kicker-num{font-family:var(--mono);color:var(--muted-2);font-size:13px;letter-spacing:.2em}
+
+.btn{font-family:var(--ui);font-weight:600;font-size:15px;display:inline-flex;align-items:center;gap:10px;padding:14px 24px;border-radius:999px;border:1px solid transparent;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,background .25s,border-color .25s;position:relative;overflow:hidden}
+.btn .ar{transition:transform .25s} .btn:hover .ar{transform:translateX(4px)}
+.btn-primary{background:linear-gradient(120deg,var(--cyan),var(--green));color:#04222a;box-shadow:0 14px 40px -14px rgba(6,182,212,.7)}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 22px 50px -14px rgba(16,185,129,.7)}
+.btn-ghost{background:rgba(255,255,255,.03);border-color:var(--line);color:var(--text)}
+.btn-ghost:hover{transform:translateY(-3px);border-color:var(--cyan);background:rgba(6,182,212,.08)}
+.btn-wa{background:#25D366;color:#04222a;box-shadow:0 14px 40px -14px rgba(37,211,102,.6)}
+.btn-wa:hover{transform:translateY(-3px)}
+.btn-sm{padding:10px 18px;font-size:13.5px}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:60;transition:background .3s,border-color .3s,backdrop-filter .3s;border-bottom:1px solid transparent}
+.nav.scrolled{background:rgba(8,14,28,.78);backdrop-filter:blur(14px);border-bottom-color:var(--line)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:72px;gap:20px}
+.brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.01em}
+.brand .mark{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),var(--cyan));box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 8px 24px -8px var(--cyan)}
+.brand .mark svg{width:18px;height:18px}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-links a{font-family:var(--ui);font-size:13.5px;color:var(--muted);padding:8px 11px;border-radius:8px;transition:color .2s,background .2s}
+.nav-links a:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-cta{display:flex;align-items:center;gap:14px}
+.nav-tag{font-family:var(--mono);font-size:11px;color:var(--muted-2);display:none}
+.burger{display:none;background:none;border:1px solid var(--line);border-radius:10px;width:42px;height:42px;cursor:pointer;color:var(--text)}
+@media(max-width:1120px){.nav-links{display:none}.burger{display:grid;place-items:center}}
+
+/* HERO */
+.hero{position:relative;padding:140px 0 90px;overflow:hidden;min-height:100vh;display:flex;align-items:center}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.7}
+.hero-glow{position:absolute;z-index:0;border-radius:50%;filter:blur(90px);opacity:.5;pointer-events:none}
+.g1{width:520px;height:520px;background:radial-gradient(circle,var(--blue),transparent 70%);top:-120px;left:-120px}
+.g2{width:460px;height:460px;background:radial-gradient(circle,var(--green),transparent 70%);bottom:-160px;right:-80px;opacity:.26}
+.hero-grid{position:relative;z-index:2;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+@media(max-width:980px){.hero-grid{grid-template-columns:1fr;gap:48px}.hero{padding-top:120px}}
+.hero .case-tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;color:var(--muted-2);display:inline-flex;align-items:center;gap:10px;margin-bottom:6px}
+.hero .case-tag .sealmini{color:var(--green-l)}
+.hero h1{font-size:clamp(44px,7vw,84px);margin:14px 0 22px}
+.hero h1 .strike{position:relative;color:var(--muted-2)}
+.hero h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:5px;background:var(--red);transform:rotate(-2deg);border-radius:3px;animation:strikein .7s .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes strikein{from{transform:scaleX(0) rotate(-2deg);transform-origin:left}to{transform:scaleX(1) rotate(-2deg)}}
+.hero h1 .verbs{display:block;font-size:.42em;letter-spacing:.02em;margin-top:14px;color:var(--text)}
+.hero h1 .verbs b{color:var(--cyan-l)}
+.hero h1 .verbs .sep{color:var(--muted-2);margin:0 .35em}
+.hero p.lead{font-size:clamp(17px,1.5vw,20px);color:var(--muted);max-width:56ch;margin:0 0 30px}
+.hero p.lead .ianow{color:var(--text);font-weight:500}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:30px}
+.trust{display:flex;flex-wrap:wrap;gap:10px 22px;font-family:var(--mono);font-size:12.5px;color:var(--muted-2)}
+.trust span{display:inline-flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green-l);box-shadow:0 0 10px var(--green-l);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.console{margin-top:34px;background:rgba(8,14,28,.7);border:1px solid var(--line);border-radius:14px;font-family:var(--mono);font-size:13px;padding:14px 16px;backdrop-filter:blur(6px);max-width:520px;box-shadow:var(--shadow)}
+.console .bar{display:flex;gap:6px;margin-bottom:10px}
+.console .bar i{width:10px;height:10px;border-radius:50%;display:block}
+.console .bar i:nth-child(1){background:#ff5f57}.console .bar i:nth-child(2){background:#febc2e}.console .bar i:nth-child(3){background:#28c840}
+.console .ln{color:var(--muted);min-height:1.4em;white-space:pre-wrap}
+.console .ln .ok{color:var(--green-l)} .console .ln .cy{color:var(--cyan-l)} .console .ln .dim{color:var(--muted-2)}
+.cursor{display:inline-block;width:8px;height:14px;background:var(--cyan-l);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.cert-stage{position:relative;perspective:1400px}
+.cert{position:relative;background:linear-gradient(160deg,#fbfdff,#e9eef7);color:#0c1726;border-radius:22px;padding:30px 28px 26px;box-shadow:0 50px 120px -40px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.5) inset;transform:rotateY(-7deg) rotateX(4deg);transition:transform .6s cubic-bezier(.2,.8,.2,1);overflow:hidden}
+.cert-stage:hover .cert{transform:rotateY(-2deg) rotateX(1deg)}
+.cert::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 22px,rgba(30,58,138,.04) 22px 23px);pointer-events:none}
+.cert-scan{position:absolute;left:0;right:0;top:0;height:120px;background:linear-gradient(180deg,rgba(6,182,212,.28),transparent);transform:translateY(-120px);animation:scan 3.4s 1s ease-in-out infinite;pointer-events:none}
+@keyframes scan{0%{transform:translateY(-120px)}45%{transform:translateY(560px)}55%{transform:translateY(560px)}100%{transform:translateY(-120px)}}
+.cert-top{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.cert-shield{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;flex:none}
+.cert-top h3{font-family:var(--ui);font-size:18px;color:#0c1726;letter-spacing:-.01em}
+.cert-top .id{font-family:var(--mono);font-size:11px;color:#5b6b82}
+.cert-row{display:flex;justify-content:space-between;gap:14px;font-family:var(--mono);font-size:12.5px;padding:9px 0;border-bottom:1px dashed rgba(12,23,38,.14);opacity:0;transform:translateY(8px)}
+.cert-row b{color:#5b6b82;font-weight:500} .cert-row span{color:#0c1726;text-align:right;word-break:break-all}
+.cert-ev{margin:18px 0 16px}
+.cert-ev h4{font-family:var(--ui);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#5b6b82;margin-bottom:10px}
+.ev{display:flex;align-items:center;gap:10px;font-size:13.5px;color:#16243a;padding:5px 0;opacity:0;transform:translateX(-8px)}
+.ev .chk{width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;flex:none;font-size:11px;transform:scale(0);transition:transform .3s}
+.ev.on .chk{transform:scale(1)}
+.cert-seal{margin-top:6px;border:2px solid var(--green);color:#0a7a52;border-radius:12px;text-align:center;font-family:var(--ui);font-weight:700;letter-spacing:.06em;padding:12px;font-size:15px;opacity:0;transform:scale(.9)}
+.cert-seal.on{opacity:1;transform:scale(1);animation:sealpulse 2.4s 1s ease-in-out infinite}
+@keyframes sealpulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.35)}50%{box-shadow:0 0 0 10px rgba(16,185,129,0)}}
+.cert-float{position:absolute;font-family:var(--mono);font-size:11px;background:rgba(8,14,28,.85);color:var(--cyan-l);border:1px solid var(--line);padding:7px 12px;border-radius:999px;backdrop-filter:blur(6px);box-shadow:var(--shadow)}
+.cf1{top:-14px;right:-10px;animation:floaty 5s ease-in-out infinite}
+.cf2{bottom:30px;left:-26px;animation:floaty 6s 1s ease-in-out infinite;color:var(--green-l)}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+.legal-ribbon{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(220,38,38,.05)}
+.legal-ribbon .wrap{display:flex;gap:14px;align-items:center;padding:14px 24px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.legal-ribbon .warn{color:var(--red);font-weight:600;flex:none}
+
+.marquee{border-bottom:1px solid var(--line);overflow:hidden;padding:18px 0;background:var(--ink-2)}
+.marquee .track{display:flex;gap:48px;width:max-content;animation:scrollx 34s linear infinite}
+.marquee:hover .track{animation-play-state:paused}
+.marquee span{font-family:var(--ui);font-weight:600;color:var(--muted-2);font-size:15px;display:inline-flex;align-items:center;gap:12px;white-space:nowrap}
+.marquee span::after{content:"◆";color:var(--cyan);font-size:9px}
+@keyframes scrollx{to{transform:translateX(-50%)}}
+
+/* LEDGER DE DOLORES */
+.ledger-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:54px;align-items:start}
+@media(max-width:920px){.ledger-grid{grid-template-columns:1fr;gap:34px}}
+.ledger-intro .bigline{font-family:var(--display);font-weight:800;font-size:clamp(28px,3.6vw,44px);line-height:1.05;margin:18px 0 18px}
+.ledger-intro .bigline em{font-style:normal;color:var(--cyan-l)}
+.ledger-intro p{color:var(--muted);font-size:16px;margin:0 0 22px;max-width:42ch}
+.ledger-intro .stampbox{display:inline-flex;align-items:center;gap:12px;border:1px dashed var(--line);border-radius:12px;padding:14px 18px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.ledger-intro .stampbox b{color:var(--green-l)}
+.ledger{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+.entry{display:grid;grid-template-columns:96px 1fr;gap:0;border-bottom:1px solid var(--line);position:relative;transition:background .3s}
+.entry:hover{background:rgba(255,255,255,.02)}
+.entry .exp{padding:30px 18px 30px 0;border-right:1px solid var(--line);text-align:right}
+.entry .exp .n{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--muted-2)}
+.entry .exp .num{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:var(--text);margin-top:4px}
+.entry .body{padding:28px 0 30px 26px;position:relative}
+.entry .kind{font-family:var(--ui);font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan-l);display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.entry .kind .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:rgba(6,182,212,.12);border:1px solid var(--line);color:var(--cyan-l)}
+.entry .grief{font-family:var(--display);font-size:19px;font-weight:600;color:var(--text);margin:0 0 14px;line-height:1.3;position:relative;display:inline}
+.entry .grief .q{color:var(--muted-2)}
+.entry .fix{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:6px}
+@media(max-width:560px){.entry .fix{grid-template-columns:1fr}}
+.entry .fix .col .lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.entry .fix .seal .lab{color:var(--cyan-l)} .entry .fix .val .lab{color:var(--green-l)}
+.entry .fix .col p{margin:0;font-size:14px;color:var(--muted)}
+.entry .fix .val p{color:var(--text)}
+.entry .stamped{position:absolute;top:24px;right:6px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--green-l);border:1.5px solid var(--green);border-radius:6px;padding:4px 9px;transform:rotate(7deg);opacity:.0;transition:opacity .5s .3s,transform .5s .3s}
+.entry.in .stamped{opacity:.85;transform:rotate(7deg) scale(1)}
+@media(max-width:560px){.entry{grid-template-columns:64px 1fr}.entry .exp .num{font-size:30px}.entry .stamped{display:none}}
+
+/* ESCUDO / HONESTIDAD */
+.shield-sec{background:linear-gradient(180deg,var(--ink-2),var(--ink));overflow:hidden}
+.shield-wrap{display:grid;grid-template-columns:1.2fr .8fr;gap:50px;align-items:center}
+@media(max-width:900px){.shield-wrap{grid-template-columns:1fr;gap:40px}}
+.shield-copy .q{font-family:var(--display);font-weight:800;font-size:clamp(26px,3.6vw,46px);line-height:1.12;margin:18px 0 22px}
+.shield-copy .q em{font-style:normal;color:var(--cyan-l)}
+.shield-copy p{color:var(--muted);font-size:16.5px;margin:0 0 16px;max-width:60ch}
+.shield-copy p b{color:var(--text)}
+.shield-copy .punch{font-family:var(--display);font-weight:700;font-size:clamp(18px,2.2vw,26px);color:var(--text);border-left:3px solid var(--amber);padding-left:18px;margin-top:24px}
+.stamp-stage{display:grid;place-items:center;min-height:300px}
+.stamp{width:240px;height:240px;border-radius:50%;border:4px double var(--green-l);display:grid;place-items:center;text-align:center;position:relative;color:var(--green-l);transform:rotate(-13deg) scale(.6);opacity:0;transition:transform .7s cubic-bezier(.2,1.4,.3,1),opacity .5s}
+.stamp::before{content:"";position:absolute;inset:12px;border-radius:50%;border:2px solid rgba(62,224,168,.5)}
+.reveal.in .stamp{transform:rotate(-13deg) scale(1);opacity:1}
+.stamp .top,.stamp .bot{font-family:var(--mono);font-size:11px;letter-spacing:.22em}
+.stamp .mid{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;margin:10px 0;letter-spacing:-.01em}
+.stamp .star{font-size:14px;letter-spacing:.3em}
+
+/* SOLUCIÓN */
+.solution{background:linear-gradient(180deg,var(--ink),var(--ink-2))}
+.claim{font-family:var(--display);font-weight:800;font-size:clamp(30px,5vw,58px);line-height:1.08;max-width:20ch;margin:24px 0}
+.claim .hl{color:var(--cyan-l)}
+.reframe{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px}
+@media(max-width:760px){.reframe{grid-template-columns:1fr}}
+.reframe .card{border:1px solid var(--line);border-radius:var(--r);padding:26px;background:rgba(255,255,255,.02)}
+.reframe .card.bad{border-color:rgba(239,68,68,.3)}
+.reframe .card.good{border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.05)}
+.reframe .lab{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+.bad .lab{color:var(--red)} .good .lab{color:var(--green-l)}
+.reframe h4{font-family:var(--ui);font-size:20px;margin-bottom:8px}
+.reframe p{color:var(--muted);margin:0;font-size:15px}
+
+/* PASOS */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:step}
+@media(max-width:860px){.steps{grid-template-columns:1fr}}
+.step{position:relative;border:1px solid var(--line);border-radius:var(--r);padding:30px 26px 28px;background:var(--ink-2);transition:transform .35s,border-color .35s,box-shadow .35s;overflow:hidden}
+.step:hover{transform:translateY(-6px);border-color:var(--cyan);box-shadow:0 30px 60px -30px rgba(6,182,212,.4)}
+.step::before{counter-increment:step;content:"0" counter(step);position:absolute;top:18px;right:22px;font-family:var(--display);font-weight:800;font-size:54px;color:rgba(255,255,255,.05)}
+.step .ic{width:50px;height:50px;border-radius:13px;display:grid;place-items:center;margin-bottom:18px;background:linear-gradient(135deg,rgba(6,182,212,.18),rgba(16,185,129,.12));border:1px solid var(--line);color:var(--cyan-l)}
+.step h3{font-family:var(--ui);font-size:20px;margin-bottom:8px}
+.step p{color:var(--muted);font-size:15px;margin:0}
+.step .hash{margin-top:14px;font-family:var(--mono);font-size:11.5px;color:var(--cyan-l);background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:8px;padding:8px 10px;word-break:break-all;min-height:38px}
+
+/* CAPAS */
+.layers-wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:48px;align-items:start}
+@media(max-width:900px){.layers-wrap{grid-template-columns:1fr}}
+.layer-stack{display:flex;flex-direction:column;gap:10px}
+.layer{display:flex;align-items:center;gap:16px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--ink-2);cursor:pointer;transition:.3s;position:relative;overflow:hidden}
+.layer::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,var(--cyan));transform:scaleY(0);transform-origin:top;transition:transform .3s}
+.layer:hover,.layer.active{border-color:var(--c,var(--cyan));background:var(--ink-3);transform:translateX(6px)}
+.layer:hover::before,.layer.active::before{transform:scaleY(1)}
+.layer .n{font-family:var(--display);font-weight:800;font-size:24px;color:var(--c,var(--cyan-l));width:34px;flex:none}
+.layer .t{font-family:var(--ui);font-weight:600;font-size:16px}
+.layer .s{font-family:var(--mono);font-size:11px;color:var(--muted-2)}
+.layer-detail{position:sticky;top:100px;border:1px solid var(--line);border-radius:var(--r);padding:34px;background:radial-gradient(120% 120% at 0% 0%,rgba(6,182,212,.1),transparent 60%),var(--ink-2);min-height:300px}
+.layer-detail .badge{font-family:var(--mono);font-size:12px;color:var(--cyan-l);letter-spacing:.14em}
+.layer-detail h3{font-size:30px;margin:12px 0 14px}
+.layer-detail p{color:var(--muted);margin:0 0 16px}
+.layer-detail .role{font-family:var(--ui);font-size:13px;color:var(--green-l);display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.07);padding:7px 13px;border-radius:999px}
+
+/* COMPETENCIA */
+.compete{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--ink-2)}
+.compete .cr{display:grid;grid-template-columns:1.2fr 1.7fr .8fr 1fr;gap:0;border-bottom:1px solid var(--line);align-items:stretch}
+.compete .cr:last-child{border-bottom:none}
+.compete .cr>div{padding:16px 18px;font-size:13.5px;border-left:1px solid var(--line)}
+.compete .cr>div:first-child{border-left:none}
+.compete .cr.head{background:var(--blue);font-family:var(--ui);font-weight:600;color:#fff;font-size:13px}
+.compete .cr.head>div{border-left-color:rgba(255,255,255,.15)}
+.compete .cr .nm{font-family:var(--ui);font-weight:600;color:var(--text)}
+.compete .cr .nm small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted-2);font-weight:400;margin-top:3px}
+.compete .cr .yes{color:var(--green-l);font-family:var(--mono)}
+.compete .cr .neu{color:var(--muted-2);font-family:var(--mono)}
+.compete .cr.verity{background:rgba(6,182,212,.07)}
+.compete .cr.verity .nm{color:var(--cyan-l)}
+.compete .cr.verity .core{color:var(--green-l);font-family:var(--ui);font-weight:700}
+@media(max-width:860px){.compete .cr{grid-template-columns:1fr}.compete .cr>div{border-left:none;border-bottom:1px solid var(--line)}.compete .cr.head{display:none}.compete .cr .nm{background:rgba(255,255,255,.03)}}
+.honesty-note{margin-top:26px;border:1px solid var(--line);border-radius:var(--r);padding:28px 30px;background:var(--ink-2);display:flex;gap:18px;align-items:flex-start}
+.honesty-note .ic{flex:none;width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.honesty-note h4{font-family:var(--ui);font-size:15px;letter-spacing:.04em;color:var(--amber);margin:0 0 8px}
+.honesty-note p{margin:0;color:var(--muted);font-size:14.5px}
+.honesty-note p b{color:var(--text)}
+.position{margin-top:26px;border:1px solid rgba(6,182,212,.3);border-radius:var(--r);padding:42px;background:radial-gradient(120% 140% at 0% 0%,rgba(6,182,212,.12),transparent 55%),var(--ink-2);position:relative;overflow:hidden}
+.position .q{font-family:var(--display);font-size:clamp(24px,3.4vw,40px);line-height:1.18;font-weight:800;max-width:24ch}
+.position .q em{font-style:normal;color:var(--cyan-l)}
+.position .sub{margin-top:20px;color:var(--muted);font-size:16px;max-width:74ch}
+.position .sub b{color:var(--text)}
+
+/* HONESTIDAD TÉCNICA */
+.honesty{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px}
+@media(max-width:820px){.honesty{grid-template-columns:1fr}}
+.hcol{border:1px solid var(--line);border-radius:var(--r);padding:28px;background:var(--ink-2)}
+.hcol.yes{border-top:3px solid var(--green)} .hcol.no{border-top:3px solid var(--red)}
+.hcol h3{font-family:var(--ui);font-size:18px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hcol.yes h3 .e{color:var(--green-l)} .hcol.no h3 .e{color:var(--red)}
+.hcol ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.hcol li{display:flex;gap:12px;color:var(--muted);font-size:15px}
+.hcol li .m{flex:none;font-family:var(--mono);color:var(--text)}
+.hcol.yes li .m{color:var(--green-l)} .hcol.no li .m{color:var(--red)}
+
+/* CASOS */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:minmax(180px,auto);gap:18px}
+.bento .b{border:1px solid var(--line);border-radius:var(--r);padding:28px;background:var(--ink-2);position:relative;overflow:hidden;transition:transform .35s,border-color .35s;display:flex;flex-direction:column}
+.bento .b:hover{transform:translateY(-5px);border-color:var(--cyan)}
+.bento .b .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;margin-bottom:auto;background:rgba(6,182,212,.12);border:1px solid var(--line);color:var(--cyan-l)}
+.bento .b h3{font-family:var(--ui);font-size:21px;margin:18px 0 8px}
+.bento .b p{color:var(--muted);font-size:14.5px;margin:0}
+.bento .b .who{font-family:var(--mono);font-size:11px;color:var(--cyan-l);letter-spacing:.1em}
+.b1{grid-column:span 4}.b2{grid-column:span 2}.b3{grid-column:span 3}.b4{grid-column:span 3}
+@media(max-width:860px){.bento{grid-template-columns:1fr}.b1,.b2,.b3,.b4{grid-column:span 1}}
+.b .glow{position:absolute;width:200px;height:200px;border-radius:50%;filter:blur(60px);opacity:.18;right:-40px;bottom:-40px;background:var(--cyan)}
+
+/* TIEMPO */
+.time{background:linear-gradient(180deg,var(--ink-2),var(--ink))}
+.time-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:34px}
+.time-tab{font-family:var(--ui);font-weight:600;font-size:15px;padding:13px 22px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--muted);transition:.25s;display:flex;align-items:center;gap:10px}
+.time-tab .dotc{width:9px;height:9px;border-radius:50%;background:var(--tc,var(--cyan))}
+.time-tab:hover{color:var(--text);border-color:var(--tc,var(--cyan))}
+.time-tab.active{background:var(--tc,var(--cyan));color:#04222a;border-color:transparent}
+.time-tab.active .dotc{background:#04222a}
+.time-panel{display:none;animation:fadein .5s ease}
+.time-panel.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.time-head{display:flex;align-items:baseline;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.time-head h3{font-size:clamp(26px,3.4vw,40px)}
+.time-head .tagline{font-family:var(--mono);font-size:13px;color:var(--tc,var(--cyan-l))}
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:820px){.time-grid{grid-template-columns:1fr}}
+.time-card{border:1px solid var(--line);border-radius:14px;padding:24px;background:var(--ink-2);transition:.3s;position:relative;overflow:hidden}
+.time-card:hover{transform:translateY(-4px);border-color:var(--tc,var(--cyan))}
+.time-card .ic{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;margin-bottom:14px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--tc,var(--cyan-l))}
+.time-card h4{font-family:var(--ui);font-size:17px;margin-bottom:7px}
+.time-card p{color:var(--muted);font-size:14px;margin:0}
+.time-card .ex{margin-top:12px;font-family:var(--mono);font-size:11.5px;color:var(--tc,var(--cyan-l));border-top:1px dashed var(--line);padding-top:10px}
+.time-thesis{margin-top:30px;border-left:3px solid var(--tc,var(--cyan));padding:8px 0 8px 20px;font-family:var(--display);font-size:clamp(18px,2.2vw,26px);font-weight:600;color:var(--text)}
+
+/* VRT */
+.vrt-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+@media(max-width:900px){.vrt-grid{grid-template-columns:1fr}}
+.coin-stage{display:grid;place-items:center;position:relative;min-height:340px}
+.coin{width:230px;height:230px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(from 200deg,var(--blue),var(--cyan),var(--green),var(--blue));box-shadow:0 40px 90px -30px rgba(6,182,212,.6),0 0 0 10px rgba(255,255,255,.04);animation:spin 18s linear infinite}
+.coin::after{content:"";position:absolute;inset:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#16264a,#0a1428)}
+.coin .v{position:relative;font-family:var(--display);font-weight:800;font-size:96px;color:#fff;z-index:2;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+.coin .vs{position:absolute;z-index:2;bottom:46px;right:46px;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--green));color:#04222a}
+@keyframes spin{to{transform:rotate(360deg)}}
+.coin-ring{position:absolute;inset:-30px;border:1px dashed var(--line);border-radius:50%;animation:spin 40s linear infinite reverse}
+.spec{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.spec .row{display:flex;justify-content:space-between;gap:16px;padding:14px 20px;border-bottom:1px solid var(--line);font-size:14.5px}
+.spec .row:last-child{border-bottom:none}
+.spec .row:nth-child(odd){background:rgba(255,255,255,.02)}
+.spec .row b{font-family:var(--ui);font-weight:500;color:var(--muted)} .spec .row span{font-family:var(--mono);color:var(--text);text-align:right}
+.thesis-box{margin-top:40px;border:1px solid rgba(16,185,129,.3);border-radius:var(--r);padding:34px;background:radial-gradient(120% 140% at 100% 0%,rgba(16,185,129,.1),transparent 55%),var(--ink-2)}
+.thesis-box .q{font-family:var(--display);font-size:clamp(22px,3vw,34px);line-height:1.2;font-weight:700}
+.thesis-box .q em{font-style:normal;color:var(--green-l)}
+.thesis-box .rule{margin-top:18px;font-family:var(--mono);font-size:13px;color:var(--muted);border-top:1px dashed var(--line);padding-top:16px}
+.thesis-box .rule b{color:var(--amber)}
+.esno{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:40px}
+@media(max-width:760px){.esno{grid-template-columns:1fr}}
+.esno .c{border-radius:var(--r);padding:26px;border:1px solid var(--line)}
+.esno .c.es{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.3)}
+.esno .c.no{background:rgba(239,68,68,.05);border-color:rgba(239,68,68,.3)}
+.esno h4{font-family:var(--ui);font-size:15px;letter-spacing:.04em;margin-bottom:14px}
+.esno .es h4{color:var(--green-l)} .esno .no h4{color:var(--red)}
+.esno ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;color:var(--muted);font-size:14.5px}
+.esno li{display:flex;gap:10px} .esno .es li .m{color:var(--green-l)} .esno .no li .m{color:var(--red)}
+
+/* DESEO */
+.desire{background:var(--ink-2)}
+.desire-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:900px){.desire-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.desire-grid{grid-template-columns:1fr}}
+.desire-card{border:1px solid var(--line);border-radius:var(--r);padding:28px;background:var(--ink);position:relative;overflow:hidden;transition:.35s;display:flex;flex-direction:column}
+.desire-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--dc,var(--cyan));transform:scaleX(0);transform-origin:left;transition:transform .35s}
+.desire-card:hover{transform:translateY(-6px);border-color:var(--dc,var(--cyan));box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
+.desire-card:hover::before{transform:scaleX(1)}
+.desire-card .want{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dc,var(--cyan-l));display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.desire-card .ic{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;margin-bottom:16px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--dc,var(--cyan-l))}
+.desire-card h3{font-family:var(--ui);font-size:20px;margin-bottom:8px}
+.desire-card p{color:var(--muted);font-size:14.5px;margin:0 0 14px;flex:1}
+.desire-card .ex{font-family:var(--mono);font-size:11.5px;color:var(--dc,var(--cyan-l));border-top:1px dashed var(--line);padding-top:12px}
+
+/* VERIFICADORES */
+.verif{background:linear-gradient(180deg,var(--ink),var(--ink-2))}
+.verif-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+@media(max-width:900px){.verif-grid{grid-template-columns:1fr}}
+.loop{display:flex;flex-direction:column;gap:14px}
+.loop .node{display:flex;align-items:center;gap:16px;border:1px solid var(--line);border-radius:14px;padding:18px 20px;background:var(--ink-2)}
+.loop .node .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex:none}
+.loop .node.win .ic{background:rgba(16,185,129,.14);color:var(--green-l)}
+.loop .node.lose .ic{background:rgba(239,68,68,.12);color:var(--red)}
+.loop .node.stake .ic{background:rgba(6,182,212,.14);color:var(--cyan-l)}
+.loop .node h4{font-family:var(--ui);font-size:16px;margin:0 0 3px}
+.loop .node p{margin:0;color:var(--muted);font-size:13.5px}
+.loop .arrow{text-align:center;color:var(--muted-2);font-family:var(--mono)}
+
+/* TOKENOMICS */
+.tok-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:center}
+@media(max-width:860px){.tok-grid{grid-template-columns:1fr}}
+.donut-wrap{display:grid;place-items:center}
+.donut{width:300px;height:300px;position:relative}
+.donut svg{transform:rotate(-90deg)}
+.donut circle{fill:none;stroke-width:30;transition:stroke-dasharray 1.4s cubic-bezier(.2,.8,.2,1)}
+.donut .center{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.donut .center .big{font-family:var(--display);font-weight:800;font-size:40px}
+.donut .center .sm{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em}
+.tok-legend{display:flex;flex-direction:column;gap:12px}
+.tok-legend .li{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--ink-2)}
+.tok-legend .sw{width:14px;height:14px;border-radius:4px;flex:none}
+.tok-legend .nm{font-family:var(--ui);font-size:15px;flex:1}
+.tok-legend .pc{font-family:var(--mono);font-weight:600;color:var(--text)}
+.vesting{margin-top:22px;font-family:var(--mono);font-size:12.5px;color:var(--muted);border-left:3px solid var(--green);padding-left:14px}
+
+/* ECONOMÍA */
+.econ{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+@media(max-width:720px){.econ{grid-template-columns:1fr}}
+.econ .e{border:1px solid var(--line);border-radius:14px;padding:24px;background:var(--ink-2);display:flex;gap:16px;align-items:flex-start}
+.econ .e .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex:none;background:rgba(6,182,212,.12);color:var(--cyan-l)}
+.econ .e h4{font-family:var(--ui);font-size:16px;margin:0 0 4px}
+.econ .e p{margin:0;color:var(--muted);font-size:13.5px}
+.grants{margin-top:24px;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.05);border-radius:var(--r);padding:26px}
+.grants h4{font-family:var(--ui);font-size:18px;color:var(--green-l);margin-bottom:8px}
+.grants p{color:var(--muted);margin:0;font-size:14.5px}
+
+/* ROADMAP */
+.road{position:relative;padding-left:34px}
+.road::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--cyan),var(--green),transparent)}
+.phase{position:relative;padding:0 0 40px 28px}
+.phase::before{content:"";position:absolute;left:-30px;top:4px;width:20px;height:20px;border-radius:50%;background:var(--ink);border:2px solid var(--cyan);box-shadow:0 0 0 5px rgba(6,182,212,.12)}
+.phase.done::before{background:var(--green);border-color:var(--green)}
+.phase.now::before{background:var(--cyan);border-color:var(--cyan);animation:pulse 1.6s infinite}
+.phase .when{font-family:var(--mono);font-size:12px;color:var(--cyan-l);letter-spacing:.12em}
+.phase h3{font-family:var(--ui);font-size:22px;margin:6px 0 12px}
+.phase ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.phase li{color:var(--muted);font-size:14.5px;display:flex;gap:10px}
+.phase li .m{color:var(--green-l);font-family:var(--mono)}
+
+/* RIESGOS */
+.risks{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:760px){.risks{grid-template-columns:1fr}}
+.risk{border:1px solid var(--line);border-radius:14px;padding:22px;background:var(--ink-2)}
+.risk .top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+.risk .top .ic{color:var(--amber);flex:none;margin-top:2px}
+.risk h4{font-family:var(--ui);font-size:16px;margin:0}
+.risk .mit{font-family:var(--mono);font-size:12.5px;color:var(--green-l);display:flex;gap:8px;align-items:flex-start;margin-top:6px}
+
+/* FUNDADOR */
+.founder{background:linear-gradient(180deg,var(--ink),var(--ink-2))}
+.found-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:48px;align-items:center}
+@media(max-width:860px){.found-grid{grid-template-columns:1fr}}
+.found-card{border:1px solid var(--line);border-radius:var(--r);padding:30px;background:radial-gradient(120% 100% at 50% 0%,rgba(6,182,212,.14),transparent 60%),var(--ink-2);text-align:center;position:relative;overflow:hidden}
+.avatar{width:130px;height:130px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:46px;color:#fff;position:relative;background:linear-gradient(135deg,var(--blue),var(--cyan),var(--green));box-shadow:0 20px 50px -16px rgba(6,182,212,.6)}
+.avatar::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px dashed var(--line);animation:spin 30s linear infinite}
+.found-card .nm{font-family:var(--display);font-weight:800;font-size:26px}
+.found-card .role{font-family:var(--mono);font-size:12.5px;color:var(--cyan-l);letter-spacing:.08em;margin:6px 0 16px}
+.found-card .bio{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+.found-card .socials{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.found-card .socials a{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);transition:.2s}
+.found-card .socials a:hover{color:var(--text);border-color:var(--cyan);transform:translateY(-3px)}
+.found-card .phone{margin-top:16px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.found-card .phone a{color:var(--green-l)}
+.found-letter h3{font-family:var(--display);font-size:clamp(24px,3vw,34px);margin:0 0 16px}
+.found-letter p{color:var(--muted);margin:0 0 14px}
+.found-letter .humble{border-left:3px solid var(--cyan);padding-left:18px;color:var(--text);font-style:italic}
+.found-letter .sign{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text);margin-top:8px}
+.manifesto{margin-top:40px;border:1px solid var(--line);border-radius:var(--r);padding:34px;background:var(--ink-2);position:relative}
+.manifesto .q{font-family:var(--display);font-size:clamp(20px,2.6vw,30px);line-height:1.3;font-weight:600}
+.manifesto .q em{font-style:normal;color:var(--cyan-l)}
+
+/* FAQ */
+.faq{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+details.qa{border:1px solid var(--line);border-radius:14px;background:var(--ink-2);overflow:hidden;transition:border-color .3s}
+details.qa[open]{border-color:var(--cyan)}
+details.qa summary{list-style:none;cursor:pointer;padding:20px 24px;font-family:var(--ui);font-weight:600;font-size:17px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary .pl{flex:none;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;color:var(--cyan-l);transition:transform .3s}
+details.qa[open] summary .pl{transform:rotate(45deg)}
+details.qa .a{padding:0 24px 22px;color:var(--muted);font-size:15px}
+
+/* JOIN */
+.join{position:relative;overflow:hidden}
+.join .bg{position:absolute;inset:0;background:radial-gradient(80% 120% at 50% 0%,rgba(6,182,212,.16),transparent 60%);z-index:0}
+.join-grid{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:10px}
+@media(max-width:820px){.join-grid{grid-template-columns:1fr}}
+.join .jc{border:1px solid var(--line);border-radius:var(--r);padding:30px;background:var(--ink-2);display:flex;flex-direction:column;gap:12px;transition:.3s}
+.join .jc:hover{transform:translateY(-6px);border-color:var(--cyan)}
+.join .jc .ic{width:50px;height:50px;border-radius:13px;display:grid;place-items:center;background:rgba(6,182,212,.12);color:var(--cyan-l)}
+.join .jc h3{font-family:var(--ui);font-size:21px}
+.join .jc p{color:var(--muted);font-size:14.5px;margin:0;flex:1}
+.join .jc .tag{font-family:var(--mono);font-size:11px;color:var(--green-l)}
+.join-cta{position:relative;z-index:2;text-align:center;margin-top:46px}
+.join-cta h2{font-size:clamp(32px,5vw,56px);margin-bottom:14px}
+.join-cta p{color:var(--muted);max-width:58ch;margin:0 auto 26px}
+.join-cta .btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+footer{border-top:1px solid var(--line);background:var(--ink-2);padding:64px 0 30px}
+.foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;margin-bottom:40px}
+@media(max-width:760px){.foot-grid{grid-template-columns:1fr}}
+.foot-grid h5{font-family:var(--ui);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin:0 0 14px}
+.foot-grid a{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;padding:5px 0;transition:color .2s}
+.foot-grid a:hover{color:var(--cyan-l)}
+.foot-brand p{color:var(--muted);font-size:14px;max-width:42ch;margin:14px 0 0}
+.foot-contact{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.foot-contact a{font-family:var(--mono);font-size:13px}
+.foot-disclaimer{border-top:1px solid var(--line);padding-top:24px;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:var(--muted-2)}
+.foot-bottom{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:18px;font-family:var(--mono);font-size:12px;color:var(--muted-2)}
+
+.wa-float{position:fixed;bottom:24px;right:24px;z-index:70;width:58px;height:58px;border-radius:50%;background:#25D366;display:grid;place-items:center;box-shadow:0 14px 40px -10px rgba(37,211,102,.7);transition:transform .3s;animation:floaty 4s ease-in-out infinite}
+.wa-float:hover{transform:scale(1.1)}
+.wa-float svg{width:30px;height:30px}
+
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.reveal[data-d="1"]{transition-delay:.08s}.reveal[data-d="2"]{transition-delay:.16s}
+.reveal[data-d="3"]{transition-delay:.24s}.reveal[data-d="4"]{transition-delay:.32s}.reveal[data-d="5"]{transition-delay:.4s}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a href="#top" class="brand">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" fill="#fff" opacity=".9"/><path d="M8.5 12l2.5 2.5L16 9" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      Verity<span style="color:var(--cyan-l)">(VRT)</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#dolores">Tu problema</a>
+      <a href="#escudo">El escudo</a>
+      <a href="#competencia">Por qué nosotros</a>
+      <a href="#vrt">Token VRT</a>
+      <a href="#deseo">Utilidad</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#fundador">Fundador</a>
+    </nav>
+    <div class="nav-cta">
+      <span class="nav-tag">BETA · NO ES INVERSIÓN</span>
+      <a href="#unete" class="btn btn-primary btn-sm">Proteger mi trabajo <span class="ar">→</span></a>
+      <button class="burger" id="burger" aria-label="Menú"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- HERO -->
+<section class="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-glow g1"></div><div class="hero-glow g2"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <span class="case-tag reveal"><span class="sealmini">◆</span> NOTARIO DIGITAL · EXP. #4821 · CONSTRUIDO EN EL MUNDO HISPANO</span>
+      <h1 class="reveal" data-d="1">Que nadie diga<br>que tu trabajo es <span class="strike">fake</span>.<span class="verbs"><b>Protege</b><span class="sep">·</span><b>Prueba</b><span class="sep">·</span><b>Cobra</b></span></h1>
+      <p class="lead reveal" data-d="2">Verity sella tu autoría en blockchain en 60 segundos. Defiende tu obra del robo, blinda tu reputación y cobra por contenido verificado. <span class="ianow">La IA no va a desaparecer — pero tu trabajo sí puede estar protegido.</span></p>
+      <div class="hero-cta reveal" data-d="3">
+        <a href="#unete" class="btn btn-primary">Proteger mi trabajo (beta gratis) <span class="ar">→</span></a>
+        <a href="#dolores" class="btn btn-ghost">Ver qué resuelve</a>
+      </div>
+      <div class="trust reveal" data-d="4">
+        <span><i class="dot"></i> Beta activa · 50 cupos</span>
+        <span>◆ Compatible C2PA</span><span>◆ 0 archivos guardados</span><span>◆ Hecho en LatAm</span>
+      </div>
+      <div class="console reveal" data-d="5" aria-hidden="true">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div id="console-lines"></div>
+      </div>
+    </div>
+
+    <div class="cert-stage reveal" data-d="2">
+      <span class="cert-float cf1">hash anclado ✓</span>
+      <span class="cert-float cf2">autoría sellada</span>
+      <div class="cert" id="cert">
+        <div class="cert-scan"></div>
+        <div class="cert-top">
+          <span class="cert-shield"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" fill="#fff"/><path d="M8.5 12l2.5 2.5L16 9" stroke="#1E3A8A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <div><h3>CERTIFICADO VERITY</h3><div class="id">#4821 · red Polygon</div></div>
+        </div>
+        <div class="cert-row" data-i="0"><b>Hash SHA-256</b><span class="mono" data-hash>a3f5b9c2e7d14f8a0b6c3e9d2f7a1c4b</span></div>
+        <div class="cert-row" data-i="1"><b>Registrado por</b><span>0x742d…María</span></div>
+        <div class="cert-row" data-i="2"><b>Fecha</b><span>29 Jul 2026 · 14:32 UTC</span></div>
+        <div class="cert-row" data-i="3"><b>Red</b><span>Polygon · bloque #58201944</span></div>
+        <div class="cert-ev">
+          <h4>Evidencia de origen</h4>
+          <div class="ev" data-i="0"><span class="chk">✓</span> Metadatos de cámara · Canon EOS R5</div>
+          <div class="ev" data-i="1"><span class="chk">✓</span> GPS de captura · Madrid, ES</div>
+          <div class="ev" data-i="2"><span class="chk">✓</span> Análisis IA · 4% probabilidad (bajo)</div>
+        </div>
+        <div class="cert-seal" id="seal">AUTORÍA SELLADA</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="legal-ribbon">
+  <div class="wrap"><span class="warn">⚠ AVISO</span> VRT es un token de utilidad, NO una inversión ni un valor negociable (security). Verity está en fase beta/testnet y no promete detectar IA con certeza absoluta: provee registro inmutable + evidencia de origen en capas. +18 · no disponible en jurisdicciones con restricciones a activos digitales.</div>
+</div>
+
+<div class="marquee" aria-hidden="true">
+  <div class="track">
+    <span>PROTEGE TU OBRA</span><span>PRUEBA TU AUTORÍA</span><span>COBRA POR TU AUTENTICIDAD</span><span>COMPATIBLE C2PA</span><span>CONSTRUIDO EN EL MUNDO HISPANO</span><span>NO DETENEMOS LA IA · TE DAMOS TU ESCUDO</span><span>0 ARCHIVOS GUARDADOS</span>
+    <span>PROTEGE TU OBRA</span><span>PRUEBA TU AUTORÍA</span><span>COBRA POR TU AUTENTICIDAD</span><span>COMPATIBLE C2PA</span><span>CONSTRUIDO EN EL MUNDO HISPANO</span><span>NO DETENEMOS LA IA · TE DAMOS TU ESCUDO</span><span>0 ARCHIVOS GUARDADOS</span>
+  </div>
+</div>
+
+<!-- 01 DOLORES / LEDGER -->
+<section class="section" id="dolores">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">01 — TU TRABAJO, TU PROBLEMA</span>
+      <h2>Tu obra tiene tres enemigos.<br>Verity es tu escudo contra los tres.</h2>
+      <p>Olvídate por un momento de la IA. Estos tres problemas existen hoy, con nombre, con dolor y con dinero de por medio. Son los que Verity resuelve de verdad.</p>
+    </div>
+    <div class="ledger-grid">
+      <div class="ledger-intro reveal">
+        <div class="bigline">Un <em>registro</em> de agravios que ya no te van a volver a hacer.</div>
+        <p>Cada entrada es un problema real de un creador real. A la izquierda, el agravio. A la derecha, el sello que lo cierra y el valor que recuperas.</p>
+        <div class="stampbox"><b>3 / 3</b> agravios con remedio on-chain</div>
+      </div>
+      <div class="ledger">
+        <div class="entry reveal">
+          <div class="exp"><div class="n">EXP.</div><div class="num">001</div></div>
+          <div class="body">
+            <span class="stamped">SELLADO ✓</span>
+            <div class="kind"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h3l2-2h8l2 2h3v12H3z"/><circle cx="12" cy="13" r="3.5"/></svg></span> ROBO Y CLONACIÓN</div>
+            <p class="grief"><span class="q">“</span>Usaron mi foto sin permiso y no puedo probar que es mía.<span class="q">”</span></p>
+            <div class="fix">
+              <div class="col seal"><div class="lab">Sello Verity</div><p>Registro inmutable de autoría y fecha. Prueba de anterioridad que nadie puede borrar.</p></div>
+              <div class="col val"><div class="lab">Lo que recuperas</div><p>El control de tu obra — y la base para reclamar.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="entry reveal" data-d="1">
+          <div class="exp"><div class="n">EXP.</div><div class="num">002</div></div>
+          <div class="body">
+            <span class="stamped">SELLADO ✓</span>
+            <div class="kind"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z M4 9h16 M9 4v16"/></svg></span> CREDIBILIDAD EN DUDA</div>
+            <p class="grief"><span class="q">“</span>Dicen que mi trabajo es fake. Mi palabra ya no basta.<span class="q">”</span></p>
+            <div class="fix">
+              <div class="col seal"><div class="lab">Sello Verity</div><p>Certificado público + firma de cámara (C2PA) + evidencia en capas.</p></div>
+              <div class="col val"><div class="lab">Lo que recuperas</div><p>La carga de la prueba se invierte: que lo refuten ellos.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="entry reveal" data-d="2">
+          <div class="exp"><div class="n">EXP.</div><div class="num">003</div></div>
+          <div class="body">
+            <span class="stamped">SELLADO ✓</span>
+            <div class="kind"><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22 M17 5H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H7"/></svg></span> VALOR QUE NO COBRAS</div>
+            <p class="grief"><span class="q">“</span>Mi autenticidad vale, pero nadie me paga por ella.<span class="q">”</span></p>
+            <div class="fix">
+              <div class="col seal"><div class="lab">Sello Verity</div><p>Entrega certificada premium que tus clientes pagan por tener.</p></div>
+              <div class="col val"><div class="lab">Lo que recuperas</div><p>Tu verdad convertida en ingresos reales.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 ESCUDO / HONESTIDAD -->
+<section class="section shield-sec" id="escudo">
+  <div class="wrap">
+    <div class="shield-wrap">
+      <div class="shield-copy reveal">
+        <span class="eyebrow">02 — Seamos claros</span>
+        <div class="q">No detenemos la IA.<br><em>Te damos tu escudo.</em></div>
+        <p>Verity <b>no</b> hace que la IA desaparezca. <b>No</b> elimina los deepfakes. Nadie puede — y quien te lo promete, te miente.</p>
+        <p>Lo que Verity hace es darte a <b>ti</b> —creador, periodista, artista— una herramienta para proteger tu obra, probar tu autoría y defender tu reputación en un mundo donde la IA ya está aquí. No arreglamos internet. <b>Te damos tu escudo.</b></p>
+        <div class="punch">La IA es el incendio. Tu protección es el producto.</div>
+      </div>
+      <div class="stamp-stage reveal" data-d="1">
+        <div class="stamp">
+          <div class="top">VERITY · PROTOCOLO</div>
+          <div class="mid">TU<br>ESCUDO</div>
+          <div class="star">★ ★ ★</div>
+          <div class="bot">NO ES MAGIA · ES EVIDENCIA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 SOLUCIÓN -->
+<section class="section solution" id="solucion">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">03 — LA SOLUCIÓN</span>
+      <h2>De "detectar IA" a registrar verdad</h2>
+    </div>
+    <p class="claim reveal">Verity registra una prueba <span class="hl">criptográfica e inmutable</span> de tu autoría y fecha, respaldada con análisis de origen.</p>
+    <div class="reframe">
+      <div class="card bad reveal">
+        <div class="lab">Lo que NO prometemos</div>
+        <h4>Un detector mágico de IA</h4>
+        <p>No existe, y prometerlo sería deshonesto. Ningún sistema puede afirmar con certeza absoluta que algo fue hecho por un humano. Quien lo promete, miente.</p>
+      </div>
+      <div class="card good reveal" data-d="1">
+        <div class="lab">Lo que SÍ entregamos</div>
+        <h4>Evidencia en capas</h4>
+        <p>Respondemos a una pregunta sí resoluble: <i>¿quién registró este archivo exacto y cuándo, y qué evidencia de origen lo acompaña?</i> A esa prueba inmutable le sumamos capas para elevar el nivel de confianza.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 CÓMO FUNCIONA -->
+<section class="section" id="como">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">04 — CÓMO FUNCIONA</span>
+      <h2>Tres pasos. Tu archivo nunca se sube.</h2>
+      <p>Generamos la huella (hash) en tu dispositivo y solo esa huella viaja a la blockchain. Privacidad total, costo mínimo, velocidad instantánea.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg></div>
+        <h3>Subes tu archivo</h3>
+        <p>Calculamos su huella digital única (SHA-256) localmente. Cambiar un solo píxel cambia el hash por completo: es el ADN del archivo.</p>
+        <div class="hash" data-hashlive>a3f5b9c2e7d14f8a…</div>
+      </div>
+      <div class="step reveal" data-d="1">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg></div>
+        <h3>Huella en blockchain</h3>
+        <p>Registraremos hash + fecha/hora + tu wallet en un reloj público e imborrable. Ni Verity ni nadie puede alterar o borrar ese sello.</p>
+        <div class="hash" style="color:var(--green-l)">⛓ anclado · Polygon · 14:32 UTC</div>
+      </div>
+      <div class="step reveal" data-d="2">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M7 3h10l2 3v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6l2-3z"/></svg></div>
+        <h3>Certificado</h3>
+        <p>Obtienes un certificado con link público de verificación y un nivel de confianza (Alto / Medio / Bajo) según la evidencia de origen.</p>
+        <div class="hash" style="color:var(--cyan-l)">✓ confianza: ALTA · PDF descargable</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 CAPAS -->
+<section class="section" id="capas" style="background:var(--ink-2)">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">05 — LAS 6 CAPAS DE DEFENSA</span>
+      <h2>Una sola tecnología no basta</h2>
+      <p>El problema IA-vs-realidad no se resuelve con una bala de plata. Verity orquesta seis capas de evidencia.</p>
+    </div>
+    <div class="layers-wrap">
+      <div class="layer-stack reveal" id="layerStack">
+        <div class="layer active" data-layer="0" style="--c:#3b62c9"><span class="n">1</span><div><div class="t">Captura</div><div class="s">C2PA · en la cámara</div></div></div>
+        <div class="layer" data-layer="1" style="--c:#06B6D4"><span class="n">2</span><div><div class="t">Registro</div><div class="s">sello inmutable · núcleo</div></div></div>
+        <div class="layer" data-layer="2" style="--c:#22c1b0"><span class="n">3</span><div><div class="t">Detección</div><div class="s">análisis probabilístico de IA</div></div></div>
+        <div class="layer" data-layer="3" style="--c:#10B981"><span class="n">4</span><div><div class="t">Distribución</div><div class="s">Content Credentials</div></div></div>
+        <div class="layer" data-layer="4" style="--c:#34d399"><span class="n">5</span><div><div class="t">Verificación humana</div><div class="s">staking de VRT</div></div></div>
+        <div class="layer" data-layer="5" style="--c:#6ee7b7"><span class="n">6</span><div><div class="t">Educación</div><div class="s">alfabetización con recompensas</div></div></div>
+      </div>
+      <div class="layer-detail reveal" data-d="1" id="layerDetail">
+        <div class="badge" id="ld-badge">CAPA 01 / 06</div>
+        <h3 id="ld-title">Captura</h3>
+        <p id="ld-text">Firmas criptográficas hechas en la cámara al momento del disparo (estándar C2PA; Leica, Sony, Nikon). Verity lee esas firmas como evidencia fuerte de origen físico.</p>
+        <span class="role" id="ld-role">◆ Leída por Verity</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 COMPETENCIA / POR QUÉ NOSOTROS -->
+<section class="section" id="competencia">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">06 — ESTADO DEL ARTE</span>
+      <h2>No llegamos tarde al problema.<br>Llegamos a tiempo al ángulo.</h2>
+      <p>La tecnología de sellado ya existe y está comoditizada — y eso es bueno: nos apoyamos en ella en vez de reinventarla. Lo que NO existe aún es la capa humana, hispana y comunitaria como núcleo. Ahí es donde vivimos.</p>
+    </div>
+    <div class="compete reveal">
+      <div class="cr head"><div>Quién</div><div>Enfoque (lo que hacen hoy)</div><div>Token</div><div>La capa humana</div></div>
+      <div class="cr"><div class="nm">C2PA / Content Credentials<small>Adobe · Microsoft · Google · Sony · Leica</small></div><div>Estándar abierto de procedencia. Es una especificación, no un producto con comunidad.</div><div class="neu">—</div><div class="neu">Estándar, no red</div></div>
+      <div class="cr"><div class="nm">Numbers Protocol<small>NUM · Ethereum / BNB</small></div><div>Infraestructura "capture, seal, trace", técnica y global.</div><div class="yes">✓ NUM</div><div class="neu">Automatizada</div></div>
+      <div class="cr"><div class="nm">Truepic<small>Enterprise · founding member C2PA</small></div><div>Certificación para grandes medios y empresas; modelo cerrado.</div><div class="neu">—</div><div class="neu">Enterprise / manual</div></div>
+      <div class="cr"><div class="nm">Starling Lab<small>Stanford + USC</small></div><div>Archivo forense de evidencia digital; nicho legal y de derechos humanos.</div><div class="neu">—</div><div class="neu">Forense / manual</div></div>
+      <div class="cr verity"><div class="nm">Verity (VRT)<small>Red humana de confianza · Mundo hispano</small></div><div>Capa humana sobre C2PA: verificadores incentivados, misión civil, comunidad.</div><div class="yes">✓ VRT</div><div class="core">NÚCLEO del protocolo</div></div>
+    </div>
+
+    <div class="honesty-note reveal">
+      <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4 M12 17h.01 M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+      <div>
+        <h4>Nota de honestidad</h4>
+        <p>No afirmamos que la competencia no pueda servir al mundo hispano. Numbers puede traducir su web; Truepic puede hacer un webinar en español. Eso no nos invalida: <b>lo valida</b> (confirma que el mercado existe). Lo que afirmamos es verificable y es sobre nosotros: Verity <b>nace</b> en el mundo hispano y se construye <b>con</b> él — en sus comunidades, en su idioma, en su contexto. Traducir una web es superficial; construir con la gente es profundo. Eso no se copia con un traductor automático.</p>
+      </div>
+    </div>
+
+    <div class="position reveal">
+      <div class="q">No te pedimos que nos elijas. <em>Te pedimos que pruebes.</em></div>
+      <div class="sub">No tenemos 50 ingenieros ni millones en financiación. Tenemos una beta, una visión y una invitación. Si te sirve, te quedas. Si no, nos lo dices y mejoramos. Y si no lo construye uno de nosotros, con nosotros, <b>no lo va a construir nadie</b> — porque esto no se traduce: se vive. No competimos diciendo que nuestra tecnología sea superior (la matemática del hash es la misma para todos); competimos en <b>comunidad, contexto y misión</b>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 HONESTIDAD TÉCNICA -->
+<section class="section" id="certificado" style="background:var(--ink-2)">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">07 — HONESTIDAD TÉCNICA</span>
+      <h2>Qué prueba y qué no prueba</h2>
+      <p>Un certificado Verity no dice "esto es humano". Dice hash, quién, cuándo y red, más evidencia de origen y un nivel de confianza. Eso es defendible ante un juez, ante la prensa y ante reguladores.</p>
+    </div>
+    <div class="honesty">
+      <div class="hcol yes reveal">
+        <h3><span class="e">✓</span> SÍ prueba</h3>
+        <ul>
+          <li><span class="m">01</span> Que un archivo exacto existió en una fecha X.</li>
+          <li><span class="m">02</span> Que fue registrado por la wallet X.</li>
+          <li><span class="m">03</span> Que no fue alterado después del registro.</li>
+          <li><span class="m">04</span> Prioridad temporal: quién lo registró primero.</li>
+        </ul>
+      </div>
+      <div class="hcol no reveal" data-d="1">
+        <h3><span class="e">✕</span> NO prueba</h3>
+        <ul>
+          <li><span class="m">01</span> Que lo haya creado un humano.</li>
+          <li><span class="m">02</span> Que no haya sido generado por IA.</li>
+          <li><span class="m">03</span> La autoría intelectual del concepto.</li>
+          <li><span class="m">04</span> La intención o el proceso creativo.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 CASOS -->
+<section class="section" id="casos">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">08 — CASOS DE USO</span>
+      <h2>De la fotógrafa al medio, vía API</h2>
+      <p>Estos no son ejemplos teóricos: son los tres dolores de la sección 01, resueltos en la vida real.</p>
+    </div>
+    <div class="bento">
+      <div class="b b1 reveal"><div class="glow"></div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h3l2-2h8l2 2h3v12H3z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+        <div class="who">CASO 01 · FOTOGRAFÍA</div>
+        <h3>María, fotógrafa de bodas</h3>
+        <p>Certifica sus entregas al capturarlas. Cuando circula una versión alterada, el link Verity muestra que el original fue registrado por su wallet antes, con metadatos de su Canon y GPS del evento. La copia no tiene sello. María incluso cobra un extra por "entrega certificada". Costo para ella: centavos en VRT.</p>
+      </div>
+      <div class="b b2 reveal" data-d="1"><div class="glow" style="background:var(--green)"></div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z M4 9h16 M9 4v16"/></svg></div>
+        <div class="who">CASO 02 · PRENSA</div>
+        <h3>La redacción bajo fuego</h3>
+        <p>Cuando acusan una imagen de "fake", el medio responde con registro inmutable + firma C2PA. La carga de la prueba se invierte.</p>
+      </div>
+      <div class="b b3 reveal"><div class="glow"></div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9c0-1-1-2-2-2h-2a2 2 0 0 1-2-2 2 2 0 0 0-2-2 3 3 0 0 1-3-3z"/><circle cx="7.5" cy="11.5" r="1"/><circle cx="11" cy="7.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/></svg></div>
+        <div class="who">CASO 03 · ARTE</div>
+        <h3>El artista y el marketplace verificado</h3>
+        <p>Vende una pieza con su certificado de procedencia. El comprador paga en VRT y recibe la prueba de origen. Comercio de contenido con notario.</p>
+      </div>
+      <div class="b b4 reveal" data-d="1"><div class="glow" style="background:var(--green)"></div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3 M16 9l4 3-4 3 M13 6l-2 12"/></svg></div>
+        <div class="who">CASO 04 · B2B</div>
+        <h3>Medios y plataformas vía API</h3>
+        <p>Un periódico integra la API de Verity para sellar cada imagen publicada y mostrar el "Sello Verity Verified" a sus lectores. El token VRT es el combustible.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 09 TIEMPO -->
+<section class="section time" id="tiempo">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">09 — VISIÓN EN 3 CAPAS DEL TIEMPO</span>
+      <h2>Lo que existe, lo invisible, lo que viene</h2>
+      <p>No inventamos la rueda: usamos lo que ya funciona y lo potenciamos. Pero pensamos en tres horizontes a la vez — porque el futuro que parecía ciencia ficción ya está llegando.</p>
+    </div>
+    <div class="time-tabs reveal">
+      <button class="time-tab active" data-time="0" style="--tc:#06B6D4"><span class="dotc"></span> Hoy visible</button>
+      <button class="time-tab" data-time="1" style="--tc:#10B981"><span class="dotc"></span> Hoy invisible</button>
+      <button class="time-tab" data-time="2" style="--tc:#f59e0b"><span class="dotc"></span> Futuro</button>
+    </div>
+    <div class="time-panel active" data-panel="0" style="--tc:#06B6D4">
+      <div class="time-head"><h3>Lo que la gente ya ve y sufre</h3><span class="tagline">No reinventamos el motor; construimos el volante.</span></div>
+      <div class="time-grid">
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h3l2-2h8l2 2h3v12H3z"/><circle cx="12" cy="13" r="3.5"/></svg></div><h4>Cámaras que ya firman</h4><p>Leica, Sony, Canon, Nikon y Google Pixel ya meten Content Credentials al disparar.</p><div class="ex">→ Verity las lee y las hace valer</div></div>
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z M8 4v16 M4 8h16"/></svg></div><h4>El estándar C2PA</h4><p>Especificación abierta de procedencia respaldada por Adobe, Microsoft, Google, OpenAI.</p><div class="ex">→ Verity es compatible y lo potencia</div></div>
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></div><h4>Detectores de IA</h4><p>Sensity, Hive, SynthID clasifican "probabilidad de IA" como servicio.</p><div class="ex">→ Verity los usa como insumo, no como producto</div></div>
+      </div>
+      <div class="time-thesis">Todo esto es frío, técnico e invisible para el creador normal. Verity es la capa humana que lo traduce a un botón: "Certificar" → "Confianza: ALTA".</div>
+    </div>
+    <div class="time-panel" data-panel="1" style="--tc:#10B981">
+      <div class="time-head"><h3>Lo que ya está en las máquinas y nadie ve</h3><span class="tagline">Verity es el traductor de lo invisible a confianza visible.</span></div>
+      <div class="time-grid">
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg></div><h4>SynthID y marcas de agua</h4><p>Google y otros ya firman invisiblemente todo lo generado por IA. Está ahí, en millones de imágenes.</p><div class="ex">→ Verity lo detecta y lo muestra</div></div>
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z M8 8h8v8H8z"/></svg></div><h4>Metadatos EXIF</h4><p>Cada foto lleva GPS, cámara, fecha y lente. Invisible para el 99% de la gente.</p><div class="ex">→ Verity lo traduce a evidencia</div></div>
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3z M3 10h18v4H3z M3 17h18v4H3z"/></svg></div><h4>Registros de modelos</h4><p>Los modelos guardan "quién generó esto, con qué prompt". Oculto en logs.</p><div class="ex">→ Verity lo convierte en procedencia</div></div>
+      </div>
+      <div class="time-thesis">Toda esa señal invisible, una vez leída y registrada, forma la "Base de la Verdad": una base de datos de procedencia gigantesca. El VRT es la llave de acceso. Es el Bloomberg de la autenticidad.</div>
+    </div>
+    <div class="time-panel" data-panel="2" style="--tc:#f59e0b">
+      <div class="time-head"><h3>Lo que viene (y ya está llegando)</h3><span class="tagline">Cada ola futura necesita una capa de confianza. Nadie la construye en español.</span></div>
+      <div class="time-grid">
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div><h4>Realidad virtual / metaverso</h4><p>En VR todo es sintético. ¿Qué es "real" ahí dentro?</p><div class="ex">→ Certificar mundos, avatares y experiencias</div></div>
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2 M9 14h.01 M15 14h.01"/></svg></div><h4>Agentes de IA autónomos</h4><p>Internet se llena de bots que hablan, compran y publican. ¿Quién es humano?</p><div class="ex">→ Proof of Humanity verificado por Verity</div></div>
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.55-2.28A1 1 0 0 1 21 8.6v6.8a1 1 0 0 1-1.45.9L15 14 M4 6h9a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/></svg></div><h4>Deepfakes en tiempo real</h4><p>Videollamadas falsas en vivo: fraudes con CEOs clonados ya ocurren.</p><div class="ex">→ Verificación de identidad en vivo</div></div>
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9c0-1-1-2-2-2h-2a2 2 0 0 1-2-2 2 2 0 0 0-2-2 3 3 0 0 1-3-3z"/></svg></div><h4>Co-creación humano + IA</h4><p>¿De quién es una obra hecha con IA? ¿Del prompter? ¿Del modelo?</p><div class="ex">→ Certificado de co-creación + royalties</div></div>
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4 M12 18v4 M2 12h4 M18 12h4 M5 5l3 3 M16 16l3 3 M19 5l-3 3 M8 16l-3 3"/></svg></div><h4>IoT, drones, vigilancia</h4><p>Miles de millones de dispositivos generando "evidencia". ¿Es fiable?</p><div class="ex">→ Cadena de custodia certificada</div></div>
+        <div class="time-card"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l3 12h12l3-12 M3 6h18 M8 10v4 M12 10v4 M16 10v4"/></svg></div><h4>Regulación (EU AI Act)</h4><p>La ley va a EXIGIR etiquetar contenido IA. Obligatorio, no opcional.</p><div class="ex">→ Verity como herramienta de cumplimiento</div></div>
+      </div>
+      <div class="time-thesis">Cuando la regulación obligue a etiquetar procedencia, la autenticidad deja de ser un "nice to have" y se vuelve un requisito legal. El que tenga la infraestructura de confianza, gana. El VRT es su combustible.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 VRT -->
+<section class="section" id="vrt">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">10 — EL TOKEN VRT</span>
+      <h2>No es una moneda. Es una unidad de confianza.</h2>
+      <p>El 99% de los tokens mueren porque solo sirven para pagar fees. VRT no es un peaje: es tu participación en la infraestructura de verdad de internet.</p>
+    </div>
+    <div class="vrt-grid">
+      <div class="coin-stage reveal">
+        <div class="coin-ring"></div>
+        <div class="coin"><span class="v">V</span><span class="vs"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" fill="#04222a"/><path d="M8.5 12l2.5 2.5L16 9" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+      </div>
+      <div class="reveal" data-d="1">
+        <div class="spec">
+          <div class="row"><b>Nombre / símbolo</b><span>Verity · VRT</span></div>
+          <div class="row"><b>Tipo</b><span>UTILITY — NO security</span></div>
+          <div class="row"><b>Red</b><span>Polygon / Sepolia-Amoy</span></div>
+          <div class="row"><b>Suministro total</b><span>100.000.000 (fijo)</span></div>
+          <div class="row"><b>Inflación</b><span>0% · sin emisión</span></div>
+          <div class="row"><b>Etapa actual</b><span>DEV / TESTNET · NO en venta</span></div>
+          <div class="row"><b>Distribución inicial</b><span>por participación, no por compra</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="thesis-box reveal">
+      <div class="q">Cada VRT no representa "dinero". Representa <em>una unidad de confianza verificada</em> dentro de la red. Tener VRT no es "tener cripto"; es <em>tener participación en la infraestructura de verdad de internet</em>.</div>
+      <div class="rule"><b>Regla de oro:</b> una utilidad que solo hace que la gente USE el token, muere. Una utilidad que hace que la gente QUIERA SER algo (verificador, humano verificado, creador acreditado), vive. Apuntamos siempre a la identidad y al estatus, no solo a la transacción.</div>
+    </div>
+    <div class="esno">
+      <div class="c es reveal">
+        <h4>✓ LO QUE VRT ES</h4>
+        <ul>
+          <li><span class="m">→</span> Un cupón de servicio digital para certificar.</li>
+          <li><span class="m">→</span> Garantía de honestidad (stake) para verificadores.</li>
+          <li><span class="m">→</span> Derecho de gobernanza sobre el protocolo.</li>
+          <li><span class="m">→</span> Llave de acceso a la Base de la Verdad.</li>
+          <li><span class="m">→</span> Pasaporte de identidad como "humano verificado".</li>
+        </ul>
+      </div>
+      <div class="c no reveal" data-d="1">
+        <h4>✕ LO QUE VRT NO ES</h4>
+        <ul>
+          <li><span class="m">→</span> Una acción, un bono o un valor negociable.</li>
+          <li><span class="m">→</span> Una promesa de ganancias o rentabilidad.</li>
+          <li><span class="m">→</span> Un producto de inversión ni una ICO.</li>
+          <li><span class="m">→</span> Algo cuyo valor se explique por "va a subir".</li>
+          <li><span class="m">→</span> Un peaje que solo sirve para pagar gas.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 DESEO -->
+<section class="section desire" id="deseo">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">11 — EL MAPA DEL DESEO</span>
+      <h2>Seis razones para QUERER tener VRT</h2>
+      <p>No "usar" el token: desearlo. Cada utilidad toca un deseo humano profundo — acceso, poder, protección, ingreso, identidad o propiedad.</p>
+    </div>
+    <div class="desire-grid">
+      <div class="desire-card reveal" style="--dc:#06B6D4">
+        <div class="want"><span style="width:8px;height:8px;border-radius:50%;background:#06B6D4;display:inline-block"></span> Acceso</div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <h3>La Base de la Verdad</h3>
+        <p>Verificar la procedencia de cualquier contenido, consultar historiales de creadores y acceder a la API de verificación.</p>
+        <div class="ex">El "Bloomberg de la autenticidad". El VRT es la llave.</div>
+      </div>
+      <div class="desire-card reveal" data-d="1" style="--dc:#3b62c9">
+        <div class="want"><span style="width:8px;height:8px;border-radius:50%;background:#3b62c9;display:inline-block"></span> Poder / Estatus</div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.5 6.5L21 9l-5 4.5L17.5 21 12 17l-5.5 4L8 13.5 3 9l6.5-.5z"/></svg></div>
+        <h3>Verificador acreditado</h3>
+        <p>Staking de VRT te convierte en verificador certificado: una licencia profesional on-chain. Tu reputación soulbound no se compra, se gana.</p>
+        <div class="ex">Gobernanza con dientes: votas quién entra y qué estándares se adoptan.</div>
+      </div>
+      <div class="desire-card reveal" data-d="2" style="--dc:#10B981">
+        <div class="want"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;display:inline-block"></span> Protección</div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"/></svg></div>
+        <h3>Pool de garantía</h3>
+        <p>Un pool de VRT respalda cada certificación. Si un contenido certificado resulta falso, el pool compensa. Tener VRT = tener un seguro de autenticidad.</p>
+        <div class="ex">El token respalda valor económico real, no especulación.</div>
+      </div>
+      <div class="desire-card reveal" style="--dc:#34d399">
+        <div class="want"><span style="width:8px;height:8px;border-radius:50%;background:#34d399;display:inline-block"></span> Ingreso</div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22 M17 5H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H7"/></svg></div>
+        <h3>Gana por defender la verdad</h3>
+        <p>Verifica contenido y gana VRT. Caza deepfakes con bounties. Corre un nodo de verdad. Recibe royalties por obras certificadas que se reutilizan.</p>
+        <div class="ex">Ingreso real por hacer algo valioso. Periodistas podrían vivir de esto.</div>
+      </div>
+      <div class="desire-card reveal" data-d="1" style="--dc:#f59e0b">
+        <div class="want"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span> Identidad</div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+        <h3>Proof of Humanity</h3>
+        <p>En un internet inundado de agentes IA, ser "humano verificado por Verity" será un estatus. Tu VRT staked es tu pasaporte digital soberano.</p>
+        <div class="ex">Cinturones de alfabetización: credenciales on-chain por saber detectar deepfakes.</div>
+      </div>
+      <div class="desire-card reveal" data-d="2" style="--dc:#8b5cf6">
+        <div class="want"><span style="width:8px;height:8px;border-radius:50%;background:#8b5cf6;display:inline-block"></span> Propiedad</div>
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></div>
+        <h3>Tu historial de autoría</h3>
+        <p>Tu cadena de obras certificadas es un activo tuyo, portable y vendible. Participa en el marketplace de procedencia pagado en VRT.</p>
+        <div class="ex">Posees y comercias "contenido con origen garantizado".</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 VERIFICADORES -->
+<section class="section verif" id="verificadores">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">12 — RED DE VERIFICADORES</span>
+      <h2>La fianza de la verdad</h2>
+      <p>¿Quién decide qué es real? Humanos con piel en el juego. El problema del oráculo se resuelve con incentivos alineados, no con magia.</p>
+    </div>
+    <div class="verif-grid">
+      <div class="loop reveal">
+        <div class="node stake"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20 M5 9l7-7 7 7 M5 15l7 7 7-7"/></svg></div><div><h4>1 · Hacen staking de VRT</h4><p>Periodistas y peritos depositan tokens como garantía de honestidad.</p></div></div>
+        <div class="arrow">↓ votan sobre contenido dudoso</div>
+        <div class="node win"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div><div><h4>2a · Si aciertan → ganan VRT</h4><p>Recompensa + sube su reputación on-chain (soulbound, no transferible).</p></div></div>
+        <div class="node lose"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18 M6 6l12 12"/></svg></div><div><h4>2b · Si mienten → slashing</h4><p>Pierden parte del stake. La colusión y el spam salen caros.</p></div></div>
+      </div>
+      <div class="reveal" data-d="1">
+        <h3 style="font-size:clamp(24px,3vw,32px);margin-bottom:14px">Meritocracia, no plutocracia</h3>
+        <p class="muted">Los verificadores con buen historial reciben tokens de reputación no transferibles: su voto pesa más que el de un novato. Así evitamos el "1 token = 1 voto" y construimos una <b style="color:var(--cyan-l)">meritocracia de la verdad</b>. Además, cualquier usuario puede reportar contenido falso y ganar VRT si la comunidad lo confirma: un sistema inmune contra la desinformación, recompensado con el token.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 TOKENOMICS -->
+<section class="section" id="tokenomics">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">13 — TOKENOMICS CON PROPÓSITO</span>
+      <h2>Distribución orientativa</h2>
+      <p>Diseñada para alinear incentivos a largo plazo. Sin venta pública especulativa en fase inicial.</p>
+    </div>
+    <div class="tok-grid">
+      <div class="donut-wrap reveal">
+        <div class="donut">
+          <svg width="300" height="300" viewBox="0 0 300 300" id="donut">
+            <circle cx="150" cy="150" r="120" stroke="rgba(255,255,255,.05)" stroke-width="30"></circle>
+          </svg>
+          <div class="center"><div class="big">100M</div><div class="sm">VRT · SUMINISTRO FIJO</div></div>
+        </div>
+      </div>
+      <div class="reveal" data-d="1">
+        <div class="tok-legend" id="tokLegend"></div>
+        <div class="vesting">◆ Equipo con vesting de 3–4 años y cliff de 1 año · los cliffs largos alinean incentivos y son señal de seriedad ante cualquier aliado.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 ECONOMÍA -->
+<section class="section" style="background:var(--ink-2)" id="economia">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">14 — MODELO ECONÓMICO</span>
+      <h2>Sostenibilidad sin especulación</h2>
+    </div>
+    <div class="econ">
+      <div class="e reveal"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22 M17 5H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H7"/></svg></div><div><h4>Fees de certificación</h4><p>Centavos por uso real y diario.</p></div></div>
+      <div class="e reveal" data-d="1"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18v13H3z M3 7l2-3h14l2 3 M9 12h6"/></svg></div><div><h4>Suscripciones enterprise</h4><p>Medios y agencias certifican archivos completos.</p></div></div>
+      <div class="e reveal"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-4 3 4 3 M16 9l4 3-4 3"/></svg></div><div><h4>API para plataformas</h4><p>Verificación por llamada → "Sello Verity Verified".</p></div></div>
+      <div class="e reveal" data-d="1"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z"/></svg></div><div><h4>Marketplace verificado</h4><p>Comisión sobre comercio de contenido con certificado.</p></div></div>
+    </div>
+    <div class="grants reveal">
+      <h4>◆ Grants de interés público</h4>
+      <p>Tu misión —luchar contra la desinformación, proteger periodistas, defender la verdad— califica para fondos de democracia, periodismo y derechos digitales (UE, Knight Foundation, Mozilla, Protocol Guild, fundaciones de L1/L2). Dinero que NO te obliga a especular con el token. Persíguelos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 15 ROADMAP -->
+<section class="section" id="roadmap">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">15 — HOJA DE RUTA</span>
+      <h2>De la validación al protocolo</h2>
+      <p>El token nace después de la validación con usuarios reales. Un token sin usuarios es especulación; con usuarios, es utilidad.</p>
+    </div>
+    <div class="road">
+      <div class="phase done reveal"><div class="when">FASE 1 · 2026</div><h3>Validación</h3><ul><li><span class="m">✓</span> Landing + captura de lista de espera</li><li><span class="m">✓</span> Comunidad inicial y reclutamiento de beta</li></ul></div>
+      <div class="phase now reveal"><div class="when">FASE 2 · 2026</div><h3>Beta privada (50 creadores)</h3><ul><li><span class="m">→</span> Hash + sello + EXIF + análisis de IA (sobre C2PA)</li><li><span class="m">→</span> Certificado con nivel de confianza</li><li><span class="m">→</span> Feedback estructurado e iteración</li></ul></div>
+      <div class="phase reveal"><div class="when">FASE 3 · 2026–27</div><h3>Escala</h3><ul><li><span class="m">→</span> Beta pública + app móvil + multi-chain</li><li><span class="m">→</span> Red de verificadores con staking / slashing</li><li><span class="m">→</span> Base de la Verdad + detección SynthID</li></ul></div>
+      <div class="phase reveal"><div class="when">FASE 4 · 2027</div><h3>Protocolo</h3><ul><li><span class="m">◆</span> Lanzamiento del token VRT como utilidad (con usuarios reales)</li><li><span class="m">◆</span> API B2B + marketplace + DAO de gobernanza</li><li><span class="m">◆</span> Capas futuras: VR, Proof of Humanity, cumplimiento regulatorio</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 RIESGOS -->
+<section class="section" style="background:var(--ink-2)" id="riesgos">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">16 — RIESGOS</span>
+      <h2>Los asumimos con los ojos abiertos</h2>
+    </div>
+    <div class="risks">
+      <div class="risk reveal"><div class="top"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4 M12 17h.01 M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span><h4>Carrera armamentística IA vs. detección</h4></div><div class="mit">◆ Mitigación: nuestra ventaja es registrar antes, no detectar perfecto.</div></div>
+      <div class="risk reveal" data-d="1"><div class="top"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4 M12 17h.01 M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span><h4>Problema del oráculo</h4></div><div class="mit">◆ Mitigación: staking + slashing + reputación on-chain.</div></div>
+      <div class="risk reveal"><div class="top"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4 M12 17h.01 M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span><h4>Garbage in / garbage out</h4></div><div class="mit">◆ Mitigación: una IA certificada queda como "IA registrada por X"; el valor está en las capas.</div></div>
+      <div class="risk reveal" data-d="1"><div class="top"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4 M12 17h.01 M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span><h4>Adopción y cambio de hábitos</h4></div><div class="mit">◆ Mitigación: validamos con un nicho concreto antes de escalar.</div></div>
+      <div class="risk reveal"><div class="top"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4 M12 17h.01 M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span><h4>Regulatorio</h4></div><div class="mit">◆ Mitigación: diseño de utilidad + disclaimers + sin venta especulativa temprana.</div></div>
+      <div class="risk reveal" data-d="1"><div class="top"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4 M12 17h.01 M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span><h4>Custodia de claves</h4></div><div class="mit">◆ Mitigación: el registro persiste en blockchain; educamos sobre custodia responsable.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 FUNDADOR -->
+<section class="section founder" id="fundador">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="kicker-num">17 — FUNDADOR &amp; MANIFIESTO</span>
+      <h2>Construido con creadores, para la confianza de todos</h2>
+    </div>
+    <div class="found-grid">
+      <div class="found-card reveal">
+        <div class="avatar">JQ</div>
+        <div class="nm">Jose Quevedo</div>
+        <div class="role">FUNDADOR &amp; ARQUITECTO DEL PROTOCOLO</div>
+        <p class="bio">Impulsor de Verity y responsable de la visión técnica y de misión del protocolo. Solofounder con un compromiso personal: construir infraestructura de confianza para la era post-verdad.</p>
+        <div class="socials">
+          <a href="https://x.com/JoseQue78921285" target="_blank" rel="noopener" aria-label="X / Twitter" title="X / Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h3l-7 8 8 12h-6l-5-7-5 7H2l8-9L2 2h6l4 6 6-6z"/></svg></a>
+          <a href="https://www.linkedin.com/in/jose-quevedo-8962b3395" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h4v16H4z M6 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4z M10 8h4v2a4 4 0 0 1 7 3v7h-4v-6a2 2 0 0 0-4 0v6h-3z"/></svg></a>
+          <a href="mailto:josequevedov08@gmail.com" aria-label="Email" title="Email"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v14H3z M3 6l9 7 9-7"/></svg></a>
+          <a href="https://wa.me/584246010231" target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.5A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.2 14.8l-.3-.2-2.8.9.9-2.7-.2-.3A8 8 0 0 1 12 4zm-2.5 4c-.2 0-.5 0-.7.4-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2 0-.1-.2-.2-.5-.3-.3-.2-1.5-.8-1.8-.9-.2-.1-.4-.1-.6.1-.2.3-.6.9-.8 1.1-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2.1-1.3-.8-.7-1.3-1.6-1.5-1.8-.1-.3 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5z"/></svg></a>
+        </div>
+        <div class="phone">📞 <a href="https://wa.me/584246010231" target="_blank" rel="noopener">+58 424-6010231</a></div>
+      </div>
+      <div class="found-letter reveal" data-d="1">
+        <h3>Carta del fundador</h3>
+        <p>"Vivimos el momento en que ver ya no es creer. La IA generativa produce imágenes, videos y voces que el ojo humano no puede distinguir de la realidad. Esto no es un problema técnico: es un problema civil. Afecta al periodista al que le dicen 'es fake', al fotógrafo cuya obra es clonada, al artista cuyo estilo es replicado, y a una sociedad que empieza a desconfiar de todo lo digital."</p>
+        <p>"Verity nace de una convicción simple: no vamos a entrenar al ojo para ganar una batalla que ya perdió. Vamos a darle una <b style="color:var(--cyan-l)">prótesis de verdad</b>. Y no vamos a reinventar la rueda: usamos lo que ya existe —C2PA, blockchain, detectores— y le añadimos lo que nadie ha puesto en el centro: <b style="color:var(--cyan-l)">una comunidad hispana con piel en el juego</b>."</p>
+        <p class="humble">"No tengo un equipo de 50 personas ni millones en financiación. Tengo este documento, esta web, y una convicción: si no lo construyo yo, con nosotros, nadie lo va a construir para nosotros. No te pido confianza ciega; te pido 10 minutos. Prueba la beta y dime si sirve. Eso es todo."</p>
+        <p>"Me importa más la utilidad que el dinero —aunque el dinero sea necesario para construirlo. Por eso VRT sirve, no especula. Y por eso validamos con personas reales antes que con hype."</p>
+        <div class="sign">— Jose Quevedo, Fundador de Verity</div>
+      </div>
+    </div>
+    <div class="manifesto reveal">
+      <div class="q">Creemos que la creatividad humana merece <em>prueba</em>. Que la verdad no debe depender de una plataforma. Que un token debe <em>servir</em>, no especular. Que la tecnología debe <em>proteger a la sociedad</em>, no solo generar rendimiento.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 18 FAQ -->
+<section class="section" id="faq" style="background:var(--ink-2)">
+  <div class="wrap">
+    <div class="section-head reveal" style="margin-left:auto;margin-right:auto;text-align:center">
+      <span class="kicker-num">18 — PREGUNTAS FRECUENTES</span>
+      <h2>Lo que todos preguntan</h2>
+    </div>
+    <div class="faq">
+      <details class="qa reveal"><summary>¿VRT es una inversión? <span class="pl">+</span></summary><div class="a">No. VRT es un token de utilidad para acceder y hacer funcionar la plataforma. No es un valor negociable (security), no es una ICO y no promete rentabilidad.</div></details>
+      <details class="qa reveal"><summary>¿En qué se diferencia de Numbers Protocol o C2PA? <span class="pl">+</span></summary><div class="a">C2PA es un estándar abierto sin producto ni comunidad propia: Verity lo adopta como base y construye la capa humana encima. Numbers Protocol sella contenido de forma técnica y automatizada; Truepic se enfoca en enterprise. Verity pone en el centro una red de verificadores humanos incentivados con VRT y nace en el mundo hispano, construido con su comunidad. No competimos diciendo que nuestra tecnología sea superior —la matemática del hash es la misma para todos—; competimos en comunidad, contexto y misión. Y si la competencia entra en nuestro mercado, lo celebramos: confirma que el problema es real.</div></details>
+      <details class="qa reveal"><summary>¿Verity detiene los deepfakes o la IA? <span class="pl">+</span></summary><div class="a">No, y nadie puede. Verity no arregla internet: te da a ti un escudo. Registra una prueba inmutable de tu autoría y fecha, y le suma evidencia de origen en capas para elevar el nivel de confianza. La IA seguirá existiendo; lo que cambia es que tu trabajo queda protegido y probado.</div></details>
+      <details class="qa reveal"><summary>¿Guardan mis archivos? <span class="pl">+</span></summary><div class="a">No. Solo generamos y registramos el hash (la huella). Tu archivo nunca sale de tu dispositivo. Privacidad total.</div></details>
+      <details class="qa reveal"><summary>¿El certificado es prueba legal? <span class="pl">+</span></summary><div class="a">Es evidencia criptográfica fuerte de existencia y autoría en una fecha. Para usos legales específicos, consulta asesoría jurídica.</div></details>
+      <details class="qa reveal"><summary>¿Y si alguien genera una imagen con IA y la certifica primero? <span class="pl">+</span></summary><div class="a">La blockchain registrará honestamente "este archivo fue registrado por X". Por eso no prometemos "anti-IA": combinamos el sello con evidencia de origen y, en fases siguientes, con una red de verificadores humanos con staking.</div></details>
+      <details class="qa reveal"><summary>¿Y si pierdo mis claves? <span class="pl">+</span></summary><div class="a">El registro sigue en la blockchain para siempre. La custodia de tus claves es tu responsabilidad; recomendamos backups seguros o hardware wallet.</div></details>
+      <details class="qa reveal"><summary>¿Cuánto cuesta? <span class="pl">+</span></summary><div class="a">La beta es gratis para los primeros 50 creadores (acceso de por vida). Después, fees bajos por uso o suscripción.</div></details>
+      <details class="qa reveal"><summary>¿Está disponible en mi país? <span class="pl">+</span></summary><div class="a">En la mayoría, salvo jurisdicciones con restricciones a activos digitales. Debes ser mayor de 18 años.</div></details>
+    </div>
+  </div>
+</section>
+
+<!-- 19 JOIN -->
+<section class="section join" id="unete">
+  <div class="bg"></div>
+  <div class="wrap">
+    <div class="section-head reveal" style="text-align:center;margin-left:auto;margin-right:auto">
+      <span class="kicker-num">19 — SÉ PARTE DE LA VERDAD</span>
+      <h2>Tres formas de sumarte hoy</h2>
+    </div>
+    <div class="join-grid">
+      <div class="jc reveal"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6v3H9z M7 6h10l2 3v11H5V9z"/></svg></div><span class="tag">BETA · CREADORES</span><h3>Protege tu trabajo gratis</h3><p>Los primeros 50 creadores (fotógrafos, periodistas, artistas) entran a la beta con acceso gratuito de por vida y voto sobre el rumbo.</p><a href="https://forms.gle/ro81DYXyReAv6dhWA" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Reservar mi cupo <span class="ar">→</span></a></div>
+      <div class="jc reveal" data-d="1"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></div><span class="tag">VERIFICADORES</span><h3>Valida y gana VRT</h3><p>Periodistas y peritos: hagan staking, voten sobre contenido dudoso y construyan reputación on-chain. Próximamente.</p><a href="https://forms.gle/ro81DYXyReAv6dhWA" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Apuntarme <span class="ar">→</span></a></div>
+      <div class="jc reveal" data-d="2"><div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11a4 4 0 1 0-8 0 M3 21a7 7 0 0 1 18 0 M17 8l2 2 4-4"/></svg></div><span class="tag">ALIADOS &amp; GRANTS</span><h3>Co-construyamos infraestructura</h3><p>Medios, ONGs, fundaciones y equipos técnicos: hablemos de integraciones, API y financiación de interés público.</p><a href="https://wa.me/584246010231" target="_blank" rel="noopener" class="btn btn-wa btn-sm">Escríbeme por WhatsApp <span class="ar">→</span></a></div>
+    </div>
+    <div class="join-cta reveal">
+      <h2>Tu autenticidad vale. Protégela, pruébala y cóbrala.</h2>
+      <p>No vamos a entrenar el ojo para una batalla perdida. Vamos a construir tu escudo, en español, con una comunidad real detrás. No te pedimos que nos elijas: te pedimos que pruebes.</p>
+      <div class="btns">
+        <a href="https://forms.gle/ro81DYXyReAv6dhWA" target="_blank" rel="noopener" class="btn btn-primary">Proteger mi trabajo (beta gratis) <span class="ar">→</span></a>
+        <a href="https://wa.me/584246010231" target="_blank" rel="noopener" class="btn btn-wa">Hablar por WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#top" class="brand"><span class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" fill="#fff"/><path d="M8.5 12l2.5 2.5L16 9" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Verity<span style="color:var(--cyan-l)">(VRT)</span></a>
+        <p>El notario digital del mundo hispano. Registro criptográfico inmutable de autoría y tiempo, con evidencia de origen en capas, sobre el estándar C2PA. No detenemos la IA: te damos tu escudo.</p>
+        <div class="foot-contact">
+          <a href="mailto:josequevedov08@gmail.com">✉ josequevedov08@gmail.com</a>
+          <a href="https://wa.me/584246010231" target="_blank" rel="noopener">W  WhatsApp</a>
+          <a href="https://x.com/JoseQue78921285" target="_blank" rel="noopener">𝕏 Jose Quevedo</a>
+          <a href="https://www.linkedin.com/in/jose-quevedo-8962b3395" target="_blank" rel="noopener">in Jose Quevedo</a>
+        </div>
+      </div>
+      <div>
+        <h5>Protocolo</h5>
+        <a href="#dolores">Tu problema</a><a href="#escudo">El escudo</a><a href="#como">Cómo funciona</a><a href="#capas">Las 6 capas</a><a href="#competencia">Por qué nosotros</a><a href="#vrt">Token VRT</a><a href="#deseo">Utilidad del token</a><a href="#roadmap">Roadmap</a>
+      </div>
+      <div>
+        <h5>Legal &amp; contacto</h5>
+        <a href="#">Política de Privacidad</a><a href="#">Términos de Servicio</a><a href="#">Política de Cookies</a><a href="https://forms.gle/ro81DYXyReAv6dhWA" target="_blank" rel="noopener">Beta (formulario)</a><a href="#fundador">Fundador</a>
+      </div>
+    </div>
+    <div class="foot-disclaimer">
+      VRT es un token de utilidad destinado al acceso y funcionamiento de la plataforma Verity; NO es un valor negociable (security), NO es una inversión y NO otorga expectativa de rentabilidad, dividendos ni participación accionaria. Este sitio y el proyecto descrito tienen fines informativos y de validación; Verity se encuentra en fase beta/testnet y sus funcionalidades, token y hoja de ruta pueden modificarse o cancelarse sin previo aviso. Verity NO promete detectar contenido generado por IA con certeza absoluta ni detener los deepfakes: provee registro inmutable de autoría y tiempo complementado con evidencia de origen en capas; ningún certificado constituye, por sí solo, prueba legal concluyente de autoría intelectual. La tecnología blockchain conlleva riesgos inherentes (pérdida de claves, fallos de software, cambios regulatorios). Participación reservada a mayores de 18 años y no disponible en jurisdicciones con restricciones a activos digitales. Este contenido no es asesoría legal, fiscal ni financiera.
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Verity · Fundado por Jose Quevedo</span>
+      <span>Web v3.0 · Compatible C2PA · Hecho en LatAm</span>
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/584246010231" target="_blank" rel="noopener" class="wa-float" aria-label="WhatsApp" title="Escríbeme por WhatsApp">
+  <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.5A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.2 14.8l-.3-.2-2.8.9.9-2.7-.2-.3A8 8 0 0 1 12 4zm-2.5 4c-.2 0-.5 0-.7.4-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2 0-.1-.2-.2-.5-.3-.3-.2-1.5-.8-1.8-.9-.2-.1-.4-.1-.6.1-.2.3-.6.9-.8 1.1-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2.1-1.3-.8-.7-1.3-1.6-1.5-1.8-.1-.3 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5z"/></svg>
+</a>
+
+<script>
+const nav=document.getElementById('nav');
+addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>20),{passive:true});
+document.getElementById('burger').addEventListener('click',()=>{
+  const l=document.querySelector('.nav-links');
+  const open=l.style.display==='flex';
+  l.style.cssText=open?'':`display:flex;position:absolute;top:72px;left:0;right:0;flex-direction:column;background:rgba(8,14,28,.97);padding:14px 24px;border-bottom:1px solid var(--line);backdrop-filter:blur(14px)`;
+});
+
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.14});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+const CHARS='0123456789abcdef';
+function scramble(el,final,dur=1100){
+  const start=performance.now();
+  (function frame(now){
+    const p=Math.min(1,(now-start)/dur);
+    const revealed=Math.floor(p*final.length);
+    let out=final.slice(0,revealed);
+    for(let i=revealed;i<final.length;i++) out+=CHARS[Math.floor(Math.random()*16)];
+    el.textContent=out;
+    if(p<1) requestAnimationFrame(frame); else el.textContent=final;
+  })(start);
+}
+const heroCertIO=new IntersectionObserver((es)=>{es.forEach(e=>{if(!e.isIntersecting)return;runCert();heroCertIO.unobserve(e.target);})},{threshold:.3});
+const certEl=document.getElementById('cert'); if(certEl) heroCertIO.observe(certEl);
+function runCert(){
+  document.querySelectorAll('#cert .cert-row').forEach((r,i)=>{
+    setTimeout(()=>{r.style.transition='opacity .5s,transform .5s';r.style.opacity=1;r.style.transform='none';
+      const h=r.querySelector('[data-hash]'); if(h) scramble(h,h.dataset.hash,900);
+    },500+i*420);
+  });
+  document.querySelectorAll('#cert .ev').forEach((ev,i)=>{
+    setTimeout(()=>{ev.style.transition='opacity .5s,transform .5s';ev.style.opacity=1;ev.style.transform='none';ev.classList.add('on');},500+4*420+i*380);
+  });
+  setTimeout(()=>{const s=document.getElementById('seal'); if(s) s.classList.add('on');},500+4*420+3*380+200);
+}
+const liveHash=document.querySelector('[data-hashlive]');
+if(liveHash){const lio=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){scramble(liveHash,'a3f5b9c2e7d14f8a0b6c3e9d2f7a1c4b',1400);lio.unobserve(e.target);}})},{threshold:.5});lio.observe(liveHash);}
+
+const consoleLines=[
+  {t:'> verity · notario digital v3.0',c:'dim'},
+  {t:'> leyendo C2PA · EXIF · SynthID…',c:'cy'},
+  {t:'> generando hash SHA-256 en dispositivo…',c:'cy'},
+  {t:'> sellando autoría en Polygon…',c:'cy'},
+  {t:'> certificado emitido ✓  autoría sellada',c:'ok'}
+];
+const cBox=document.getElementById('console-lines');
+if(cBox){
+  let li=0;
+  function typeLine(){
+    if(li>=consoleLines.length){const cur=document.createElement('div');cur.className='ln';cur.innerHTML='<span class="cursor"></span>';cBox.appendChild(cur);return;}
+    const line=document.createElement('div');line.className='ln';cBox.appendChild(line);
+    const full=consoleLines[li].t, cls=consoleLines[li].c; let ci=0;
+    const iv=setInterval(()=>{ci++;line.innerHTML='<span class="'+cls+'">'+full.slice(0,ci)+'</span><span class="cursor"></span>';
+      if(ci>=full.length){clearInterval(iv);line.innerHTML='<span class="'+cls+'">'+full+'</span>';li++;setTimeout(typeLine,360);}
+    },18);
+  }
+  setTimeout(typeLine,900);
+}
+
+const layerData=[
+  {t:'Captura',b:'CAPA 01 / 06',role:'◆ Leída por Verity',x:'Firmas criptográficas hechas en la cámara al momento del disparo (estándar C2PA; Leica, Sony, Nikon). Verity lee esas firmas como evidencia fuerte de que el archivo nació en un sensor físico, no en un modelo generativo.'},
+  {t:'Registro',b:'CAPA 02 / 06',role:'◆ Núcleo de Verity',x:'Sello de tiempo inmutable en blockchain: hash + fecha/hora + wallet. Nadie —ni Verity— puede alterarlo o borrarlo. Es la prueba de anterioridad: quién lo registró primero.'},
+  {t:'Detección',b:'CAPA 03 / 06',role:'◆ Evidencia, no verdad absoluta',x:'Análisis probabilístico de IA (modelos tipo Hive / Illuminarty / SynthID). Se muestra como una capa de evidencia y un nivel de confianza, nunca como veredicto definitivo.'},
+  {t:'Distribución',b:'CAPA 04 / 06',role:'◆ Sobrevive a re-subidas',x:'La credencial viaja con el archivo mediante Content Credentials, de modo que la procedencia persiste aunque la imagen se comparta y re-suba en distintas plataformas.'},
+  {t:'Verificación humana',b:'CAPA 05 / 06',role:'◆ Staking de VRT',x:'Una red descentralizada de periodistas y peritos valida contenido dudoso con staking de VRT. Aciertan y ganan; mienten y pierden parte del stake (slashing). La fianza de la verdad.'},
+  {t:'Educación',b:'CAPA 06 / 06',role:'◆ Recompensas por aprender',x:'Alfabetización mediática con recompensas: los usuarios aprenden a verificar HACIENDO, y se convierten en verificadores. Resolvemos el problema y generamos la red a la vez.'}
+];
+const stack=document.getElementById('layerStack');
+function setLayer(i){
+  const d=layerData[i];
+  document.getElementById('ld-badge').textContent=d.b;
+  document.getElementById('ld-title').textContent=d.t;
+  document.getElementById('ld-text').textContent=d.x;
+  document.getElementById('ld-role').textContent=d.role;
+  document.querySelectorAll('#layerStack .layer').forEach(l=>l.classList.toggle('active',+l.dataset.layer===i));
+}
+if(stack) stack.querySelectorAll('.layer').forEach(l=>{
+  l.addEventListener('mouseenter',()=>setLayer(+l.dataset.layer));
+  l.addEventListener('click',()=>setLayer(+l.dataset.layer));
+});
+
+document.querySelectorAll('.time-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    const i=tab.dataset.time;
+    document.querySelectorAll('.time-tab').forEach(t=>t.classList.toggle('active',t===tab));
+    document.querySelectorAll('.time-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===i));
+  });
+});
+
+const tokData=[
+  {nm:'Comunidad y verificadores',pc:35,c:'#06B6D4'},
+  {nm:'Tesoro DAO / desarrollo',pc:20,c:'#10B981'},
+  {nm:'Equipo (vesting 3–4a, cliff 1a)',pc:20,c:'#3b62c9'},
+  {nm:'Aliados / grants matching',pc:15,c:'#34d399'},
+  {nm:'Liquidez y operaciones',pc:10,c:'#6ee7b7'}
+];
+const R=120, C=2*Math.PI*R;
+const donut=document.getElementById('donut'), legend=document.getElementById('tokLegend');
+if(donut&&legend){
+  let offset=0;
+  tokData.forEach((d)=>{
+    const len=C*d.pc/100;
+    const circ=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circ.setAttribute('cx',150);circ.setAttribute('cy',150);circ.setAttribute('r',R);
+    circ.setAttribute('stroke',d.c);
+    circ.setAttribute('stroke-dashoffset',-offset);
+    circ.style.strokeDasharray=`0 ${C}`;
+    circ.dataset.target=`${len} ${C-len}`;
+    donut.appendChild(circ);
+    offset+=len;
+    const li=document.createElement('div');li.className='li';
+    li.innerHTML=`<span class="sw" style="background:${d.c}"></span><span class="nm">${d.nm}</span><span class="pc">${d.pc}%</span>`;
+    legend.appendChild(li);
+  });
+  const dio=new IntersectionObserver((es)=>{es.forEach(e=>{if(!e.isIntersecting)return;
+    donut.querySelectorAll('circle[data-target]').forEach((c,i)=>{
+      setTimeout(()=>{c.style.strokeDasharray=c.dataset.target;},120*i);
+    });
+    dio.unobserve(e.target);})},{threshold:.4});
+  dio.observe(donut);
+}
+
+(function(){
+  const cv=document.getElementById('hero-canvas'); if(!cv) return;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ctx=cv.getContext('2d'); let w,h,dpr,pts=[],raf;
+  const mouse={x:-999,y:-999};
+  function size(){dpr=Math.min(2,devicePixelRatio||1);w=cv.clientWidth;h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+    const n=Math.min(70,Math.floor(w*h/16000));pts=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25}));}
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    for(const p of pts){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;}
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const a=pts[i],b=pts[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy);
+        if(d<130){ctx.strokeStyle='rgba(63,214,236,'+(0.12*(1-d/130))+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+      }
+      const md=Math.hypot(pts[i].x-mouse.x,pts[i].y-mouse.y);
+      if(md<160){ctx.strokeStyle='rgba(16,185,129,'+(0.25*(1-md/160))+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(mouse.x,mouse.y);ctx.stroke();}
+      ctx.fillStyle='rgba(120,180,230,.55)';ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,1.4,0,7);ctx.fill();
+    }
+    raf=requestAnimationFrame(draw);
+  }
+  size(); if(!reduce) draw(); else { draw(); cancelAnimationFrame(raf); }
+  addEventListener('resize',size);
+  cv.parentElement.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;});
+  cv.parentElement.addEventListener('pointerleave',()=>{mouse.x=-999;mouse.y=-999;});
+})();
+</script>
+</body>
+</html>
