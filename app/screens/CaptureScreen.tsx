@@ -20,9 +20,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
   Pressable,
 } from 'react-native';
+// SafeAreaView de 'react-native' está deprecado; se usa el de
+// react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Directory, File, Paths } from 'expo-file-system';

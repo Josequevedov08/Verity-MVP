@@ -20,7 +20,6 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   Modal,
   FlatList,
@@ -28,6 +27,9 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
+// SafeAreaView de 'react-native' está deprecado; se usa el de
+// react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 

@@ -15,7 +15,10 @@
  * solo restaura tu propio índice de "qué sellé y cuándo".
  */
 import React, { useCallback, useState } from 'react';
-import { FlatList, Text, StyleSheet, SafeAreaView, Pressable, Alert, View } from 'react-native';
+import { FlatList, Text, StyleSheet, Pressable, Alert, View } from 'react-native';
+// SafeAreaView de 'react-native' está deprecado; se usa el de
+// react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
