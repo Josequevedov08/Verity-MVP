@@ -110,10 +110,21 @@ una foto sea tuya, solo restaura tu propio registro de "qué hash sellé y
 cuándo". La prueba de autoría real sigue dependiendo de que conserves el
 archivo original en algún lado (tu propia nube, por ejemplo).
 
+**Actualización:** "Verificar" ya no requiere pegar el número de sello
+antes de elegir el archivo. El flujo correcto es al revés: eliges la
+foto primero, Verity la hashea y busca sola en el historial local de
+este dispositivo. Si la reconoce, muestra el número de sello
+automáticamente. Si NO la reconoce, no significa que no esté sellada —
+puede haberse sellado desde otro dispositivo, cuyo historial este
+teléfono no puede ver sin un backend — en ese caso se le ofrece al
+usuario escribir el número de sello a mano (si lo tiene) para
+comprobarlo directamente contra el registro público.
+
 Pendiente para una fase futura (no en este MVP, requiere backend): un
 índice público mínimo (`backend/anchor.ts`, ver estructura de carpetas)
-que permita verificar un archivo *sin* necesitar ya el número de sello a
-mano — hoy "Verificar" requiere pegar el hash de transacción primero.
+que permita verificar un archivo *sin* necesitar el número de sello a
+mano incluso cuando fue sellado desde OTRO dispositivo — hoy eso solo
+funciona dentro del mismo teléfono que lo selló.
 
 ## Estado y próximos pasos
 
