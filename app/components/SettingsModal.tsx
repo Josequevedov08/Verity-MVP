@@ -43,7 +43,7 @@ const APP_ICON = require('../../assets/icons/app-icon.png');
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.2.7';
+const APP_VERSION = '0.2.8';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -243,9 +243,10 @@ export default function SettingsModal({
                   imageStyle={{ borderRadius: 20 }}
                 >
                   <LinearGradient
-                    colors={[`${colors.accent}AD`, `${darken(colors.accent, 35)}CC`]}
+                    colors={[colors.accent, `${colors.accent}00`]}
+                    locations={[0.42, 1]}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    end={{ x: 1, y: 0 }}
                     style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
                   />
                   <View style={styles.proBannerBadge}>
@@ -275,9 +276,10 @@ export default function SettingsModal({
             {usage && usage.isPro && (
               <ImageBackground source={HERO_IMAGE} style={styles.proBanner} imageStyle={{ borderRadius: 20 }}>
                 <LinearGradient
-                  colors={[`${colors.accent}AD`, `${darken(colors.accent, 35)}CC`]}
+                  colors={[colors.accent, `${colors.accent}00`]}
+                  locations={[0.42, 1]}
                   start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                  end={{ x: 1, y: 0 }}
                   style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
                 />
                 <View style={styles.proBannerBadge}>
@@ -465,22 +467,6 @@ export default function SettingsModal({
 
 function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
-/**
- * Oscurece un color hex un `percent`% — se usa para armar el degradado
- * del banner de PRO (colors.accent → una versión más oscura del MISMO
- * color) sin necesitar un segundo token de tema fijo, y sin quedar mal
- * si el acento de la marca cambia algún día.
- */
-function darken(hex: string, percent: number): string {
-  const clean = hex.replace('#', '');
-  const num = parseInt(clean.length === 3 ? clean.replace(/(.)/g, '$1$1') : clean, 16);
-  const factor = 1 - percent / 100;
-  const r = Math.max(0, Math.round(((num >> 16) & 0xff) * factor));
-  const g = Math.max(0, Math.round(((num >> 8) & 0xff) * factor));
-  const b = Math.max(0, Math.round((num & 0xff) * factor));
-  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 
 const styles = StyleSheet.create({
