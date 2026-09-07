@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.1.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.2.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -98,6 +98,13 @@ eso se evitaron deliberadamente en este MVP (ver decisión documentada en
   Oscuro y Sistema, seleccionable desde Ajustes en cualquiera de las 3
   pantallas. Sección legal real en Ajustes: Política de privacidad,
   Términos de uso, FAQ y "Modo de uso" — no texto de relleno genérico.
+- **Ícono real de la app**: la misma geometría del sello circular
+  (`SealMedallion.tsx`) simplificada para leerse bien de chico —
+  monograma "VRT" sin el texto curvo, ilegible a tamaño de lanzador.
+  Incluye ícono adaptativo de Android (`adaptive-icon-foreground.png`
+  + fondo `#0B0B0F`, el mismo negro base del modo oscuro) para que se
+  vea bien recortado en círculo, cuadrado redondeado, etc. según el
+  launcher del teléfono.
 
 ## Freemium y pagos
 
@@ -196,7 +203,8 @@ mano incluso cuando fue sellado desde OTRO dispositivo.
 - [ ] Backend simple (`backend/`) para verificar por archivo sin número de sello
 - [ ] Guardar capturas en la galería del sistema (requiere development build)
 - [ ] Selector de idioma (multi-idioma) — pospuesto a la fase del APK
-- [ ] Icono y screenshots (`assets/`)
+- [x] Ícono de la app (real, con la identidad del sello — ver abajo)
+- [ ] Screenshots para la ficha de Play Store/Devpost (`assets/`)
 - [ ] Materiales de Devpost (`documentation/shipaton-submission/`)
 - [ ] Registro en Shipaton, guion y grabación del video demo
 - [ ] Cuenta de Google Play Console y build de producción (v1.0.0)

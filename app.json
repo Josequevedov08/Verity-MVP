@@ -2,12 +2,16 @@
   "expo": {
     "name": "Verity",
     "slug": "verity-mvp",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "orientation": "portrait",
     "icon": "./assets/icons/app-icon.png",
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.verity.mvp",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/adaptive-icon-foreground.png",
+        "backgroundColor": "#0B0B0F"
+      },
       "permissions": [
         "CAMERA",
         "ACCESS_FINE_LOCATION",
