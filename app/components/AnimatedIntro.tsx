@@ -9,7 +9,6 @@
  */
 import React, { useEffect, useRef } from 'react';
 import { View, Image, Animated, StyleSheet, Easing } from 'react-native';
-import { FONT_DISPLAY } from '../theme/fonts';
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
 const INTRO_DURATION_MS = 1100;
@@ -69,5 +68,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   icon: { width: 96, height: 96, borderRadius: 22, marginBottom: 16 },
-  wordmark: { color: '#F2F2F5', fontSize: 24, fontFamily: FONT_DISPLAY, letterSpacing: 3 },
+  wordmark: { color: '#F2F2F5', fontSize: 22, fontWeight: '800', letterSpacing: 3 },
 });

@@ -17,7 +17,6 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 // SafeAreaView de 'react-native' está deprecado; se usa el de
 // react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FONT_DISPLAY } from '../theme/fonts';
 
 interface Slide {
   title: string;
@@ -76,7 +75,7 @@ const styles = StyleSheet.create({
   skip: { position: 'absolute', top: 24, right: 24 },
   skipText: { color: '#aaa', fontSize: 14 },
   content: { flex: 1, justifyContent: 'center' },
-  title: { color: '#fff', fontSize: 28, fontFamily: FONT_DISPLAY, marginBottom: 16 },
+  title: { color: '#fff', fontSize: 27, fontWeight: '800', marginBottom: 16 },
   body: { color: '#cfd3d8', fontSize: 16, lineHeight: 24 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 24 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#444' },
