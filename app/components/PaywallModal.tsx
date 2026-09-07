@@ -103,7 +103,7 @@ export default function PaywallModal({
             la tarjeta de abajo (termina exactamente en colors.surface). */}
         <ImageBackground source={HERO_IMAGE} style={styles.hero} resizeMode="cover">
           <LinearGradient
-            colors={[`${colors.accent}55`, colors.surface]}
+            colors={[`${colors.accent}40`, colors.surface]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}

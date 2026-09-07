@@ -43,7 +43,7 @@ const APP_ICON = require('../../assets/icons/app-icon.png');
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.2.5';
+const APP_VERSION = '0.2.6';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -243,7 +243,7 @@ export default function SettingsModal({
                   imageStyle={{ borderRadius: 20 }}
                 >
                   <LinearGradient
-                    colors={[`${colors.accent}CC`, `${darken(colors.accent, 35)}E6`]}
+                    colors={[`${colors.accent}AD`, `${darken(colors.accent, 35)}CC`]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
@@ -275,7 +275,7 @@ export default function SettingsModal({
             {usage && usage.isPro && (
               <ImageBackground source={HERO_IMAGE} style={styles.proBanner} imageStyle={{ borderRadius: 20 }}>
                 <LinearGradient
-                  colors={[`${colors.accent}CC`, `${darken(colors.accent, 35)}E6`]}
+                  colors={[`${colors.accent}AD`, `${darken(colors.accent, 35)}CC`]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
