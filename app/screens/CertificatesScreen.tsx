@@ -172,7 +172,10 @@ export default function CertificatesScreen() {
         </Pressable>
       </View>
 
-      {viewMode === 'grid' && certificates.length > 0 && <TrustLegend />}
+      {/* Antes solo se mostraba en grilla — pero la lista también usa
+          insignias de nivel de confianza (TrustLevelBadge en cada
+          tarjeta), así que la leyenda es igual de útil ahí. */}
+      {certificates.length > 0 && <TrustLegend />}
 
       {viewMode === 'list' ? (
         <FlatList

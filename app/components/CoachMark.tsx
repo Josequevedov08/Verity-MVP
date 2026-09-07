@@ -68,15 +68,18 @@ export default function CoachMark({
       return;
     }
     setRect(null);
-    // Se mide más de una vez a propósito: si el layout todavía se está
-    // acomodando (ej. justo después de volver de la cámara nativa, o
-    // mientras cargan datos async arriba en la pantalla), una sola
-    // medición temprana puede quedar desactualizada. Cada medición
-    // posterior SOBRESCRIBE a la anterior con la posición más reciente,
-    // así que el resultado final es siempre el más fiable.
+    // .measure() en vez de .measureInWindow(): da pageX/pageY por una
+    // ruta nativa distinta (measureLayout relativo a la raíz de la
+    // página) que en la práctica resulta más confiable en Android que
+    // measureInWindow para este caso. Se mide más de una vez a
+    // propósito: si el layout todavía se está acomodando (ej. justo
+    // después de volver de la cámara nativa, o mientras cargan datos
+    // async arriba en la pantalla), una sola medición temprana puede
+    // quedar desactualizada. Cada medición posterior SOBRESCRIBE a la
+    // anterior con la posición más reciente.
     const measure = () => {
-      step?.targetRef.current?.measureInWindow((x, y, width, height) => {
-        if (width > 0 && height > 0) setRect({ x, y, width, height });
+      step?.targetRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
+        if (width > 0 && height > 0) setRect({ x: pageX, y: pageY, width, height });
       });
     };
     const timers = [setTimeout(measure, 120), setTimeout(measure, 350), setTimeout(measure, 700)];
