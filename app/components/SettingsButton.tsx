@@ -1,8 +1,11 @@
 /**
  * SettingsButton.tsx
  * ---------------------------------------------------------------------------
- * Ícono de engranaje que abre el selector de apariencia (SettingsModal).
- * Se coloca en la esquina superior derecha de las 3 pantallas principales.
+ * Ícono de engranaje que abre el panel de ajustes (SettingsModal). Por
+ * defecto flota en la esquina superior derecha (uso en Sellar/Verificar);
+ * con `inline` se comporta como un botón normal dentro de una fila, para
+ * cuando comparte espacio con otro ícono (ej. Mis sellos, junto al
+ * selector de lista/grilla).
  */
 import React, { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -15,14 +18,18 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import SettingsModal from './SettingsModal';
 
-export default function SettingsButton() {
+export default function SettingsButton({ inline }: { inline?: boolean }) {
   const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
 
   return (
     <>
       <Pressable
-        style={[styles.button, { backgroundColor: colors.surfaceAlt }]}
+        style={[
+          styles.button,
+          { backgroundColor: colors.surfaceAlt },
+          !inline && styles.floating,
+        ]}
         onPress={() => setVisible(true)}
         hitSlop={8}
       >
@@ -35,13 +42,11 @@ export default function SettingsButton() {
 
 const styles = StyleSheet.create({
   button: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  floating: { position: 'absolute', top: 0, right: 0 },
 });

@@ -29,6 +29,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Directory, File, Paths } from 'expo-file-system';
 import { randomUUID } from 'expo-crypto';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { hashFile } from '../services/hashService';
 import { anchorHashOnChain } from '../services/blockchainService';
@@ -258,10 +259,29 @@ export default function CaptureScreen() {
       </View>
 
       {step === 'idle' || step === 'error' ? (
-        <View style={styles.actions}>
-          <CameraButton onPress={handleCameraCapture} label="Tomar foto" />
-          <CameraButton onPress={handleGalleryPick} label="Elegir de galería" secondary />
-        </View>
+        <>
+          <View style={styles.actions}>
+            <CameraButton onPress={handleCameraCapture} label="Tomar foto" />
+            <CameraButton onPress={handleGalleryPick} label="Elegir de galería" secondary />
+          </View>
+
+          <View style={[styles.howCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <Text style={[styles.howTitle, { color: colors.textMuted }]}>CÓMO FUNCIONA</Text>
+            <HowStep
+              icon="finger-print-outline"
+              text="Se calcula una huella digital única de tu foto, dentro de tu teléfono."
+            />
+            <HowStep
+              icon="link-outline"
+              text="Esa huella se registra en Polygon, un registro público que nadie puede alterar."
+            />
+            <HowStep
+              icon="ribbon-outline"
+              text="Recibes un certificado con nivel de confianza, listo para compartir o verificar."
+              last
+            />
+          </View>
+        </>
       ) : null}
 
       {(step === 'hashing' || step === 'anchoring') && (
@@ -309,12 +329,51 @@ export default function CaptureScreen() {
   );
 }
 
+function HowStep({
+  icon,
+  text,
+  last,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  text: string;
+  last?: boolean;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View style={[howStepStyles.row, !last && howStepStyles.rowSpacing]}>
+      <View style={[howStepStyles.iconCol, { backgroundColor: colors.surfaceAlt }]}>
+        <Ionicons name={icon} size={16} color={colors.accent} />
+      </View>
+      <Text style={[howStepStyles.text, { color: colors.text }]}>{text}</Text>
+    </View>
+  );
+}
+
+const howStepStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  rowSpacing: { marginBottom: 14 },
+  iconCol: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  text: { flex: 1, fontSize: 13, lineHeight: 19 },
+});
+
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24 },
   header: { position: 'relative', paddingRight: 48, marginBottom: 24 },
   title: { fontSize: 24, fontWeight: '800', marginBottom: 8 },
   subtitle: { fontSize: 14 },
   actions: { gap: 16 },
+  howCard: {
+    marginTop: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  howTitle: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, marginBottom: 14 },
   loadingBox: { alignItems: 'center', marginTop: 40, gap: 12 },
   loadingText: { fontSize: 14 },
   errorText: { marginTop: 16 },

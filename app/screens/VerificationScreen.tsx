@@ -34,6 +34,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { hashFile } from '../services/hashService';
 import { lookupAnchorByTxHash } from '../services/blockchainService';
@@ -150,9 +151,25 @@ export default function VerificationScreen() {
         <SettingsButton />
       </View>
 
+      {/* Encabezado ilustrado: le da a la pantalla la sensación de estar
+          entrando a un lugar donde se comprueban cosas importantes, no
+          solo un formulario de búsqueda. */}
+      <View style={styles.notaryHeader}>
+        <View style={[styles.notarySeal, { borderColor: colors.accent }]}>
+          <Ionicons name="shield-checkmark" size={30} color={colors.accent} />
+        </View>
+        <Text style={[styles.notaryText, { color: colors.textMuted }]}>
+          Todo lo que se verifica aquí queda comprobado directamente contra
+          el registro público de Polygon — nadie puede alterarlo después.
+        </Text>
+      </View>
+
       {/* ---------------- Sección 1: por archivo ---------------- */}
       <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por archivo</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Ionicons name="image-outline" size={16} color={colors.accent} />
+          <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por archivo</Text>
+        </View>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           Elige una foto y Verity revisa sola si ya la sellaste.
         </Text>
@@ -193,6 +210,7 @@ export default function VerificationScreen() {
         {fileResult.status === 'found' && (
           <CertificateDetailModal
             certificate={fileResult.certificate}
+            certificates={certificates}
             visible={fileDetailVisible}
             onClose={() => setFileDetailVisible(false)}
           />
@@ -201,7 +219,10 @@ export default function VerificationScreen() {
 
       {/* ---------------- Sección 2: por número de sello ---------------- */}
       <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por número de sello</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Ionicons name="key-outline" size={16} color={colors.accent} />
+          <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por número de sello</Text>
+        </View>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           Escribe un número de sello (por ejemplo, uno que te haya pasado otra
           persona) para confirmar si existe de verdad.
@@ -234,6 +255,7 @@ export default function VerificationScreen() {
             />
             <CertificateDetailModal
               certificate={hashResult.certificate}
+              certificates={certificates}
               visible={hashDetailVisible}
               onClose={() => setHashDetailVisible(false)}
             />
@@ -315,7 +337,19 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
+  notaryHeader: { alignItems: 'center', marginBottom: 24, paddingHorizontal: 12 },
+  notarySeal: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  notaryText: { fontSize: 12.5, textAlign: 'center', lineHeight: 18 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  sectionTitle: { fontSize: 15, fontWeight: '700' },
   subtitle: { fontSize: 13, marginBottom: 14 },
   input: {
     borderWidth: 1,

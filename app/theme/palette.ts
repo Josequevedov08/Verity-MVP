@@ -45,11 +45,20 @@ export const LIGHT: ThemeColors = {
   overlay: 'rgba(0,0,0,0.5)',
 };
 
+// NOTA sobre el orden de estos dos: en toda la app, las pantallas usan
+// `surface` como fondo de PÁGINA y `background` como fondo de TARJETA
+// (así quedó definido desde el certificado: página gris clara, tarjeta
+// blanca "flotando" encima). En modo oscuro, para que una tarjeta se
+// siga sintiendo "elevada" (más clara que la página, como espera
+// cualquier UI oscura — Material, iOS, etc.), `background` tiene que
+// ser el tono más CLARO de los dos y `surface` el más OSCURO. Antes
+// estaban al revés (tarjeta más oscura que la página), por eso el modo
+// oscuro "se veía raro" — un bug real de contraste, no solo de gusto.
 export const DARK: ThemeColors = {
-  background: '#0B0B0F',
-  surface: '#17171D',
-  surfaceAlt: '#1F1F27',
-  border: '#2A2A33',
+  background: '#1C1C24',
+  surface: '#0B0B0F',
+  surfaceAlt: '#26262F',
+  border: '#33333D',
   text: '#F2F2F5',
   textMuted: '#9A9AA5',
   accent: '#4C9AFF',
