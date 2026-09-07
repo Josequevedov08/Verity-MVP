@@ -20,6 +20,7 @@
  * vez de fallar en silencio o simular una compra que no es real.
  */
 import Purchases, { CustomerInfo } from 'react-native-purchases';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
 import { countSealsThisMonth } from '../utils/cryptoUtils';
 
@@ -34,8 +35,31 @@ export async function initRevenueCat(): Promise<void> {
   initialized = true;
 }
 
+const DEV_PRO_OVERRIDE_KEY = 'verity_dev_pro_override';
+
+/**
+ * SOLO PRUEBAS — nunca funciona fuera de `__DEV__` (Expo Go / desarrollo).
+ * Simula tener PRO activo sin pasar por una compra real, para poder
+ * probar en el propio teléfono lo que ve un usuario PRO (lote múltiple,
+ * etc.) mientras todavía no existe un producto de suscripción real en
+ * Play Console (ver nota arriba). En un build de producción esta
+ * función no hace nada — no hay forma de "activar PRO gratis" en la
+ * app real, solo en desarrollo. Se controla desde Ajustes → sección
+ * "Modo prueba" (solo visible en __DEV__).
+ */
+export async function setDevProOverride(enabled: boolean): Promise<void> {
+  if (!__DEV__) return;
+  await AsyncStorage.setItem(DEV_PRO_OVERRIDE_KEY, enabled ? '1' : '0');
+}
+
+export async function getDevProOverride(): Promise<boolean> {
+  if (!__DEV__) return false;
+  return (await AsyncStorage.getItem(DEV_PRO_OVERRIDE_KEY)) === '1';
+}
+
 /** Consulta si el usuario tiene la suscripción PRO activa. */
 export async function isProUser(): Promise<boolean> {
+  if (await getDevProOverride()) return true;
   if (!initialized) return false;
   try {
     const info: CustomerInfo = await Purchases.getCustomerInfo();

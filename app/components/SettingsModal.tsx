@@ -15,7 +15,7 @@
  * para hacer scroll y visualmente consistente con el resto de la app.
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, Image, ImageBackground, ScrollView, Alert } from 'react-native';
+import { View, Text, Modal, Pressable, StyleSheet, Image, ImageBackground, ScrollView, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 // Import directo al submódulo (ver SettingsButton.tsx para el porqué:
@@ -33,7 +33,13 @@ import {
   restoreDeviceWalletFromPrivateKey,
 } from '../services/blockchainService';
 import { resetAllCoachMarks } from '../utils/coachMarkUtils';
-import { getSealUsage, restorePurchases, type SealUsage } from '../services/revenuecatService';
+import {
+  getSealUsage,
+  restorePurchases,
+  getDevProOverride,
+  setDevProOverride,
+  type SealUsage,
+} from '../services/revenuecatService';
 import LegalContentModal, { LEGAL_DOCS, type LegalDocId } from './LegalContentModal';
 import PaywallModal from './PaywallModal';
 import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
@@ -43,7 +49,7 @@ const APP_ICON = require('../../assets/icons/app-icon.png');
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.3.1';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -68,6 +74,15 @@ export default function SettingsModal({
   const [usage, setUsage] = useState<SealUsage | null>(null);
   const [paywallVisible, setPaywallVisible] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  // Modo prueba (solo __DEV__) — ver revenuecatService.ts. Nunca existe
+  // en un build de producción real.
+  const [devProOverride, setDevProOverrideState] = useState(false);
+
+  async function handleToggleDevPro(next: boolean) {
+    setDevProOverrideState(next);
+    await setDevProOverride(next);
+    getSealUsage().then(setUsage);
+  }
 
   /** Ver PaywallModal.tsx / revenuecatService.ts para el porqué de
    * esto: sin cuenta/login, si alguien borra los datos de la app o
@@ -115,6 +130,7 @@ export default function SettingsModal({
     // última vez que se vio Ajustes.
     if (visible) {
       getSealUsage().then(setUsage);
+      getDevProOverride().then(setDevProOverrideState);
     }
   }, [visible]);
 
@@ -297,6 +313,30 @@ export default function SettingsModal({
                   {restoring ? 'Buscando...' : '¿Ya pagaste antes? Restaurar compra'}
                 </Text>
               </Pressable>
+            )}
+
+            {/* Solo existe en __DEV__ (Expo Go / desarrollo) — en un
+                build de producción real este bloque ni siquiera se
+                incluye en el bundle, así que no hay forma de activar
+                PRO gratis en la app publicada. Sirve para probar en el
+                propio teléfono lo que ve un usuario PRO (lote múltiple,
+                etc.) mientras no existe un producto de suscripción real
+                dado de alta en Play Console. */}
+            {__DEV__ && (
+              <View style={[styles.devBox, { borderColor: colors.warning, backgroundColor: colors.background }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.devBoxTitle, { color: colors.warning }]}>🧪 Modo prueba (solo desarrollo)</Text>
+                  <Text style={[styles.devBoxText, { color: colors.textMuted }]}>
+                    Simula tener PRO en este teléfono, sin pagar de verdad. No existe en la app publicada.
+                  </Text>
+                </View>
+                <Switch
+                  value={devProOverride}
+                  onValueChange={handleToggleDevPro}
+                  trackColor={{ false: colors.border, true: colors.warning }}
+                  thumbColor="#fff"
+                />
+              </View>
             )}
 
             <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>APARIENCIA</Text>
@@ -524,6 +564,18 @@ const styles = StyleSheet.create({
   proBannerPricePeriod: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
   restoreLink: { alignItems: 'center', marginBottom: 20, marginTop: -8 },
   restoreLinkText: { fontSize: 12.5, fontWeight: '700' },
+  devBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 20,
+  },
+  devBoxTitle: { fontSize: 12.5, fontWeight: '800', marginBottom: 3 },
+  devBoxText: { fontSize: 11.5, lineHeight: 15 },
   sectionLabel: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, marginBottom: 10 },
   subtitle: { fontSize: 13, marginBottom: 8 },
   option: {
