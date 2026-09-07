@@ -39,7 +39,6 @@ import StatsCard from '../components/StatsCard';
 import { useTheme } from '../theme/ThemeContext';
 import { getCertificates, buildBackup, importBackup } from '../utils/cryptoUtils';
 import { hasSeenCoachMark, markCoachMarkSeen, useCoachMarkResetVersion } from '../utils/coachMarkUtils';
-import { getSealUsage, type SealUsage } from '../services/revenuecatService';
 import type { VerityCertificate, CertificatesBackup } from '../../documentation/technical/verity-protocol';
 
 type ViewMode = 'list' | 'grid';
@@ -49,14 +48,12 @@ export default function CertificatesScreen() {
   const [certificates, setCertificates] = useState<VerityCertificate[]>([]);
   const [selected, setSelected] = useState<VerityCertificate | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [usage, setUsage] = useState<SealUsage | null>(null);
 
   // Recarga el historial cada vez que se entra a esta pestaña, para
   // reflejar sellos hechos recién en "Sellar".
   useFocusEffect(
     useCallback(() => {
       getCertificates().then(setCertificates);
-      getSealUsage().then(setUsage);
     }, [])
   );
 
@@ -157,7 +154,7 @@ export default function CertificatesScreen() {
         </View>
       </View>
 
-      {certificates.length > 0 && <StatsCard certificates={certificates} usage={usage} />}
+      {certificates.length > 0 && <StatsCard certificates={certificates} />}
 
       <View style={styles.backupRow} ref={backupRowRef} collapsable={false}>
         <Pressable

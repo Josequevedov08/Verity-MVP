@@ -32,7 +32,9 @@ import {
   restoreDeviceWalletFromPrivateKey,
 } from '../services/blockchainService';
 import { resetAllCoachMarks } from '../utils/coachMarkUtils';
+import { getSealUsage, type SealUsage } from '../services/revenuecatService';
 import LegalContentModal, { LEGAL_DOCS, type LegalDocId } from './LegalContentModal';
+import PaywallModal from './PaywallModal';
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
 // Mantener en sync con la versión de package.json / app.json.
@@ -55,6 +57,11 @@ export default function SettingsModal({
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [openDoc, setOpenDoc] = useState<LegalDocId | null>(null);
+  // Estado del plan (gratis/PRO) — Ajustes es la única pantalla que lo
+  // muestra de forma permanente (ver StatsCard.tsx y CaptureScreen.tsx
+  // para el porqué de que ya NO se repita ahí).
+  const [usage, setUsage] = useState<SealUsage | null>(null);
+  const [paywallVisible, setPaywallVisible] = useState(false);
 
   /**
    * Antes esto solo reiniciaba una bandera en AsyncStorage sin ningún
@@ -74,6 +81,12 @@ export default function SettingsModal({
   useEffect(() => {
     if (visible && !walletAddress) {
       getDeviceWalletAddress().then(setWalletAddress).catch(() => {});
+    }
+    // El uso del mes sí se refresca cada vez que se abre (a diferencia
+    // de la wallet, que no cambia): puede haber sellado algo desde la
+    // última vez que se vio Ajustes.
+    if (visible) {
+      getSealUsage().then(setUsage);
     }
   }, [visible]);
 
@@ -252,6 +265,22 @@ export default function SettingsModal({
                 <Text style={[styles.aboutRowValue, { color: colors.text }]}>Polygon Amoy (testnet)</Text>
               </View>
 
+              {/* Único lugar de la app donde vive el estado del plan de
+                  forma permanente (ver notas en CaptureScreen.tsx y
+                  StatsCard.tsx) — tocarlo abre el paywall. */}
+              <Pressable
+                style={[styles.aboutRow, { borderTopColor: colors.border }]}
+                onPress={() => setPaywallVisible(true)}
+              >
+                <Text style={[styles.aboutRowLabel, { color: colors.textMuted }]}>Plan</Text>
+                <View style={styles.aboutRowValueWrap}>
+                  <Text style={[styles.aboutRowValue, { color: colors.text }]}>
+                    {!usage ? '...' : usage.isPro ? 'PRO · ilimitado' : `Gratis · ${usage.used}/${usage.limit} este mes`}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
+                </View>
+              </Pressable>
+
               <Pressable
                 style={[styles.aboutRow, { borderTopColor: colors.border }]}
                 onPress={handleCopyWallet}
@@ -322,6 +351,17 @@ export default function SettingsModal({
       </SafeAreaView>
 
       <LegalContentModal docId={openDoc} onClose={() => setOpenDoc(null)} />
+
+      <PaywallModal
+        visible={paywallVisible}
+        usage={usage}
+        onClose={() => setPaywallVisible(false)}
+        onPurchased={() => {
+          setPaywallVisible(false);
+          getSealUsage().then(setUsage);
+          Alert.alert('¡Listo!', 'Ya eres PRO — sellos ilimitados.');
+        }}
+      />
     </Modal>
   );
 }

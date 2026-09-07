@@ -397,25 +397,21 @@ export default function CaptureScreen() {
         <SettingsButton />
       </View>
 
-      {/* Indicador del plan — visible siempre, no solo cuando se llega
-          al límite. Tocarlo abre el paywall voluntariamente (alguien
-          puede querer hacerse PRO antes de toparse con el límite). */}
-      {usage && (
+      {/* El estado del plan (gratis/PRO, X de 30 este mes) vive en
+          Ajustes — fuente única de verdad, no se repite acá para no
+          competir con la acción principal de esta pantalla ("Sellar"
+          debe sentirse instantánea). Acá SOLO aparece un aviso, y solo
+          cuando quedan pocos sellos gratis este mes (7 o menos) — el
+          resto del tiempo esta pantalla no muestra nada del plan. */}
+      {usage && !usage.isPro && usage.limit - usage.used <= 7 && usage.limit - usage.used > 0 && (
         <Pressable
-          style={[styles.planRow, { borderColor: colors.border, backgroundColor: colors.background }]}
+          style={[styles.lowSealsWarning, { borderColor: colors.warning, backgroundColor: colors.background }]}
           onPress={() => setPaywallVisible(true)}
         >
-          <Ionicons
-            name={usage.isPro ? 'ribbon' : 'pricetag-outline'}
-            size={14}
-            color={usage.isPro ? colors.accent : colors.textMuted}
-          />
-          <Text style={[styles.planText, { color: colors.textMuted }]}>
-            {usage.isPro ? 'Plan PRO · sellos ilimitados' : `Plan gratis · ${usage.used}/${usage.limit} este mes`}
+          <Ionicons name="alert-circle-outline" size={14} color={colors.warning} />
+          <Text style={[styles.lowSealsText, { color: colors.warning }]}>
+            Te quedan {usage.limit - usage.used} sellos gratis este mes
           </Text>
-          {!usage.isPro && (
-            <Text style={[styles.planUpgrade, { color: colors.accent }]}>Hazte PRO</Text>
-          )}
         </Pressable>
       )}
 
@@ -590,7 +586,7 @@ const styles = StyleSheet.create({
   header: { position: 'relative', paddingRight: 48, marginBottom: 24 },
   title: { fontSize: 24, fontWeight: '800', marginBottom: 8 },
   subtitle: { fontSize: 14 },
-  planRow: {
+  lowSealsWarning: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -600,8 +596,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginBottom: 16,
   },
-  planText: { flex: 1, fontSize: 12, fontWeight: '600' },
-  planUpgrade: { fontSize: 12, fontWeight: '800' },
+  lowSealsText: { flex: 1, fontSize: 12, fontWeight: '700' },
   actions: { gap: 12 },
   secondaryRow: { flexDirection: 'row', gap: 12 },
   secondaryHalf: { flex: 1 },

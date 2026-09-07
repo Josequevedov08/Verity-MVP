@@ -2,25 +2,17 @@
  * StatsCard.tsx
  * ---------------------------------------------------------------------------
  * Resumen rápido del uso de Verity en este teléfono — se muestra arriba
- * de "Mis sellos". No es solo decorativo: le da al usuario (y a
- * cualquiera viendo una demo) una foto clara de "cuánto he sellado y de
- * qué calidad", y deja visible el plan gratis/PRO en el mismo lugar
- * donde se ve el historial completo.
+ * de "Mis sellos". Solo el conteo real de sellos y su desglose por
+ * nivel de confianza — el estado del plan gratis/PRO vive únicamente
+ * en Ajustes (fuente única de verdad), a propósito no se repite aquí.
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
-import type { SealUsage } from '../services/revenuecatService';
 
-export default function StatsCard({
-  certificates,
-  usage,
-}: {
-  certificates: VerityCertificate[];
-  usage: SealUsage | null;
-}) {
+export default function StatsCard({ certificates }: { certificates: VerityCertificate[] }) {
   const { colors } = useTheme();
 
   const alto = certificates.filter((c) => c.trustLevel === 'ALTO').length;
@@ -43,24 +35,6 @@ export default function StatsCard({
         <StatChip icon="shield-half" color={colors.warning} value={medio} label="Media" />
         <StatChip icon="shield-outline" color={colors.tabBarInactive} value={bajo} label="Baja" />
       </View>
-
-      {usage && (
-        <>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <View style={styles.planRow}>
-            <Ionicons
-              name={usage.isPro ? 'ribbon' : 'pricetag-outline'}
-              size={13}
-              color={usage.isPro ? colors.accent : colors.textMuted}
-            />
-            <Text style={[styles.planText, { color: colors.textMuted }]}>
-              {usage.isPro
-                ? 'Plan PRO · sellos ilimitados'
-                : `Plan gratis · ${usage.used}/${usage.limit} sellos usados este mes`}
-            </Text>
-          </View>
-        </>
-      )}
     </View>
   );
 }
@@ -96,6 +70,4 @@ const styles = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   chipValue: { fontSize: 13, fontWeight: '800' },
   chipLabel: { fontSize: 11.5, fontWeight: '600' },
-  planRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  planText: { fontSize: 11.5, fontWeight: '600' },
 });
