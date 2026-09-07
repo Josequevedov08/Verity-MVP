@@ -3,9 +3,18 @@
  * ---------------------------------------------------------------------------
  * El certificado como DOCUMENTO, no como una tarjeta más de app: foto con
  * marco, un sello real superpuesto (SealStamp) en vez de una pastilla de
- * color, y el número de sello mostrado grande, como el serial de un
- * billete. El enlace externo al explorador de blockchain es una acción
- * explícita al final, nunca automática.
+ * color, y el número de sello mostrado de forma prominente. El enlace
+ * externo al explorador de blockchain es una acción explícita al final,
+ * nunca automática.
+ *
+ * IMPORTANTE (corregido tras feedback real de uso): antes se mostraba
+ * un número "decorativo" acortado (primeros/últimos caracteres) como si
+ * fuera EL número de sello, y más abajo el hash completo real bajo otro
+ * nombre ("Número de sello completo") — confuso, y con riesgo real de
+ * que alguien copiara el que no sirve para verificar. Ahora hay un solo
+ * "Número de sello", siempre el hash completo y funcional, con
+ * `letterSpacing` para que se vea como un serial (sin insertar espacios
+ * de verdad en el texto — eso rompería la búsqueda al copiar/pegar).
  */
 import React from 'react';
 import { View, Text, Image, StyleSheet, Modal, Pressable, Linking, ScrollView } from 'react-native';
@@ -37,8 +46,11 @@ export default function CertificateDetailModal({
 
         {certificate && (
           <>
+            <Text style={[styles.title, { color: colors.text, fontFamily: FONT_DISPLAY }]}>
+              Certificado
+            </Text>
             <Text style={[styles.eyebrow, { color: colors.textMuted }]}>
-              CERTIFICADO DIGITAL · VERITY
+              VERITY · REGISTRO PÚBLICO
             </Text>
 
             {certificate.thumbnailUri && (
@@ -55,17 +67,15 @@ export default function CertificateDetailModal({
               </View>
             )}
 
-            <Text style={[styles.serialLabel, { color: colors.textMuted }]}>Número de sello</Text>
-            <Text
-              style={[styles.serial, { color: colors.text, fontFamily: FONT_DISPLAY }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              selectable
-            >
-              {shortHash(certificate.anchor.txHash)}
-            </Text>
-
-            <View style={[styles.divider, { borderColor: colors.border }]} />
+            <View style={[styles.sealBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.serialLabel, { color: colors.textMuted }]}>Número de sello</Text>
+              <Text style={[styles.serial, { color: colors.text }]} selectable>
+                {certificate.anchor.txHash}
+              </Text>
+              <Text style={[styles.serialHint, { color: colors.textMuted }]}>
+                Usa este número en la pestaña "Verificar" para comprobarlo.
+              </Text>
+            </View>
 
             <Row label="Huella digital (SHA-256)" value={certificate.sha256} mono />
             <Row
@@ -79,7 +89,6 @@ export default function CertificateDetailModal({
                 value={`${certificate.metadata.latitude.toFixed(5)}, ${certificate.metadata.longitude.toFixed(5)}`}
               />
             )}
-            <Row label="Número de sello completo" value={certificate.anchor.txHash} mono />
             <Row label="Wallet del dispositivo" value={certificate.anchor.walletAddress} mono />
 
             <Pressable
@@ -95,12 +104,6 @@ export default function CertificateDetailModal({
       </ScrollView>
     </Modal>
   );
-}
-
-/** Muestra los primeros y últimos caracteres del hash, como el serial de un billete. */
-function shortHash(hash: string): string {
-  const clean = hash.startsWith('0x') ? hash.slice(2) : hash;
-  return `${clean.slice(0, 6).toUpperCase()} · ${clean.slice(-6).toUpperCase()}`;
 }
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
@@ -119,14 +122,16 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   closeButton: { alignSelf: 'flex-end', marginBottom: 12 },
   closeText: { fontSize: 15, fontWeight: '600' },
+  title: { fontSize: 28, textAlign: 'center' },
   eyebrow: {
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 2,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    marginTop: 4,
   },
-  photoFrame: { alignSelf: 'center', marginBottom: 12 },
+  photoFrame: { alignSelf: 'center', marginBottom: 24 },
   photoBorder: {
     borderWidth: 4,
     borderRadius: 4,
@@ -134,21 +139,27 @@ const styles = StyleSheet.create({
   },
   thumbnail: { width: 220, height: 220, borderRadius: 2 },
   stampOverlay: { position: 'absolute', bottom: -20, right: -20 },
-  sealOnly: { alignItems: 'center', marginBottom: 12 },
+  sealOnly: { alignItems: 'center', marginBottom: 24 },
+  sealBox: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 8,
+  },
   serialLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 1.5,
-    textAlign: 'center',
-    marginTop: 20,
+    letterSpacing: 1,
   },
   serial: {
-    fontSize: 26,
-    letterSpacing: 2,
-    textAlign: 'center',
-    marginTop: 4,
+    fontSize: 15,
+    fontFamily: 'monospace',
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    marginTop: 8,
+    lineHeight: 22,
   },
-  divider: { borderTopWidth: 1, borderStyle: 'dashed', marginTop: 20 },
+  serialHint: { fontSize: 11, marginTop: 10, lineHeight: 15 },
   row: { paddingVertical: 14, borderBottomWidth: 1 },
   rowLabel: { fontSize: 11, marginBottom: 4, letterSpacing: 0.5 },
   rowValue: { fontSize: 14 },

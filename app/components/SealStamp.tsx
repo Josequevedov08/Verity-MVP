@@ -34,7 +34,26 @@ export default function SealStamp({
   const { label, icon } = CONFIG[level];
 
   return (
-    <View style={[styles.outer, { width: size, height: size, borderRadius: size / 2, borderColor: color }, style]}>
+    <View
+      style={[
+        styles.outer,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderColor: color,
+          // Fondo SÓLIDO (no transparente): antes el sello se volvía
+          // ilegible sobre fotos con colores fuertes o muy claras,
+          // porque solo tenía anillos sin relleno. Con esto se ve igual
+          // de bien sobre cualquier imagen de fondo. La sombra lo
+          // "levanta" visualmente de la foto, como un sello real de
+          // relieve.
+          backgroundColor: colors.background,
+        },
+        styles.shadow,
+        style,
+      ]}
+    >
       <View style={[styles.inner, { borderColor: color, margin: size * 0.07 }]}>
         <Ionicons name={icon} size={size * 0.3} color={color} />
         <Text style={[styles.label, { color, fontFamily: FONT_DISPLAY, fontSize: size * 0.12 }]}>
@@ -52,6 +71,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     transform: [{ rotate: '-8deg' }],
+  },
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 6,
   },
   inner: {
     flex: 1,
