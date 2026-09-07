@@ -397,21 +397,46 @@ export default function CaptureScreen() {
         <SettingsButton />
       </View>
 
-      {/* El estado del plan (gratis/PRO, X de 30 este mes) vive en
-          Ajustes — fuente única de verdad, no se repite acá para no
+      {/* El estado completo del plan (gratis/PRO, X de 30 este mes) vive
+          en Ajustes — fuente única de verdad, no se repite acá para no
           competir con la acción principal de esta pantalla ("Sellar"
-          debe sentirse instantánea). Acá SOLO aparece un aviso, y solo
-          cuando quedan pocos sellos gratis este mes (7 o menos) — el
-          resto del tiempo esta pantalla no muestra nada del plan. */}
-      {usage && !usage.isPro && usage.limit - usage.used <= 7 && usage.limit - usage.used > 0 && (
+          debe sentirse instantánea). Acá SOLO hay una tira, y es UNA
+          sola a la vez (nunca dos apiladas): mientras quedan sellos de
+          sobra es una invitación discreta y neutra a hazte PRO ("la
+          parte de inicio se ve muy vacía" fue el feedback que la
+          motivó); en cuanto quedan 7 o menos, la MISMA tira cambia a
+          tono de aviso (color warning + texto de cuenta regresiva) —
+          más urgente justo cuando importa, sin sumar una segunda caja. */}
+      {usage && !usage.isPro && (
         <Pressable
-          style={[styles.lowSealsWarning, { borderColor: colors.warning, backgroundColor: colors.background }]}
+          style={[
+            styles.proStrip,
+            usage.limit - usage.used <= 7
+              ? { borderColor: colors.warning, backgroundColor: colors.background }
+              : { borderColor: colors.border, backgroundColor: colors.background },
+          ]}
           onPress={() => setPaywallVisible(true)}
         >
-          <Ionicons name="alert-circle-outline" size={14} color={colors.warning} />
-          <Text style={[styles.lowSealsText, { color: colors.warning }]}>
-            Te quedan {usage.limit - usage.used} sellos gratis este mes
+          <Ionicons
+            name={usage.limit - usage.used <= 7 ? 'alert-circle-outline' : 'ribbon-outline'}
+            size={14}
+            color={usage.limit - usage.used <= 7 ? colors.warning : colors.accent}
+          />
+          <Text
+            style={[
+              styles.proStripText,
+              { color: usage.limit - usage.used <= 7 ? colors.warning : colors.textMuted },
+            ]}
+          >
+            {usage.limit - usage.used <= 7
+              ? `Te quedan ${usage.limit - usage.used} sellos gratis este mes`
+              : `Llevas ${usage.used} de ${usage.limit} sellos gratis · Hazte PRO para sellos ilimitados`}
           </Text>
+          <Ionicons
+            name="chevron-forward"
+            size={14}
+            color={usage.limit - usage.used <= 7 ? colors.warning : colors.textMuted}
+          />
         </Pressable>
       )}
 
@@ -586,7 +611,7 @@ const styles = StyleSheet.create({
   header: { position: 'relative', paddingRight: 48, marginBottom: 24 },
   title: { fontSize: 24, fontWeight: '800', marginBottom: 8 },
   subtitle: { fontSize: 14 },
-  lowSealsWarning: {
+  proStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -596,7 +621,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginBottom: 16,
   },
-  lowSealsText: { flex: 1, fontSize: 12, fontWeight: '700' },
+  proStripText: { flex: 1, fontSize: 12, fontWeight: '700' },
   actions: { gap: 12 },
   secondaryRow: { flexDirection: 'row', gap: 12 },
   secondaryHalf: { flex: 1 },
