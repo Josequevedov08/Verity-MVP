@@ -3,9 +3,10 @@
  * ---------------------------------------------------------------------------
  * Insignia visual del nivel de confianza (ALTO/MEDIO/BAJO). Traduce el
  * criterio técnico (ver documentation/technical/verity-protocol.ts) a algo
- * que cualquier usuario entiende de un vistazo, con color + texto simple.
- * Los colores semánticos (verde/ámbar/gris) vienen del tema para que se
- * vean bien tanto en modo claro como oscuro.
+ * que cualquier usuario entiende de un vistazo. Pastilla con CONTORNO de
+ * color (no relleno sólido) — mismo lenguaje visual que la pastilla de
+ * estado del certificado (CertificateDetailModal), para que se vea
+ * coherente en toda la app: lista, detalle, resultados de verificación.
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
@@ -15,15 +16,16 @@ import { useTheme } from '../theme/ThemeContext';
 export default function TrustLevelBadge({ level }: { level: TrustLevel }) {
   const { colors } = useTheme();
 
-  const config: Record<TrustLevel, { bg: string; label: string }> = {
-    ALTO: { bg: colors.success, label: 'Confianza alta' },
-    MEDIO: { bg: colors.warning, label: 'Confianza media' },
-    BAJO: { bg: colors.tabBarInactive, label: 'Confianza baja' },
+  const config: Record<TrustLevel, { color: string; label: string }> = {
+    ALTO: { color: colors.success, label: 'CONFIANZA ALTA' },
+    MEDIO: { color: colors.warning, label: 'CONFIANZA MEDIA' },
+    BAJO: { color: colors.tabBarInactive, label: 'CONFIANZA BAJA' },
   };
+  const { color, label } = config[level];
 
   return (
-    <View style={[styles.badge, { backgroundColor: config[level].bg }]}>
-      <Text style={styles.text}>{config[level].label}</Text>
+    <View style={[styles.badge, { borderColor: color }]}>
+      <Text style={[styles.text, { color }]}>{label}</Text>
     </View>
   );
 }
@@ -31,9 +33,10 @@ export default function TrustLevelBadge({ level }: { level: TrustLevel }) {
 const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
+    borderWidth: 1.5,
   },
-  text: { color: '#fff', fontWeight: '600', fontSize: 12 },
+  text: { fontWeight: '800', fontSize: 10.5, letterSpacing: 0.4 },
 });

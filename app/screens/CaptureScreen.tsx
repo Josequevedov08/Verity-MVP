@@ -247,7 +247,7 @@ export default function CaptureScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Sellar contenido</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
@@ -282,16 +282,18 @@ export default function CaptureScreen() {
       {step === 'done' && certificate && (
         <>
           {isDuplicate && (
-            <Text style={[styles.duplicateText, { color: colors.warning, backgroundColor: colors.surfaceAlt }]}>
-              Ya habías sellado este archivo antes — aquí está tu certificado. No se
-              generó un sello nuevo ni se gastó gas de nuevo.
-            </Text>
+            <View style={[styles.duplicateBox, { borderColor: colors.warning, backgroundColor: colors.background }]}>
+              <Text style={[styles.duplicateText, { color: colors.warning }]}>
+                Ya habías sellado este archivo antes — aquí está tu certificado. No se
+                generó un sello nuevo ni se gastó gas de nuevo.
+              </Text>
+            </View>
           )}
           <StampReveal trigger={certificate.id}>
             <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
           </StampReveal>
           <Pressable
-            style={[styles.sealAnotherButton, { backgroundColor: colors.surfaceAlt }]}
+            style={[styles.sealAnotherButton, { borderColor: colors.accent }]}
             onPress={handleSealAnother}
           >
             <Text style={[styles.sealAnotherText, { color: colors.accent }]}>Sellar otra foto</Text>
@@ -316,17 +318,22 @@ const styles = StyleSheet.create({
   loadingBox: { alignItems: 'center', marginTop: 40, gap: 12 },
   loadingText: { fontSize: 14 },
   errorText: { marginTop: 16 },
-  duplicateText: {
+  duplicateBox: {
+    borderWidth: 1,
+    borderRadius: 12,
     padding: 12,
-    borderRadius: 10,
     marginBottom: 4,
+  },
+  duplicateText: {
     fontSize: 13,
+    lineHeight: 18,
   },
   sealAnotherButton: {
     marginTop: 16,
     paddingVertical: 14,
     borderRadius: 14,
+    borderWidth: 1.5,
     alignItems: 'center',
   },
-  sealAnotherText: { fontWeight: '600' },
+  sealAnotherText: { fontWeight: '700' },
 });

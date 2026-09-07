@@ -104,7 +104,7 @@ export default function CertificatesScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Mis sellos</Text>
         <SettingsButton />
@@ -112,7 +112,7 @@ export default function CertificatesScreen() {
 
       <View style={styles.backupRow}>
         <Pressable
-          style={[styles.backupButton, { backgroundColor: colors.surfaceAlt }]}
+          style={[styles.backupButton, { borderColor: colors.accent }]}
           onPress={handleExport}
         >
           <Text style={[styles.backupButtonText, { color: colors.accent }]}>
@@ -120,7 +120,7 @@ export default function CertificatesScreen() {
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.backupButton, { backgroundColor: colors.surfaceAlt }]}
+          style={[styles.backupButton, { borderColor: colors.accent }]}
           onPress={handleImport}
         >
           <Text style={[styles.backupButtonText, { color: colors.accent }]}>
@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
   backupButton: {
     flex: 1,
     borderRadius: 12,
+    borderWidth: 1.5,
     paddingVertical: 10,
     alignItems: 'center',
   },

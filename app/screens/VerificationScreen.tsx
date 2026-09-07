@@ -27,6 +27,7 @@ import {
   Image,
   Pressable,
   Alert,
+  ScrollView,
 } from 'react-native';
 // SafeAreaView de 'react-native' está deprecado; se usa el de
 // react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
@@ -142,114 +143,125 @@ export default function VerificationScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Verificar contenido</Text>
         <SettingsButton />
       </View>
 
       {/* ---------------- Sección 1: por archivo ---------------- */}
-      <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por archivo</Text>
-      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-        Elige una foto y Verity revisa sola si ya la sellaste.
-      </Text>
+      <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
+        <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por archivo</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          Elige una foto y Verity revisa sola si ya la sellaste.
+        </Text>
 
-      <View style={styles.actions}>
-        <CameraButton label="Elegir de mi galería" onPress={handlePickFromGallery} />
-        <CameraButton
-          label="Elegir de Mis sellos"
-          secondary
-          onPress={() => setPickerVisible(true)}
-        />
+        <View style={styles.actions}>
+          <CameraButton label="Elegir de mi galería" onPress={handlePickFromGallery} />
+          <CameraButton
+            label="Elegir de Mis sellos"
+            secondary
+            onPress={() => setPickerVisible(true)}
+          />
+        </View>
+
+        {fileResult.status === 'checking' && (
+          <View style={styles.resultBox}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        )}
+        {fileResult.status === 'found' && (
+          <Pressable
+            style={[styles.resultTintBox, { borderColor: colors.success, backgroundColor: colors.surface }]}
+            onPress={() => setFileDetailVisible(true)}
+          >
+            <Text style={[styles.matchText, { color: colors.success }]}>
+              ✅ Esta foto ya está sellada. Toca para ver el certificado completo.
+            </Text>
+          </Pressable>
+        )}
+        {fileResult.status === 'not-found' && (
+          <View style={[styles.resultTintBox, { borderColor: colors.danger, backgroundColor: colors.surface }]}>
+            <Text style={[styles.noMatchText, { color: colors.danger }]}>
+              No encontramos esta foto en tu historial local. Si crees que fue sellada
+              desde otro dispositivo, usa "Por número de sello" más abajo.
+            </Text>
+          </View>
+        )}
+
+        {fileResult.status === 'found' && (
+          <CertificateDetailModal
+            certificate={fileResult.certificate}
+            visible={fileDetailVisible}
+            onClose={() => setFileDetailVisible(false)}
+          />
+        )}
       </View>
 
-      {fileResult.status === 'checking' && (
-        <View style={styles.resultBox}>
-          <ActivityIndicator color={colors.accent} />
-        </View>
-      )}
-      {fileResult.status === 'found' && (
-        <Pressable style={styles.resultBox} onPress={() => setFileDetailVisible(true)}>
-          <Text style={[styles.matchText, { color: colors.success }]}>
-            ✅ Esta foto ya está sellada. Toca para ver el certificado completo.
-          </Text>
-        </Pressable>
-      )}
-      {fileResult.status === 'not-found' && (
-        <Text style={[styles.noMatchText, { color: colors.danger }, styles.resultBox]}>
-          No encontramos esta foto en tu historial local. Si crees que fue sellada
-          desde otro dispositivo, usa "Por número de sello" más abajo.
-        </Text>
-      )}
-
-      {fileResult.status === 'found' && (
-        <CertificateDetailModal
-          certificate={fileResult.certificate}
-          visible={fileDetailVisible}
-          onClose={() => setFileDetailVisible(false)}
-        />
-      )}
-
-      <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
       {/* ---------------- Sección 2: por número de sello ---------------- */}
-      <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por número de sello</Text>
-      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-        Escribe un número de sello (por ejemplo, uno que te haya pasado otra
-        persona) para confirmar si existe de verdad.
-      </Text>
-
-      <TextInput
-        style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-        placeholder="Número de sello (0x...)"
-        placeholderTextColor={colors.textMuted}
-        value={sealInput}
-        onChangeText={setSealInput}
-        autoCapitalize="none"
-      />
-      <Pressable style={[styles.searchButton, { backgroundColor: colors.accent }]} onPress={handleSearchBySeal}>
-        <Text style={[styles.searchButtonText, { color: colors.accentText }]}>Buscar</Text>
-      </Pressable>
-
-      {hashResult.status === 'checking' && (
-        <View style={styles.resultBox}>
-          <ActivityIndicator color={colors.accent} />
-        </View>
-      )}
-
-      {hashResult.status === 'found-local' && (
-        <View style={styles.resultBox}>
-          <Text style={[styles.matchText, { color: colors.success }]}>Este sello es de tu dispositivo:</Text>
-          <CertificateCard
-            certificate={hashResult.certificate}
-            onPress={() => setHashDetailVisible(true)}
-          />
-          <CertificateDetailModal
-            certificate={hashResult.certificate}
-            visible={hashDetailVisible}
-            onClose={() => setHashDetailVisible(false)}
-          />
-        </View>
-      )}
-
-      {hashResult.status === 'found-on-chain' && (
-        <View style={styles.resultBox}>
-          <Text style={[styles.matchText, { color: colors.success }]}>
-            ✅ Este número de sello existe en el registro público (no es de este
-            dispositivo, así que no tenemos la foto para mostrarte).
-          </Text>
-          <Text style={[styles.hashLabel, { color: colors.textMuted }]}>Huella digital anclada</Text>
-          <Text style={[styles.hashValue, { color: colors.text }]} selectable>
-            {hashResult.sha256}
-          </Text>
-        </View>
-      )}
-
-      {hashResult.status === 'not-found' && (
-        <Text style={[styles.noMatchText, { color: colors.danger }, styles.resultBox]}>
-          ❌ No se encontró ninguna transacción con ese número de sello.
+      <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
+        <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por número de sello</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          Escribe un número de sello (por ejemplo, uno que te haya pasado otra
+          persona) para confirmar si existe de verdad.
         </Text>
-      )}
+
+        <TextInput
+          style={[styles.input, { borderColor: colors.border, color: colors.text }]}
+          placeholder="Número de sello (0x...)"
+          placeholderTextColor={colors.textMuted}
+          value={sealInput}
+          onChangeText={setSealInput}
+          autoCapitalize="none"
+        />
+        <Pressable style={[styles.searchButton, { backgroundColor: colors.accent }]} onPress={handleSearchBySeal}>
+          <Text style={[styles.searchButtonText, { color: colors.accentText }]}>Buscar</Text>
+        </Pressable>
+
+        {hashResult.status === 'checking' && (
+          <View style={styles.resultBox}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        )}
+
+        {hashResult.status === 'found-local' && (
+          <View style={styles.resultBox}>
+            <Text style={[styles.matchText, { color: colors.success }]}>Este sello es de tu dispositivo:</Text>
+            <CertificateCard
+              certificate={hashResult.certificate}
+              onPress={() => setHashDetailVisible(true)}
+            />
+            <CertificateDetailModal
+              certificate={hashResult.certificate}
+              visible={hashDetailVisible}
+              onClose={() => setHashDetailVisible(false)}
+            />
+          </View>
+        )}
+
+        {hashResult.status === 'found-on-chain' && (
+          <View style={[styles.resultTintBox, { borderColor: colors.success, backgroundColor: colors.surface }]}>
+            <Text style={[styles.matchText, { color: colors.success }]}>
+              ✅ Este número de sello existe en el registro público (no es de este
+              dispositivo, así que no tenemos la foto para mostrarte).
+            </Text>
+            <Text style={[styles.hashLabel, { color: colors.textMuted }]}>Huella digital anclada</Text>
+            <Text style={[styles.hashValue, { color: colors.text }]} selectable>
+              {hashResult.sha256}
+            </Text>
+          </View>
+        )}
+
+        {hashResult.status === 'not-found' && (
+          <View style={[styles.resultTintBox, { borderColor: colors.danger, backgroundColor: colors.surface }]}>
+            <Text style={[styles.noMatchText, { color: colors.danger }]}>
+              ❌ No se encontró ninguna transacción con ese número de sello.
+            </Text>
+          </View>
+        )}
+      </View>
+      </ScrollView>
 
       <Modal visible={pickerVisible} animationType="slide" onRequestClose={() => setPickerVisible(false)}>
         <SafeAreaView style={[styles.pickerContainer, { backgroundColor: colors.background }]}>
@@ -288,9 +300,21 @@ export default function VerificationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24 },
-  header: { position: 'relative', paddingRight: 48, marginBottom: 16 },
+  container: { flex: 1 },
+  scrollContent: { padding: 24, paddingBottom: 40 },
+  header: { position: 'relative', paddingRight: 48, marginBottom: 20 },
   title: { fontSize: 24, fontWeight: '800' },
+  card: {
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
   sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
   subtitle: { fontSize: 13, marginBottom: 14 },
   input: {
@@ -306,8 +330,13 @@ const styles = StyleSheet.create({
   },
   searchButtonText: { fontWeight: '700' },
   actions: { gap: 12 },
-  divider: { height: 1, marginVertical: 28 },
   resultBox: { marginTop: 20 },
+  resultTintBox: {
+    marginTop: 20,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+  },
   matchText: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   noMatchText: { fontSize: 13, fontWeight: '600', lineHeight: 19 },
   hashLabel: { fontSize: 12, marginTop: 8 },

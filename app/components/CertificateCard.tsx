@@ -25,7 +25,7 @@ export default function CertificateCard({
 
   return (
     <CardWrapper
-      style={[styles.card, { backgroundColor: colors.surface }]}
+      style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}
       onPress={onPress}
     >
       {certificate.thumbnailUri && (
@@ -58,8 +58,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     borderRadius: 16,
+    borderWidth: 1,
     padding: 16,
-    marginTop: 20,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   thumbnail: { width: 72, height: 72, borderRadius: 12 },
   info: { flex: 1, gap: 4 },
