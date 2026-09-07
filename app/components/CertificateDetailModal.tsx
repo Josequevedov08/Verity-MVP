@@ -157,6 +157,14 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
     }
     isAnimating.current = true;
     const goingToBack = !flipped;
+    // Importante para video: `flipped` se actualiza ANTES de animar, no
+    // en el callback de .start(). Así <VideoBackFace> se monta (o
+    // desmonta, liberando el reproductor nativo) apenas se toca la
+    // carta, no recién cuando termina de girar — reproducir un video
+    // recién montado exactamente cuando ya es visible da tiempo de
+    // sobra a inicializarse durante el giro, que de todos modos está
+    // oculto (backfaceVisibility) hasta pasar los 90°.
+    setFlipped(goingToBack);
     Animated.spring(flip, {
       toValue: goingToBack ? 180 : 0,
       friction: 8,
@@ -164,13 +172,12 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
       useNativeDriver: true,
     }).start(() => {
       isAnimating.current = false;
-      setFlipped(goingToBack);
       if (goingToBack && !isVideo) {
         flipBackTimer.current = setTimeout(() => {
           isAnimating.current = true;
+          setFlipped(false);
           Animated.spring(flip, { toValue: 0, friction: 8, tension: 10, useNativeDriver: true }).start(() => {
             isAnimating.current = false;
-            setFlipped(false);
           });
         }, 2200);
       }
@@ -326,7 +333,14 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
           ]}
         >
           {isVideo && hasLocalMedia ? (
-            <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
+            // Montaje perezoso: el reproductor nativo (ExoPlayer/AVPlayer)
+            // solo existe mientras la carta está volteada. Si se
+            // instanciara siempre (aunque en pausa), la lista horizontal
+            // de certificados podría llegar a montar varios reproductores
+            // a la vez (el actual + vecinos que React Native pre-renderiza
+            // para el scroll) — eso fue lo que causaba que la app se
+            // cerrara sola al tocar la carta.
+            flipped && <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
           ) : hasLocalMedia ? (
             <>
               <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
