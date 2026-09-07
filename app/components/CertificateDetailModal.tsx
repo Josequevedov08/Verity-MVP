@@ -171,14 +171,48 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   const swapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const SPIN_DURATION_MS = 700;
+  const AUTO_RETURN_MS = 2200;
+
+  // Cuánto falta del auto-retorno cuando se pausa (mantener el dedo
+  // presionado sobre la foto/sello, como en Instagram Stories) y en qué
+  // momento se reanudó por última vez — con esto se puede calcular
+  // cuánto tiempo REAL queda, en vez de reiniciar la cuenta desde cero
+  // cada vez que se suelta.
+  const autoReturnRemainingMs = useRef(AUTO_RETURN_MS);
+  const autoReturnStartedAt = useRef<number | null>(null);
+
+  function scheduleAutoReturn(ms: number) {
+    autoReturnRemainingMs.current = ms;
+    autoReturnStartedAt.current = Date.now();
+    flipBackTimer.current = setTimeout(handleCardTap, ms);
+  }
+
+  /** Mantener el dedo presionado sobre la foto/sello congela el
+   * auto-retorno — no aplica a video (ese ya no tiene auto-retorno, se
+   * controla con play/pausa real). */
+  function pauseAutoReturn() {
+    if (isVideo || !flipBackTimer.current || autoReturnStartedAt.current === null) return;
+    clearTimeout(flipBackTimer.current);
+    flipBackTimer.current = null;
+    const elapsed = Date.now() - autoReturnStartedAt.current;
+    // Mínimo 400ms al soltar, para que nunca se sienta "instantáneo".
+    autoReturnRemainingMs.current = Math.max(400, autoReturnRemainingMs.current - elapsed);
+    autoReturnStartedAt.current = null;
+  }
+
+  function resumeAutoReturn() {
+    if (isVideo || !flippedRef.current || flipBackTimer.current) return;
+    scheduleAutoReturn(autoReturnRemainingMs.current);
+  }
 
   /**
-   * Dispara UN giro de moneda (una sola vez, nunca en bucle). Para FOTO,
-   * además vuelve sola al frente a los ~2s (un vistazo rápido)
-   * repitiendo el mismo giro UNA vez más. Para VIDEO no hay
-   * auto-retorno: el video se queda reproduciendo — volver es una
-   * acción explícita del usuario (botón "Volver al certificado" o
-   * tocar fuera del video, ver el reverso más abajo).
+   * Dispara UN giro de moneda (una sola vez, nunca en bucle). Para FOTO
+   * (o el sello, cuando no hay archivo local), además vuelve sola al
+   * frente a los ~2.2s (un vistazo rápido) — mantener el dedo
+   * presionado sobre la imagen pausa esa cuenta (ver pauseAutoReturn).
+   * Para VIDEO no hay auto-retorno: el video se queda reproduciendo —
+   * volver es una acción explícita del usuario (botón "Volver al
+   * certificado").
    */
   function handleCardTap() {
     if (!canFlip || isAnimating.current) return;
@@ -201,7 +235,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
     }).start(() => {
       isAnimating.current = false;
       if (goingToBack && !isVideo) {
-        flipBackTimer.current = setTimeout(handleCardTap, 2200);
+        scheduleAutoReturn(AUTO_RETURN_MS);
       }
     });
   }
@@ -281,14 +315,13 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
     );
   }
 
-  // Mientras se ve el VIDEO, tocar la carta NO debe voltearla de vuelta
-  // — antes cualquier toque (incluso uno pensado para los controles
-  // nativos de play/pausa) también disparaba el giro de regreso al
-  // certificado, mezclando las dos intenciones. Ahora, viendo un video,
-  // tocar la carta no hace nada (los controles nativos manejan sus
-  // propios toques) y volver es una acción explícita: el botón "Volver
-  // al certificado" del reverso.
-  const cardTapDisabled = !canFlip || (flipped && isVideo);
+  // Una vez volteada (a lo que sea: video, foto o el sello), tocar la
+  // carta ya NO la regresa de inmediato — antes eso hacía que mantener
+  // el dedo presionado para pausar la foto también contara como "toque"
+  // y la volteara de golpe al soltar. Volver es siempre una acción
+  // explícita (botón "Volver al certificado") o el auto-retorno normal
+  // (foto/sello, pausable con el dedo — ver pauseAutoReturn).
+  const cardTapDisabled = !canFlip || flipped;
 
   return (
     <Pressable onPress={handleCardTap} disabled={cardTapDisabled}>
@@ -410,8 +443,25 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
               </>
             ) : hasLocalMedia ? (
               <>
-                <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
-                <Text style={styles.cardBackLabel}>CERTIFICADO VERITY — FOTO ORIGINAL</Text>
+                {/* onPressIn/onPressOut (no onPress) para no chocar con
+                    el toque normal: mantener el dedo presionado pausa
+                    el auto-retorno (estilo Instagram Stories), soltar
+                    lo reanuda con el tiempo que faltaba — así hay
+                    tiempo de sobra para leer/mirar antes de que la
+                    carta vuelva sola. delayLongPress alto evita que un
+                    toque rápido normal dispare esto por accidente. */}
+                <Pressable
+                  style={StyleSheet.absoluteFill}
+                  onPressIn={pauseAutoReturn}
+                  onPressOut={resumeAutoReturn}
+                >
+                  <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
+                  <Text style={styles.cardBackLabel}>CERTIFICADO VERITY — FOTO ORIGINAL</Text>
+                </Pressable>
+                <Pressable style={styles.backToCardButton} onPress={handleCardTap} hitSlop={8}>
+                  <Ionicons name="arrow-back" size={16} color="#fff" />
+                  <Text style={styles.backToCardText}>Volver al certificado</Text>
+                </Pressable>
               </>
             ) : (
               <View style={styles.cardBackNoMedia}>
@@ -421,6 +471,14 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                   copia de seguridad, que nunca incluye archivos), pero el sello sigue siendo 100% válido —
                   anclado en Polygon Amoy con el número de sello de arriba.
                 </Text>
+                <Pressable
+                  style={[styles.backToCardButtonDark, { borderColor: colors.accent }]}
+                  onPress={handleCardTap}
+                  hitSlop={8}
+                >
+                  <Ionicons name="arrow-back" size={16} color={colors.accent} />
+                  <Text style={[styles.backToCardTextDark, { color: colors.accent }]}>Volver al certificado</Text>
+                </Pressable>
               </View>
             )}
           </View>
@@ -671,6 +729,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
   backToCardText: { color: '#fff', fontSize: 11.5, fontWeight: '700' },
+  // Misma acción, pero como botón normal en el flujo (no flotando sobre
+  // una imagen) — el sello no tiene nada debajo para "flotar" encima.
+  backToCardButtonDark: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1.5,
+  },
+  backToCardTextDark: { fontSize: 12, fontWeight: '700' },
   cardBackNoMedia: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
   cardBackNoMediaText: { fontSize: 12.5, lineHeight: 18, textAlign: 'center' },
   cardBackLabel: {

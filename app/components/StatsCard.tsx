@@ -12,6 +12,19 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
+/**
+ * Abrevia números grandes (198567 → "198.5k") para que la fila de 3
+ * cifras nunca reviente el ancho de la tarjeta — con miles de sellos
+ * (alguien probando la app a fondo, o un futuro sellado en lote) los
+ * conteos reales pueden crecer mucho, y un número de 6+ dígitos sin
+ * abreviar rompería el layout de la fila.
+ */
+function formatCount(n: number): string {
+  if (n < 1000) return String(n);
+  if (n < 1_000_000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
+  return `${(n / 1_000_000).toFixed(1)}M`;
+}
+
 export default function StatsCard({ certificates }: { certificates: VerityCertificate[] }) {
   const { colors } = useTheme();
 
@@ -22,7 +35,9 @@ export default function StatsCard({ certificates }: { certificates: VerityCertif
   return (
     <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
       <View style={styles.totalRow}>
-        <Text style={[styles.totalNumber, { color: colors.text }]}>{certificates.length}</Text>
+        <Text style={[styles.totalNumber, { color: colors.text }]} numberOfLines={1}>
+          {formatCount(certificates.length)}
+        </Text>
         <Text style={[styles.totalLabel, { color: colors.textMuted }]}>
           {certificates.length === 1 ? 'sello en este teléfono' : 'sellos en este teléfono'}
         </Text>
@@ -30,6 +45,7 @@ export default function StatsCard({ certificates }: { certificates: VerityCertif
 
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
+      <Text style={[styles.breakdownTitle, { color: colors.textMuted }]}>NIVEL DE CONFIANZA</Text>
       <View style={styles.breakdownRow}>
         <StatChip icon="shield-checkmark" color={colors.success} value={alto} label="Alta" />
         <StatChip icon="shield-half" color={colors.warning} value={medio} label="Media" />
@@ -39,6 +55,11 @@ export default function StatsCard({ certificates }: { certificates: VerityCertif
   );
 }
 
+/**
+ * `label` concuerda en número con `value` a propósito ("5 Altas", no
+ * "5 Alta") — es un adjetivo acompañando una cantidad, así que debe
+ * pluralizarse igual que "sello/sellos" arriba.
+ */
 function StatChip({
   icon,
   color,
@@ -54,8 +75,12 @@ function StatChip({
   return (
     <View style={styles.chip}>
       <Ionicons name={icon} size={16} color={color} />
-      <Text style={[styles.chipValue, { color: colors.text }]}>{value}</Text>
-      <Text style={[styles.chipLabel, { color: colors.textMuted }]}>{label}</Text>
+      <Text style={[styles.chipValue, { color: colors.text }]} numberOfLines={1}>
+        {formatCount(value)}
+      </Text>
+      <Text style={[styles.chipLabel, { color: colors.textMuted }]} numberOfLines={1}>
+        {value === 1 ? label : `${label}s`}
+      </Text>
     </View>
   );
 }
@@ -63,11 +88,15 @@ function StatChip({
 const styles = StyleSheet.create({
   card: { borderWidth: 1, borderRadius: 18, padding: 16, marginBottom: 16 },
   totalRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  totalNumber: { fontSize: 30, fontWeight: '800' },
-  totalLabel: { fontSize: 13, fontWeight: '600' },
+  totalNumber: { fontSize: 30, fontWeight: '800', flexShrink: 1 },
+  totalLabel: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
   divider: { height: 1, marginVertical: 12 },
-  breakdownRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  chipValue: { fontSize: 13, fontWeight: '800' },
-  chipLabel: { fontSize: 11.5, fontWeight: '600' },
+  breakdownTitle: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.6, marginBottom: 10 },
+  // flexWrap + cada chip con flexBasis/flexShrink: si con números
+  // abreviados TODAVÍA no cupieran los 3 en una fila (pantallas muy
+  // angostas), se acomodan en 2 líneas en vez de desbordar o superponerse.
+  breakdownRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1, minWidth: '30%' },
+  chipValue: { fontSize: 13, fontWeight: '800', flexShrink: 1 },
+  chipLabel: { fontSize: 11.5, fontWeight: '600', flexShrink: 1 },
 });

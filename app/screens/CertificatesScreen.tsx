@@ -175,11 +175,6 @@ export default function CertificatesScreen() {
         </Pressable>
       </View>
 
-      {/* Antes solo se mostraba en grilla — pero la lista también usa
-          insignias de nivel de confianza (TrustLevelBadge en cada
-          tarjeta), así que la leyenda es igual de útil ahí. */}
-      {certificates.length > 0 && <TrustLegend />}
-
       {viewMode === 'list' ? (
         <FlatList
           key="list"
@@ -248,41 +243,11 @@ export default function CertificatesScreen() {
 
 /**
  * Explica qué significan los íconos de escudo en las miniaturas de la
- * grilla. Antes solo había un punto de color sin ninguna explicación —
- * al entrar a este modo no se entendía qué representaba.
+ * grilla. Se movió a StatsCard.tsx (arriba de todo) para no repetir la
+ * misma info dos veces en la misma pantalla — antes existía esta
+ * leyenda por separado, redundante con el desglose de la tarjeta de
+ * estadísticas.
  */
-function TrustLegend() {
-  const { colors } = useTheme();
-  return (
-    <View>
-      <Text style={[styles.legendTitle, { color: colors.textMuted }]}>NIVEL DE CONFIANZA</Text>
-      <View style={[styles.legend, { backgroundColor: colors.background, borderColor: colors.border }]}>
-        <LegendItem icon="shield-checkmark" color={colors.success} label="Alta" />
-        <LegendItem icon="shield-half" color={colors.warning} label="Media" />
-        <LegendItem icon="shield-outline" color={colors.tabBarInactive} label="Baja" />
-      </View>
-    </View>
-  );
-}
-
-function LegendItem({
-  icon,
-  color,
-  label,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  color: string;
-  label: string;
-}) {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.legendItem}>
-      <Ionicons name={icon} size={13} color={color} />
-      <Text style={[styles.legendLabel, { color: colors.textMuted }]}>{label}</Text>
-    </View>
-  );
-}
-
 function GridTile({ certificate, onPress }: { certificate: VerityCertificate; onPress: () => void }) {
   const { colors } = useTheme();
   const trustIcon =
@@ -337,18 +302,6 @@ const styles = StyleSheet.create({
   },
   backupButtonText: { fontWeight: '600', fontSize: 12, textAlign: 'center' },
   empty: { marginTop: 40, textAlign: 'center' },
-  legendTitle: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.6, marginBottom: 6 },
-  legend: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: 12,
-  },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  legendLabel: { fontSize: 11, fontWeight: '600' },
   gridRow: { gap: 8, marginBottom: 8 },
   gridTile: { flex: 1 / 3, aspectRatio: 1, position: 'relative' },
   gridImage: { flex: 1, borderRadius: 12, borderWidth: 1 },

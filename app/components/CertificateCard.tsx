@@ -73,7 +73,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  thumbnail: { width: 72, height: 72, borderRadius: 12 },
+  // Sin height fijo a propósito: alignItems:'stretch' (el default de
+  // `card`) hace que la miniatura ocupe TODO el alto real de la fila
+  // (el que define la columna de texto, casi siempre más alta que
+  // 72px) — antes tenía height:72 fijo, así que quedaba corta con
+  // espacio vacío debajo, sin llegar hasta abajo de la tarjeta.
+  thumbnail: { width: 72, borderRadius: 12 },
   thumbnailPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1, gap: 4 },
   label: { fontSize: 11, marginTop: 6 },
