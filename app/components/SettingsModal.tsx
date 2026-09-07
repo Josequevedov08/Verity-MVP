@@ -15,15 +15,22 @@
  * para hacer scroll y visualmente consistente con el resto de la app.
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, Modal, Pressable, StyleSheet, Image, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Import directo al submódulo (ver SettingsButton.tsx para el porqué:
 // el barrel de @expo/vector-icons carga las 15 familias de íconos de
 // una sola vez, ~3MB de fuentes de más).
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
+import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
+import { File, Paths } from 'expo-file-system';
 import { useTheme, type ThemePreference } from '../theme/ThemeContext';
-import { getDeviceWalletAddress } from '../services/blockchainService';
+import {
+  getDeviceWalletAddress,
+  exportDeviceWalletPrivateKey,
+  restoreDeviceWalletFromPrivateKey,
+} from '../services/blockchainService';
 import { resetAllCoachMarks } from '../utils/coachMarkUtils';
 import LegalContentModal, { LEGAL_DOCS, type LegalDocId } from './LegalContentModal';
 
@@ -75,6 +82,99 @@ export default function SettingsModal({
     await Clipboard.setStringAsync(walletAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
+  }
+
+  /**
+   * Sin esto, si el usuario borra los datos de la app o cambia de
+   * teléfono, pierde para siempre la identidad con la que selló antes
+   * (ya le pasó una vez en pruebas reales — ver blockchainService.ts).
+   * El archivo generado contiene la clave privada en texto plano: tan
+   * sensible como una contraseña, de ahí la advertencia explícita antes
+   * de generarlo.
+   */
+  async function handleBackupWallet() {
+    Alert.alert(
+      'Respaldar tu wallet',
+      'Se va a generar un archivo con la clave de tu wallet. Guárdalo en un lugar seguro y NUNCA lo compartas — quien lo tenga puede sellar como si fuera este teléfono. Es la única forma de recuperar tu identidad si pierdes el teléfono o borras los datos de la app.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Continuar',
+          onPress: async () => {
+            try {
+              const privateKey = await exportDeviceWalletPrivateKey();
+              const address = walletAddress ?? (await getDeviceWalletAddress());
+              const backup = {
+                version: 1,
+                walletAddress: address,
+                privateKey,
+                exportedAt: new Date().toISOString(),
+              };
+
+              const file = new File(Paths.cache, `verity-wallet-backup-${Date.now()}.json`);
+              if (!file.exists) file.create({ intermediates: true });
+              file.write(JSON.stringify(backup, null, 2));
+
+              const canShare = await Sharing.isAvailableAsync();
+              if (!canShare) {
+                Alert.alert('No disponible', 'Compartir archivos no está disponible en este dispositivo.');
+                return;
+              }
+              await Sharing.shareAsync(file.uri, {
+                mimeType: 'application/json',
+                dialogTitle: 'Guardar respaldo de tu wallet',
+              });
+            } catch (error) {
+              console.error('Error al respaldar la wallet:', error);
+              Alert.alert('Error', 'No se pudo generar el respaldo.');
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  /** Reemplaza la wallet de este teléfono por la de un respaldo — para
+   * cuando alguien cambió de teléfono y quiere recuperar la identidad
+   * con la que ya había sellado antes. */
+  async function handleRestoreWallet() {
+    Alert.alert(
+      'Restaurar wallet desde respaldo',
+      'Esto reemplaza la wallet de este teléfono por la del archivo que elijas. Solo hazlo si sabes lo que contiene el archivo.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Elegir archivo',
+          onPress: async () => {
+            try {
+              const result = await DocumentPicker.getDocumentAsync({
+                type: 'application/json',
+                copyToCacheDirectory: true,
+              });
+              if (result.canceled || !result.assets[0]) return;
+
+              // fetch() en vez de la clase File nueva: más robusto con
+              // las rutas que entrega el selector de documentos (mismo
+              // motivo que en CertificatesScreen.handleImport).
+              const text = await fetch(result.assets[0].uri).then((res) => res.text());
+              const backup = JSON.parse(text) as { privateKey?: string };
+
+              if (!backup?.privateKey) {
+                Alert.alert('Archivo inválido', 'Este archivo no parece ser un respaldo de wallet de Verity.');
+                return;
+              }
+
+              const address = await restoreDeviceWalletFromPrivateKey(backup.privateKey);
+              setWalletAddress(address);
+              Alert.alert('Wallet restaurada', `Este teléfono ahora usa la wallet ${truncateAddress(address)}.`);
+            } catch (error) {
+              console.error('Error al restaurar la wallet:', error);
+              Alert.alert('Error', error instanceof Error ? error.message : 'No se pudo restaurar la wallet.');
+            }
+          },
+        },
+      ]
+    );
   }
 
   return (
@@ -173,6 +273,28 @@ export default function SettingsModal({
             </View>
 
             <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: 24 }]}>
+              RESPALDO DE LA WALLET
+            </Text>
+            <Text style={[styles.walletHint, { color: colors.textMuted }]}>
+              Si borras los datos de la app o cambias de teléfono, se pierde la wallet y con ella
+              la posibilidad de sellar con esta misma identidad. Un respaldo es la única forma de
+              recuperarla.
+            </Text>
+            <View style={[styles.aboutCard, { backgroundColor: colors.background, borderColor: colors.border, padding: 4 }]}>
+              <Pressable style={styles.legalRow} onPress={handleBackupWallet}>
+                <Text style={[styles.legalRowLabel, { color: colors.text }]}>Respaldar mi wallet</Text>
+                <Ionicons name="download-outline" size={18} color={colors.textMuted} />
+              </Pressable>
+              <Pressable
+                style={[styles.legalRow, { borderTopWidth: 1, borderTopColor: colors.border }]}
+                onPress={handleRestoreWallet}
+              >
+                <Text style={[styles.legalRowLabel, { color: colors.text }]}>Restaurar desde respaldo</Text>
+                <Ionicons name="cloud-upload-outline" size={18} color={colors.textMuted} />
+              </Pressable>
+            </View>
+
+            <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: 24 }]}>
               LEGAL Y AYUDA
             </Text>
             <View style={[styles.aboutCard, { backgroundColor: colors.background, borderColor: colors.border, padding: 4 }]}>
@@ -263,6 +385,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   legalRowLabel: { fontSize: 13.5, fontWeight: '600' },
+  walletHint: { fontSize: 11.5, lineHeight: 16, marginBottom: 10 },
   replayTourButton: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -84,6 +84,47 @@ export async function getDeviceWalletAddress(): Promise<string> {
 }
 
 /**
+ * Devuelve la clave privada de la wallet del dispositivo, para poder
+ * respaldarla (ver SettingsModal.tsx: "Respaldar mi wallet"). Sin esto,
+ * si el usuario borra los datos de la app o cambia de teléfono, pierde
+ * para siempre la capacidad de sellar con la misma identidad — no hay
+ * forma de recuperarla, ni siquiera reinstalando. Quien la use decide
+ * cómo guardarla a salvo (es tan sensible como una contraseña: quien la
+ * tenga puede firmar transacciones como si fuera este dispositivo).
+ */
+export async function exportDeviceWalletPrivateKey(): Promise<string> {
+  const wallet = await getOrCreateDeviceWallet();
+  return wallet.privateKey;
+}
+
+/**
+ * Restaura la wallet del dispositivo a partir de una clave privada
+ * respaldada antes (ver exportDeviceWalletPrivateKey). Sobrescribe la
+ * wallet actual — se usa cuando el usuario perdió su historial local
+ * (ej. cambió de teléfono) y quiere recuperar la MISMA identidad con la
+ * que selló antes, para que sus certificados viejos sigan mostrando
+ * "sellado por" la wallet correcta.
+ *
+ * Lanza un error con mensaje claro si la clave no tiene forma válida —
+ * mejor eso que guardar algo corrupto en SecureStore sin darse cuenta.
+ */
+export async function restoreDeviceWalletFromPrivateKey(privateKey: string): Promise<string> {
+  const trimmed = privateKey.trim();
+  let wallet: ethers.Wallet;
+  try {
+    wallet = new ethers.Wallet(trimmed);
+  } catch {
+    throw new Error('Esa clave no tiene un formato válido. Revisa que la copiaste completa.');
+  }
+
+  await SecureStore.setItemAsync(PRIVATE_KEY_STORAGE_KEY, trimmed, {
+    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+  });
+
+  return wallet.address;
+}
+
+/**
  * Ancla un hash SHA-256 en Polygon Amoy.
  *
  * @param sha256Hash Hash en hexadecimal (con o sin prefijo "0x").

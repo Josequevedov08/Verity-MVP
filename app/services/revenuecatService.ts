@@ -10,8 +10,14 @@
  * RevenueCat y configurarse en .env (ver .env.example). Este archivo NO
  * trae claves hardcodeadas.
  *
- * Estado: stub funcional. La lógica de compra/entitlements está lista para
- * conectarse en cuanto existan las API keys — ver TODOs.
+ * Estado real (para no generar falsas expectativas): la lógica de límite
+ * y entitlements SÍ está conectada y en uso (ver CaptureScreen.tsx +
+ * PaywallModal.tsx). Lo que todavía NO existe es un producto de
+ * suscripción real dado de alta en Google Play Console (requiere pagar
+ * el registro de desarrollador, deliberadamente pospuesto a la fase de
+ * publicación) — hasta entonces, `getOfferings()` no devuelve paquetes
+ * reales y `presentPaywall()` lo indica con el motivo 'unavailable' en
+ * vez de fallar en silencio o simular una compra que no es real.
  */
 import Purchases, { CustomerInfo } from 'react-native-purchases';
 import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
@@ -40,29 +46,60 @@ export async function isProUser(): Promise<boolean> {
   }
 }
 
-/**
- * Verifica si el usuario todavía puede sellar este mes (gratis hasta el
- * límite, o ilimitado si es PRO).
- */
-export async function canSealThisMonth(): Promise<boolean> {
-  if (await isProUser()) return true;
-  const used = await countSealsThisMonth();
-  return used < FREEMIUM_LIMITS.FREE_SEALS_PER_MONTH;
+export interface SealUsage {
+  used: number;
+  limit: number;
+  isPro: boolean;
+  /** true si ya llegó al límite mensual y NO es PRO. */
+  limitReached: boolean;
 }
 
-/** Muestra el paywall nativo de RevenueCat para pasar a PRO. */
-export async function presentPaywall(): Promise<boolean> {
-  // TODO: reemplazar por react-native-purchases-ui cuando se configure
-  // el paywall visual en el dashboard de RevenueCat.
-  const offerings = await Purchases.getOfferings();
-  const current = offerings.current;
-  if (!current || !current.availablePackages.length) return false;
+/**
+ * Da el estado completo de uso del plan gratis/PRO en una sola llamada
+ * — se usa tanto para decidir si bloquear el sellado como para mostrar
+ * "llevas X de 10 este mes" en la UI (CaptureScreen, StatsCard).
+ */
+export async function getSealUsage(): Promise<SealUsage> {
+  const isPro = await isProUser();
+  const used = await countSealsThisMonth();
+  const limit = FREEMIUM_LIMITS.FREE_SEALS_PER_MONTH;
+  return { used, limit, isPro, limitReached: !isPro && used >= limit };
+}
+
+/** Verifica si el usuario todavía puede sellar este mes (gratis hasta el límite, o ilimitado si es PRO). */
+export async function canSealThisMonth(): Promise<boolean> {
+  const usage = await getSealUsage();
+  return !usage.limitReached;
+}
+
+export type PaywallOutcome =
+  | { status: 'purchased' }
+  | { status: 'cancelled' }
+  /** No hay un producto de suscripción real configurado todavía (falta
+   * Google Play Console — ver nota arriba). No es un error del usuario. */
+  | { status: 'unavailable' };
+
+/**
+ * Intenta mostrar la compra de PRO. Ver PaywallOutcome — 'unavailable'
+ * es el resultado ESPERADO hasta que exista un producto real en Play
+ * Store, y se distingue a propósito de 'cancelled' (el usuario sí tenía
+ * la opción y se arrepintió) para poder mostrar el mensaje correcto.
+ */
+export async function presentPaywall(): Promise<PaywallOutcome> {
+  if (!initialized) return { status: 'unavailable' };
 
   try {
+    const offerings = await Purchases.getOfferings();
+    const current = offerings.current;
+    if (!current || !current.availablePackages.length) {
+      return { status: 'unavailable' };
+    }
+
     const { customerInfo } = await Purchases.purchasePackage(current.availablePackages[0]);
-    return customerInfo.entitlements.active[FREEMIUM_LIMITS.PRO_ENTITLEMENT_ID] !== undefined;
+    const purchased = customerInfo.entitlements.active[FREEMIUM_LIMITS.PRO_ENTITLEMENT_ID] !== undefined;
+    return { status: purchased ? 'purchased' : 'cancelled' };
   } catch (error) {
-    console.warn('Compra cancelada o fallida:', error);
-    return false;
+    console.warn('No se pudo completar la compra de PRO:', error);
+    return { status: 'unavailable' };
   }
 }

@@ -41,7 +41,9 @@ import StampReveal from '../components/StampReveal';
 import SealStamp from '../components/SealStamp';
 import SettingsButton from '../components/SettingsButton';
 import CoachMark from '../components/CoachMark';
+import PaywallModal from '../components/PaywallModal';
 import { useTheme } from '../theme/ThemeContext';
+import { getSealUsage, type SealUsage } from '../services/revenuecatService';
 import type {
   CaptureMetadata,
   TrustLevel,
@@ -59,6 +61,34 @@ export default function CaptureScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [isDuplicate, setIsDuplicate] = useState(false);
+
+  // Freemium (RevenueCat) — ver revenuecatService.ts. `usage` alimenta
+  // tanto el indicador de la pantalla inicial ("3/10 este mes") como el
+  // propio paywall (para mostrar "ya usaste tus 10").
+  const [usage, setUsage] = useState<SealUsage | null>(null);
+  const [paywallVisible, setPaywallVisible] = useState(false);
+
+  async function refreshUsage(): Promise<SealUsage> {
+    const u = await getSealUsage();
+    setUsage(u);
+    return u;
+  }
+
+  useEffect(() => {
+    refreshUsage();
+  }, []);
+
+  /** Se llama al INICIO de cualquier acción que vaya a sellar algo. Si
+   * ya se llegó al límite gratis del mes, muestra el paywall en vez de
+   * dejar continuar — así el límite es real, no decorativo. */
+  async function ensureCanSeal(): Promise<boolean> {
+    const u = await refreshUsage();
+    if (u.limitReached) {
+      setPaywallVisible(true);
+      return false;
+    }
+    return true;
+  }
 
   // Recorrido guiado (una sola vez, la primera vez que se entra a esta
   // pestaña — ver coachMarkUtils.ts). `collapsable={false}` en el View
@@ -236,6 +266,7 @@ export default function CaptureScreen() {
       };
 
       await saveCertificate(newCertificate);
+      refreshUsage();
 
       setCertificate(newCertificate);
       setStep('done');
@@ -289,6 +320,8 @@ export default function CaptureScreen() {
    * ese modo, sin ambigüedad de gesto.
    */
   async function handleCameraCapture(mode: 'photo' | 'video' = 'photo') {
+    if (!(await ensureCanSeal())) return;
+
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permiso necesario', 'Verity necesita acceso a la cámara para sellar fotos.');
@@ -308,6 +341,8 @@ export default function CaptureScreen() {
   }
 
   async function handleGalleryPick() {
+    if (!(await ensureCanSeal())) return;
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permiso necesario', 'Verity necesita acceso a tus fotos para sellarlas.');
@@ -361,6 +396,28 @@ export default function CaptureScreen() {
         </Text>
         <SettingsButton />
       </View>
+
+      {/* Indicador del plan — visible siempre, no solo cuando se llega
+          al límite. Tocarlo abre el paywall voluntariamente (alguien
+          puede querer hacerse PRO antes de toparse con el límite). */}
+      {usage && (
+        <Pressable
+          style={[styles.planRow, { borderColor: colors.border, backgroundColor: colors.background }]}
+          onPress={() => setPaywallVisible(true)}
+        >
+          <Ionicons
+            name={usage.isPro ? 'ribbon' : 'pricetag-outline'}
+            size={14}
+            color={usage.isPro ? colors.accent : colors.textMuted}
+          />
+          <Text style={[styles.planText, { color: colors.textMuted }]}>
+            {usage.isPro ? 'Plan PRO · sellos ilimitados' : `Plan gratis · ${usage.used}/${usage.limit} este mes`}
+          </Text>
+          {!usage.isPro && (
+            <Text style={[styles.planUpgrade, { color: colors.accent }]}>Hazte PRO</Text>
+          )}
+        </Pressable>
+      )}
 
       {step === 'idle' || step === 'error' ? (
         <>
@@ -486,6 +543,17 @@ export default function CaptureScreen() {
           markCoachMarkSeen('capture');
         }}
       />
+
+      <PaywallModal
+        visible={paywallVisible}
+        usage={usage}
+        onClose={() => setPaywallVisible(false)}
+        onPurchased={() => {
+          setPaywallVisible(false);
+          refreshUsage();
+          Alert.alert('¡Listo!', 'Ya eres PRO — sellos ilimitados. Toca "Tomar foto" de nuevo para continuar.');
+        }}
+      />
     </>
   );
 }
@@ -522,6 +590,18 @@ const styles = StyleSheet.create({
   header: { position: 'relative', paddingRight: 48, marginBottom: 24 },
   title: { fontSize: 24, fontWeight: '800', marginBottom: 8 },
   subtitle: { fontSize: 14 },
+  planRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+  },
+  planText: { flex: 1, fontSize: 12, fontWeight: '600' },
+  planUpgrade: { fontSize: 12, fontWeight: '800' },
   actions: { gap: 12 },
   secondaryRow: { flexDirection: 'row', gap: 12 },
   secondaryHalf: { flex: 1 },

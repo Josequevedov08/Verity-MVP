@@ -36,6 +36,10 @@ const SLIDES: Slide[] = [
     title: 'Toma 2 segundos más',
     body: 'Y esos 2 segundos son la prueba. Así funciona un notario — y así funciona Verity.',
   },
+  {
+    title: '10 sellos gratis cada mes',
+    body: 'Suficiente para probar Verity a fondo. Si necesitas más, Verity PRO ($4.99/mes) los deja ilimitados — pero nunca es obligatorio para verificar nada.',
+  },
 ];
 
 export default function OnboardingScreen({ onDone }: { onDone: () => void }) {
