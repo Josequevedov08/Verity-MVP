@@ -89,8 +89,14 @@ export default function CertificatesScreen() {
       });
       if (result.canceled || !result.assets[0]) return;
 
-      const file = new File(result.assets[0].uri);
-      const text = await file.text();
+      // Nota: antes se leía con la clase File nueva de expo-file-system,
+      // pero es más estricta con las rutas que entrega el selector de
+      // documentos de Android (fallaba con "Call to function ... has
+      // been rejected" según el tipo de app usada para elegir el
+      // archivo). fetch() es la forma más robusta y estándar en React
+      // Native para leer un archivo elegido por el usuario, sin
+      // importar si la ruta es file:// o content://.
+      const text = await fetch(result.assets[0].uri).then((res) => res.text());
       const backup = JSON.parse(text) as CertificatesBackup;
 
       if (!backup || !Array.isArray(backup.certificates)) {
