@@ -151,6 +151,8 @@ export default function CertificatesScreen() {
         </Pressable>
       </View>
 
+      {viewMode === 'grid' && certificates.length > 0 && <TrustLegend />}
+
       {viewMode === 'list' ? (
         <FlatList
           key="list"
@@ -195,9 +197,49 @@ export default function CertificatesScreen() {
   );
 }
 
+/**
+ * Explica qué significan los íconos de escudo en las miniaturas de la
+ * grilla. Antes solo había un punto de color sin ninguna explicación —
+ * al entrar a este modo no se entendía qué representaba.
+ */
+function TrustLegend() {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.legend, { backgroundColor: colors.background, borderColor: colors.border }]}>
+      <LegendItem icon="shield-checkmark" color={colors.success} label="Confianza alta" />
+      <LegendItem icon="shield-half" color={colors.warning} label="Media" />
+      <LegendItem icon="shield-outline" color={colors.tabBarInactive} label="Baja" />
+    </View>
+  );
+}
+
+function LegendItem({
+  icon,
+  color,
+  label,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  label: string;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.legendItem}>
+      <Ionicons name={icon} size={13} color={color} />
+      <Text style={[styles.legendLabel, { color: colors.textMuted }]}>{label}</Text>
+    </View>
+  );
+}
+
 function GridTile({ certificate, onPress }: { certificate: VerityCertificate; onPress: () => void }) {
   const { colors } = useTheme();
-  const dotColor =
+  const trustIcon =
+    certificate.trustLevel === 'ALTO'
+      ? 'shield-checkmark'
+      : certificate.trustLevel === 'MEDIO'
+        ? 'shield-half'
+        : 'shield-outline';
+  const trustColor =
     certificate.trustLevel === 'ALTO'
       ? colors.success
       : certificate.trustLevel === 'MEDIO'
@@ -211,7 +253,9 @@ function GridTile({ certificate, onPress }: { certificate: VerityCertificate; on
       ) : (
         <View style={[styles.gridImage, styles.gridImagePlaceholder, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]} />
       )}
-      <View style={[styles.gridDot, { backgroundColor: dotColor, borderColor: colors.background }]} />
+      <View style={[styles.gridBadge, { backgroundColor: colors.background }]}>
+        <Ionicons name={trustIcon} size={13} color={trustColor} />
+      </View>
     </Pressable>
   );
 }
@@ -238,17 +282,34 @@ const styles = StyleSheet.create({
   },
   backupButtonText: { fontWeight: '600', fontSize: 12, textAlign: 'center' },
   empty: { marginTop: 40, textAlign: 'center' },
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  legendLabel: { fontSize: 11, fontWeight: '600' },
   gridRow: { gap: 8, marginBottom: 8 },
   gridTile: { flex: 1 / 3, aspectRatio: 1, position: 'relative' },
   gridImage: { flex: 1, borderRadius: 12, borderWidth: 1 },
   gridImagePlaceholder: {},
-  gridDot: {
+  gridBadge: {
     position: 'absolute',
     bottom: 6,
     right: 6,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 3,
   },
 });
