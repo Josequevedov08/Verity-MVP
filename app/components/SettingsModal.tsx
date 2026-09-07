@@ -3,11 +3,20 @@
  * ---------------------------------------------------------------------------
  * Panel de ajustes: selector de apariencia (Claro/Oscuro/Sistema) +
  * sección "Acerca de Verity" con versión, red y la wallet del
- * dispositivo (copiable). Antes solo tenía el selector de tema y se
- * sentía vacío/poco interactivo.
+ * dispositivo (copiable) + "Legal y ayuda".
+ *
+ * Antes era una hoja inferior (bottom sheet) que solo tapaba parte de
+ * la pantalla — se sentía como si "se abriera desde abajo" mostrando
+ * parte de la pantalla anterior detrás, y al vivir dentro de un
+ * ScrollView anidado en un Pressable de fondo, el gesto de deslizar
+ * para hacer scroll a veces no se registraba bien (competía con el
+ * Pressable del backdrop). Ahora es una pantalla completa propia,
+ * igual que CertificateDetailModal/LegalContentModal — más predecible
+ * para hacer scroll y visualmente consistente con el resto de la app.
  */
 import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Pressable, StyleSheet, Image, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 // Import directo al submódulo (ver SettingsButton.tsx para el porqué:
 // el barrel de @expo/vector-icons carga las 15 familias de íconos de
 // una sola vez, ~3MB de fuentes de más).
@@ -53,12 +62,15 @@ export default function SettingsModal({
   }
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <Pressable style={[styles.backdrop, { backgroundColor: colors.overlay }]} onPress={onClose}>
-        <Pressable style={[styles.sheet, { backgroundColor: colors.surface }]}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={[styles.title, { color: colors.text }]}>Ajustes</Text>
-
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={[styles.page, { backgroundColor: colors.surface }]}>
+        <View style={styles.topBar}>
+          <Text style={[styles.title, { color: colors.text }]}>Ajustes</Text>
+          <Pressable onPress={onClose} hitSlop={8}>
+            <Text style={[styles.closeText, { color: colors.accent }]}>Cerrar ✕</Text>
+          </Pressable>
+        </View>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>APARIENCIA</Text>
             <View style={{ gap: 10 }}>
               {OPTIONS.map((option) => {
@@ -163,12 +175,8 @@ export default function SettingsModal({
               ))}
             </View>
 
-            <Pressable style={styles.closeButton} onPress={onClose}>
-              <Text style={{ color: colors.accent, fontWeight: '700' }}>Listo</Text>
-            </Pressable>
-          </ScrollView>
-        </Pressable>
-      </Pressable>
+        </ScrollView>
+      </SafeAreaView>
 
       <LegalContentModal docId={openDoc} onClose={() => setOpenDoc(null)} />
     </Modal>
@@ -180,14 +188,18 @@ function truncateAddress(address: string): string {
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'flex-end' },
-  sheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    maxHeight: '80%',
+  page: { flex: 1 },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
-  title: { fontSize: 18, fontWeight: '800', marginBottom: 16 },
+  title: { fontSize: 18, fontWeight: '800' },
+  closeText: { fontSize: 14, fontWeight: '700' },
+  content: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40 },
   sectionLabel: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, marginBottom: 10 },
   subtitle: { fontSize: 13, marginBottom: 8 },
   option: {
@@ -222,7 +234,6 @@ const styles = StyleSheet.create({
   aboutRowLabel: { fontSize: 12.5, fontWeight: '600', width: 128 },
   aboutRowValue: { fontSize: 12.5 },
   aboutRowValueWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
-  closeButton: { alignItems: 'center', paddingVertical: 16, marginTop: 20 },
   legalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -139,14 +139,31 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   const canFlip = true;
 
   const [flipped, setFlipped] = useState(false);
+  // Espejo en un ref del mismo valor que `flipped`. Es LA causa del bug
+  // "el giro no para nunca": el auto-retorno programaba
+  // `setTimeout(handleCardTap, 2200)`, pero esa llamada recursiva
+  // referenciaba la función `handleCardTap` de ESE render (con `flipped`
+  // congelado en su valor de ese momento vía closure) — cuando el
+  // timeout disparaba, `goingToBack = !flipped` se recalculaba con ese
+  // valor viejo, así que creía que tenía que girar hacia el reverso otra
+  // vez (aunque ya estaba ahí), programaba OTRO retorno, y así para
+  // siempre. Leer `flippedRef.current` en vez de `flipped` evita el
+  // problema por completo: un ref siempre da el valor más reciente, sin
+  // importar qué closure lo esté leyendo.
+  const flippedRef = useRef(false);
+  function updateFlipped(value: boolean) {
+    flippedRef.current = value;
+    setFlipped(value);
+  }
+
   // Un solo valor de 0 a 1 maneja TODO el giro de moneda (ver el mockup
   // del usuario: coinFlip 0.7s — rotateY 0→180→360, translateY 0→-50→0,
   // scale 1→1.1→1). A diferencia del "flip de carta" clásico (dos caras
   // superpuestas con backfaceVisibility), aquí es UNA sola vista cuyo
-  // contenido se intercambia (`flipped`) justo en la mitad del giro
-  // (SPIN_DURATION_MS/2, con la carta de canto y casi invisible por la
-  // perspectiva) — por eso el giro completa 360° y no 180°: para volver
-  // a quedar de frente al usuario mostrando el contenido nuevo.
+  // contenido se intercambia justo en la mitad del giro (con la carta de
+  // canto y casi invisible por la perspectiva) — por eso el giro
+  // completa 360° y no 180°: para volver a quedar de frente al usuario
+  // mostrando el contenido nuevo.
   const spin = useRef(new Animated.Value(0)).current;
   const isAnimating = useRef(false);
   const flipBackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -155,11 +172,12 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   const SPIN_DURATION_MS = 700;
 
   /**
-   * Tocar la carta dispara el giro de moneda. Para FOTO, además vuelve
-   * sola al frente a los ~2s (un vistazo rápido) repitiendo el mismo
-   * giro. Para VIDEO no hay auto-retorno: interrumpiría la reproducción
-   * justo cuando el usuario la empieza a ver — ahí toca la carta de
-   * nuevo (o los controles nativos) para volver.
+   * Dispara UN giro de moneda (una sola vez, nunca en bucle). Para FOTO,
+   * además vuelve sola al frente a los ~2s (un vistazo rápido)
+   * repitiendo el mismo giro UNA vez más. Para VIDEO no hay
+   * auto-retorno: el video se queda reproduciendo — volver es una
+   * acción explícita del usuario (botón "Volver al certificado" o
+   * tocar fuera del video, ver el reverso más abajo).
    */
   function handleCardTap() {
     if (!canFlip || isAnimating.current) return;
@@ -168,12 +186,12 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
       flipBackTimer.current = null;
     }
     isAnimating.current = true;
-    const goingToBack = !flipped;
+    const goingToBack = !flippedRef.current;
     spin.setValue(0);
     // El contenido se intercambia a la mitad del giro (de canto, casi
     // invisible por la perspectiva), no al terminar — así lo que
     // "aterriza" en la segunda mitad del giro ya es el contenido nuevo.
-    swapTimer.current = setTimeout(() => setFlipped(goingToBack), SPIN_DURATION_MS / 2);
+    swapTimer.current = setTimeout(() => updateFlipped(goingToBack), SPIN_DURATION_MS / 2);
     Animated.timing(spin, {
       toValue: 1,
       duration: SPIN_DURATION_MS,
@@ -231,8 +249,17 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
     );
   }
 
+  // Mientras se ve el VIDEO, tocar la carta NO debe voltearla de vuelta
+  // — antes cualquier toque (incluso uno pensado para los controles
+  // nativos de play/pausa) también disparaba el giro de regreso al
+  // certificado, mezclando las dos intenciones. Ahora, viendo un video,
+  // tocar la carta no hace nada (los controles nativos manejan sus
+  // propios toques) y volver es una acción explícita: el botón "Volver
+  // al certificado" del reverso.
+  const cardTapDisabled = !canFlip || (flipped && isVideo);
+
   return (
-    <Pressable onPress={handleCardTap} disabled={!canFlip}>
+    <Pressable onPress={handleCardTap} disabled={cardTapDisabled}>
       <Animated.View
         style={[
           styles.card,
@@ -324,7 +351,15 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
           // válido, solo no hay archivo guardado en ESTE teléfono.
           <View style={styles.cardBack}>
             {isVideo && hasLocalMedia ? (
-              <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
+              <>
+                <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
+                {/* Acción explícita para volver — separada de tocar el
+                    video (que ahora solo controla play/pausa). */}
+                <Pressable style={styles.backToCardButton} onPress={handleCardTap} hitSlop={8}>
+                  <Ionicons name="arrow-back" size={16} color="#fff" />
+                  <Text style={styles.backToCardText}>Volver al certificado</Text>
+                </Pressable>
+              </>
             ) : hasLocalMedia ? (
               <>
                 <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
@@ -353,10 +388,15 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
  * este lado — se usa para pausar automáticamente el video en cuanto deja
  * de estar visible (al voltear de vuelta o al cerrar el detalle), en vez
  * de dejarlo sonando de fondo.
+ *
+ * `loop = false` a propósito: el video reproduce una vez y se queda en
+ * pausa en el último frame al terminar — los controles nativos ya
+ * muestran un botón de "reproducir de nuevo" en ese estado, sin
+ * necesidad de repetir solo automáticamente.
  */
 function VideoBackFace({ uri, active }: { uri: string; active: boolean }) {
   const player = useVideoPlayer(uri, (p) => {
-    p.loop = true;
+    p.loop = false;
   });
 
   useEffect(() => {
@@ -514,6 +554,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardBackImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  backToCardButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  backToCardText: { color: '#fff', fontSize: 11.5, fontWeight: '700' },
   cardBackNoMedia: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
   cardBackNoMediaText: { fontSize: 12.5, lineHeight: 18, textAlign: 'center' },
   cardBackLabel: {
