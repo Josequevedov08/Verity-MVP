@@ -35,10 +35,11 @@ import { resetAllCoachMarks } from '../utils/coachMarkUtils';
 import { getSealUsage, type SealUsage } from '../services/revenuecatService';
 import LegalContentModal, { LEGAL_DOCS, type LegalDocId } from './LegalContentModal';
 import PaywallModal from './PaywallModal';
+import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.2.1';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -200,6 +201,39 @@ export default function SettingsModal({
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Banner de PRO — lo PRIMERO que se ve al abrir Ajustes, a
+                propósito. Antes el estado del plan vivía como una fila
+                más entre "Red" y "Wallet del dispositivo", dentro de
+                "Acerca de Verity" — demasiado discreto: "no aparece en
+                ningún lado" fue el comentario real de una prueba. Un
+                banner arriba de todo, siempre visible, no se puede
+                pasar por alto. */}
+            {usage && !usage.isPro && (
+              <Pressable
+                style={[styles.proBanner, { backgroundColor: colors.accent }]}
+                onPress={() => setPaywallVisible(true)}
+              >
+                <Ionicons name="ribbon" size={22} color={colors.accentText} />
+                <View style={styles.proBannerText}>
+                  <Text style={[styles.proBannerTitle, { color: colors.accentText }]}>
+                    Hazte Verity PRO — ${FREEMIUM_LIMITS.PRO_MONTHLY_PRICE_USD}/mes
+                  </Text>
+                  <Text style={[styles.proBannerSubtitle, { color: colors.accentText }]}>
+                    Sellos ilimitados · llevas {usage.used}/{usage.limit} este mes
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.accentText} />
+              </Pressable>
+            )}
+            {usage && usage.isPro && (
+              <View style={[styles.proBanner, { backgroundColor: colors.accent }]}>
+                <Ionicons name="ribbon" size={22} color={colors.accentText} />
+                <Text style={[styles.proBannerTitle, { color: colors.accentText }]}>
+                  Ya eres Verity PRO — sellos ilimitados
+                </Text>
+              </View>
+            )}
+
             <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>APARIENCIA</Text>
             <View style={{ gap: 10 }}>
               {OPTIONS.map((option) => {
@@ -383,6 +417,17 @@ const styles = StyleSheet.create({
   title: { fontSize: 18, fontWeight: '800' },
   closeText: { fontSize: 14, fontWeight: '700' },
   content: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40 },
+  proBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+  },
+  proBannerText: { flex: 1 },
+  proBannerTitle: { fontSize: 14, fontWeight: '800' },
+  proBannerSubtitle: { fontSize: 12, fontWeight: '600', marginTop: 2, opacity: 0.9 },
   sectionLabel: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, marginBottom: 10 },
   subtitle: { fontSize: 13, marginBottom: 8 },
   option: {

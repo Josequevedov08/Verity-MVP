@@ -58,9 +58,20 @@ export default function MediaThumbnail({
   }
 
   if (uri && mediaType === 'video' && previewUri) {
+    // La <Image> usa position:'absolute' + inset 0 a propósito (no
+    // `style` directo): desde que CertificateCard dejó de fijar un alto
+    // explícito en la miniatura (para poder estirarse al alto real de
+    // la fila — ver CertificateCard.tsx), una <Image> SIN alto propio
+    // anidada dentro de una <View> que TAMPOCO tiene alto propio crea
+    // una dependencia circular (cada una espera el tamaño de la otra)
+    // que Yoga resuelve en 0px — el frame del video dejaba de verse
+    // por completo. Con position:'absolute', el tamaño de la Image ya
+    // no participa en el cálculo del contenedor: el contenedor toma su
+    // alto de afuera (stretch de la fila) y la imagen simplemente lo
+    // rellena, sin depender de sí misma.
     return (
       <View style={viewStyle}>
-        <Image source={{ uri: previewUri }} style={style} />
+        <Image source={{ uri: previewUri }} style={StyleSheet.absoluteFill} />
         <View style={[styles.videoBadge, { backgroundColor: 'rgba(0,0,0,0.55)' }]} pointerEvents="none">
           <Ionicons name="videocam" size={Math.max(10, Math.round(iconSize * 0.5))} color="#fff" />
         </View>

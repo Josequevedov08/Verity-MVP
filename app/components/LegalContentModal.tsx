@@ -40,7 +40,7 @@ export const LEGAL_DOCS: Record<LegalDocId, LegalDoc> = {
       },
       {
         heading: 'Mis sellos',
-        body: 'Aquí vive el historial de todo lo que has sellado en este teléfono. Toca el ícono junto al engranaje para cambiar entre lista y grilla. Toca cualquier certificado para ver el detalle completo, y toca la CARTA (no la lista) para verla girar y mostrar la foto o reproducir el video real. Desliza el dedo dentro del detalle para pasar al sello anterior/siguiente.',
+        body: 'Arriba de todo verás cuántos sellos tienes en este teléfono (ej. "18 sellos") y su desglose por nivel de confianza: Alta (verde), Media (ámbar) y Baja (gris) — esto NO dice si tus fotos/videos son reales o falsos, solo qué tanta información hay disponible sobre cómo se tomaron (toca la insignia de confianza dentro de cualquier certificado para más detalle). Debajo, toca el ícono junto al engranaje para cambiar entre lista y grilla. Toca cualquier certificado para ver el detalle completo, y toca la CARTA (no la lista) para verla girar y mostrar la foto o reproducir el video real. Desliza el dedo dentro del detalle para pasar al sello anterior/siguiente.',
       },
       {
         heading: 'Verificar',
