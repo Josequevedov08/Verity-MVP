@@ -33,6 +33,7 @@ import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
 
 const BENEFITS = [
   { icon: 'infinite-outline', text: 'Sellos ilimitados, sin límite mensual' },
+  { icon: 'layers-outline', text: 'Elige varias fotos o videos de golpe en Galería' },
   { icon: 'flash-outline', text: 'Prioridad al registrar en el registro público' },
   { icon: 'heart-outline', text: 'Apoyas directamente el desarrollo de Verity' },
 ] as const;

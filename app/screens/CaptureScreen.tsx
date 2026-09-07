@@ -43,7 +43,7 @@ import SettingsButton from '../components/SettingsButton';
 import CoachMark from '../components/CoachMark';
 import PaywallModal from '../components/PaywallModal';
 import { useTheme } from '../theme/ThemeContext';
-import { getSealUsage, type SealUsage } from '../services/revenuecatService';
+import { getSealUsage, canSealThisMonth, type SealUsage } from '../services/revenuecatService';
 import type {
   CaptureMetadata,
   TrustLevel,
@@ -53,6 +53,24 @@ import { saveCertificate, findCertificateByHash, getNextSequenceNumber } from '.
 import { hasSeenCoachMark, markCoachMarkSeen, useCoachMarkResetVersion } from '../utils/coachMarkUtils';
 
 type CaptureStep = 'idle' | 'hashing' | 'anchoring' | 'done' | 'error';
+
+/** Tope técnico del lote (solo PRO — ver handleGalleryPick). No es un
+ * número que el usuario tenga que conocer o elegir: es una protección
+ * de sentido común (cada archivo es su propia transacción en Polygon,
+ * uno detrás de otro) para que un lote no tarde una eternidad, no un
+ * límite de producto. */
+const MAX_BATCH_SIZE = 50;
+
+interface BatchState {
+  total: number;
+  processed: number;
+  sealedCount: number;
+  duplicateCount: number;
+  failedCount: number;
+  currentLabel: string;
+  done: boolean;
+  limitReachedMidBatch: boolean;
+}
 
 export default function CaptureScreen() {
   const { colors } = useTheme();
@@ -67,6 +85,10 @@ export default function CaptureScreen() {
   // propio paywall (para mostrar "ya usaste tus 10").
   const [usage, setUsage] = useState<SealUsage | null>(null);
   const [paywallVisible, setPaywallVisible] = useState(false);
+  // Lote múltiple (solo PRO — ver handleGalleryPick). No null mientras
+  // se está procesando o mostrando el resumen de un lote; toma el
+  // lugar de la UI normal de `step` mientras tanto.
+  const [batch, setBatch] = useState<BatchState | null>(null);
 
   async function refreshUsage(): Promise<SealUsage> {
     const u = await getSealUsage();
@@ -167,16 +189,22 @@ export default function CaptureScreen() {
     }
   }
 
-  /** Punto de entrada compartido tanto para cámara como para galería. */
-  async function processAsset(
+  /**
+   * El trabajo real de sellar UN archivo (hash → detectar duplicado →
+   * guardar copia → anclar → guardar certificado), sin tocar ningún
+   * estado de UI de la pantalla — así lo puede usar tanto el flujo de
+   * un solo archivo (processAsset, abajo) como el lote múltiple
+   * (processBatch), cada uno decidiendo cómo mostrar el progreso.
+   * `onStep` es opcional porque el lote no necesita (ni quiere) mostrar
+   * "Calculando huella..." / "Registrando..." por cada ítem — solo su
+   * barra de progreso general.
+   */
+  async function sealAsset(
     asset: ImagePicker.ImagePickerAsset,
-    source: 'camera' | 'gallery'
-  ) {
-    try {
-      setErrorMessage(null);
-      setCertificate(null);
-      setIsDuplicate(false);
-      setStep('hashing');
+    source: 'camera' | 'gallery',
+    onStep?: (step: 'hashing' | 'anchoring') => void
+  ): Promise<{ certificate: VerityCertificate; duplicate: boolean }> {
+      onStep?.('hashing');
 
       // Metadatos disponibles. GPS solo se intenta pedir cuando la captura
       // viene de la cámara de la app (nivel ALTO), para no pedir permisos
@@ -222,10 +250,7 @@ export default function CaptureScreen() {
       // sin saberlo.
       const existing = await findCertificateByHash(hashResult.sha256);
       if (existing) {
-        setCertificate(existing);
-        setIsDuplicate(true);
-        setStep('done');
-        return;
+        return { certificate: existing, duplicate: true };
       }
 
       // 2) Si viene de la cámara, copiarla a una carpeta propia y
@@ -249,7 +274,7 @@ export default function CaptureScreen() {
         metadata.mediaType === 'video' ? await generateVideoPreview(persistentUri, certificateId) : undefined;
 
       // 3) Registro en el "registro público" (Polygon Amoy testnet).
-      setStep('anchoring');
+      onStep?.('anchoring');
       const anchor = await anchorHashOnChain(hashResult.sha256);
 
       // 4) Armar el certificado y guardarlo en el historial local.
@@ -266,9 +291,27 @@ export default function CaptureScreen() {
       };
 
       await saveCertificate(newCertificate);
-      refreshUsage();
+      return { certificate: newCertificate, duplicate: false };
+  }
 
-      setCertificate(newCertificate);
+  /** Punto de entrada de UN solo archivo (cámara, o galería sin lote):
+   * llama a sealAsset y traduce el resultado a los estados de pantalla
+   * (step/certificate/error) de esta pantalla. */
+  async function processAsset(
+    asset: ImagePicker.ImagePickerAsset,
+    source: 'camera' | 'gallery'
+  ) {
+    try {
+      setErrorMessage(null);
+      setCertificate(null);
+      setIsDuplicate(false);
+      setStep('hashing');
+
+      const { certificate: result, duplicate } = await sealAsset(asset, source, setStep);
+      if (!duplicate) refreshUsage();
+
+      setCertificate(result);
+      setIsDuplicate(duplicate);
       setStep('done');
     } catch (error) {
       console.error('Error al sellar el archivo:', error);
@@ -282,6 +325,71 @@ export default function CaptureScreen() {
       setErrorMessage(message);
       setStep('error');
     }
+  }
+
+  /**
+   * Sella varios archivos elegidos de golpe en la galería (solo PRO —
+   * ver handleGalleryPick). Se procesan UNO POR UNO, nunca en paralelo:
+   * cada sello es su propia transacción en Polygon, y mandarlas todas
+   * a la vez arriesgaría un choque de nonce en la wallet del
+   * dispositivo. La UI no bloquea con una confirmación por archivo —
+   * solo una barra de progreso general — para que el usuario no tenga
+   * que quedarse mirando cada uno.
+   */
+  async function processBatch(assets: ImagePicker.ImagePickerAsset[]) {
+    setErrorMessage(null);
+    setCertificate(null);
+    setIsDuplicate(false);
+    setBatch({
+      total: assets.length,
+      processed: 0,
+      sealedCount: 0,
+      duplicateCount: 0,
+      failedCount: 0,
+      currentLabel: '',
+      done: false,
+      limitReachedMidBatch: false,
+    });
+
+    for (let i = 0; i < assets.length; i++) {
+      const asset = assets[i];
+      const label =
+        asset.type === 'video'
+          ? `Sellando video ${i + 1} de ${assets.length}...`
+          : `Sellando foto ${i + 1} de ${assets.length}...`;
+      setBatch((prev) => (prev ? { ...prev, currentLabel: label } : prev));
+
+      // El lote es una función PRO (ilimitado), pero esto queda como
+      // protección real por si algún día cambia esa regla: si a mitad
+      // de camino se agota el cupo del mes, se detiene acá y avisa con
+      // el paywall en vez de seguir anclando de más.
+      if (!(await canSealThisMonth())) {
+        setBatch((prev) => (prev ? { ...prev, done: true, limitReachedMidBatch: true } : prev));
+        refreshUsage();
+        setPaywallVisible(true);
+        return;
+      }
+
+      try {
+        const { duplicate } = await sealAsset(asset, 'gallery');
+        setBatch((prev) =>
+          prev
+            ? {
+                ...prev,
+                processed: prev.processed + 1,
+                sealedCount: prev.sealedCount + (duplicate ? 0 : 1),
+                duplicateCount: prev.duplicateCount + (duplicate ? 1 : 0),
+              }
+            : prev
+        );
+      } catch (error) {
+        console.error('Error al sellar en lote:', error);
+        setBatch((prev) => (prev ? { ...prev, processed: prev.processed + 1, failedCount: prev.failedCount + 1 } : prev));
+      }
+    }
+
+    refreshUsage();
+    setBatch((prev) => (prev ? { ...prev, done: true } : prev));
   }
 
   /** Extrae la extensión de un archivo a partir de su URI (sin el punto), o null si no se puede determinar. */
@@ -340,6 +448,15 @@ export default function CaptureScreen() {
     }
   }
 
+  /**
+   * Elegir de galería. Selección múltiple es EXCLUSIVA de PRO: el plan
+   * gratis sigue siendo una foto/video a la vez, como siempre — pedido
+   * real del usuario ("una podría sellar una diaria" fue el
+   * razonamiento del límite gratis, no pensado para lotes). No hace
+   * falta un aviso aparte para el usuario gratis: el picker
+   * simplemente no ofrece elegir varias, así que la experiencia es
+   * idéntica a la de siempre.
+   */
   async function handleGalleryPick() {
     if (!(await ensureCanSeal())) return;
 
@@ -349,13 +466,19 @@ export default function CaptureScreen() {
       return;
     }
 
+    const isPro = usage?.isPro ?? false;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images', 'videos'],
       quality: 1,
       exif: true,
+      ...(isPro ? { allowsMultipleSelection: true, selectionLimit: MAX_BATCH_SIZE } : null),
     });
 
-    if (!result.canceled && result.assets[0]) {
+    if (result.canceled || !result.assets.length) return;
+
+    if (result.assets.length > 1) {
+      await processBatch(result.assets);
+    } else {
       await processAsset(result.assets[0], 'gallery');
     }
   }
@@ -366,6 +489,11 @@ export default function CaptureScreen() {
     setCertificate(null);
     setErrorMessage(null);
     setIsDuplicate(false);
+  }
+
+  /** Cierra el resumen del lote y vuelve a la pantalla inicial. */
+  function handleBatchFinish() {
+    setBatch(null);
   }
 
   // Reduce la fricción de uso: al abrir la app (después del onboarding),
@@ -440,99 +568,153 @@ export default function CaptureScreen() {
         </Pressable>
       )}
 
-      {step === 'idle' || step === 'error' ? (
-        <>
-          <View style={styles.actions}>
-            <View ref={primaryButtonRef} collapsable={false}>
-              <CameraButton
-                onPress={() => handleCameraCapture('photo')}
-                label="Tomar foto"
-                icon="camera"
+      {/* Lote múltiple (PRO): toma el lugar de toda la UI de `step`
+          mientras hay uno en curso o mostrando su resumen — no tiene
+          sentido ver los botones de "Tomar foto" detrás de una barra
+          de progreso de 12 archivos. */}
+      {batch && (
+        <View style={[styles.batchBox, { borderColor: colors.border, backgroundColor: colors.background }]}>
+          {!batch.done ? (
+            <>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={[styles.loadingText, { color: colors.textMuted }]}>{batch.currentLabel}</Text>
+              <View style={[styles.batchProgressTrack, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+                <View
+                  style={[
+                    styles.batchProgressFill,
+                    { width: `${Math.round((batch.processed / batch.total) * 100)}%`, backgroundColor: colors.accent },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.batchProgressLabel, { color: colors.textMuted }]}>
+                {batch.processed} de {batch.total}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Ionicons
+                name={batch.limitReachedMidBatch ? 'alert-circle' : 'checkmark-circle'}
+                size={40}
+                color={batch.limitReachedMidBatch ? colors.warning : colors.success}
               />
-            </View>
-            <View style={styles.secondaryRow} ref={secondaryRowRef} collapsable={false}>
-              <CameraButton
-                onPress={() => handleCameraCapture('video')}
-                label="Grabar video"
-                icon="videocam-outline"
-                secondary
-                style={styles.secondaryHalf}
-              />
-              <CameraButton
-                onPress={handleGalleryPick}
-                label="Galería"
-                icon="images-outline"
-                secondary
-                style={styles.secondaryHalf}
-              />
-            </View>
-          </View>
-
-          <View
-            ref={howCardRef}
-            collapsable={false}
-            style={[styles.howCard, { backgroundColor: colors.background, borderColor: colors.border }]}
-          >
-            <Text style={[styles.howTitle, { color: colors.textMuted }]}>CÓMO FUNCIONA</Text>
-            <HowStep
-              icon="finger-print-outline"
-              text="Se calcula una huella digital única de tu foto, dentro de tu teléfono."
-            />
-            <HowStep
-              icon="link-outline"
-              text="Esa huella se registra en Polygon, un registro público que nadie puede alterar."
-            />
-            <HowStep
-              icon="ribbon-outline"
-              text="Recibes un certificado con nivel de confianza, listo para compartir o verificar."
-              last
-            />
-          </View>
-        </>
-      ) : null}
-
-      {(step === 'hashing' || step === 'anchoring') && (
-        <View style={styles.loadingBox}>
-          <ActivityIndicator size="large" color={colors.accent} />
-          <Text style={[styles.loadingText, { color: colors.textMuted }]}>
-            {step === 'hashing'
-              ? 'Calculando huella digital...'
-              : 'Registrando en el registro público...'}
-          </Text>
+              <Text style={[styles.batchSummaryTitle, { color: colors.text }]}>
+                {batch.limitReachedMidBatch ? 'Llegaste a tu límite gratis a mitad de camino' : 'Lote sellado'}
+              </Text>
+              <Text style={[styles.batchSummaryText, { color: colors.textMuted }]}>
+                {batch.sealedCount} sellados
+                {batch.duplicateCount > 0 ? `, ${batch.duplicateCount} ya estaban sellados` : ''}
+                {batch.failedCount > 0 ? `, ${batch.failedCount} fallaron` : ''} de {batch.total}.
+              </Text>
+              <Pressable style={[styles.sealAnotherButton, { borderColor: colors.accent }]} onPress={handleBatchFinish}>
+                <Text style={[styles.sealAnotherText, { color: colors.accent }]}>Listo</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       )}
 
-      {step === 'error' && errorMessage && (
-        <Text style={[styles.errorText, { color: colors.danger }]}>{errorMessage}</Text>
-      )}
-
-      {step === 'done' && certificate && (
+      {!batch && (
         <>
-          {isDuplicate && (
-            <View style={[styles.duplicateBox, { borderColor: colors.warning, backgroundColor: colors.background }]}>
-              <Text style={[styles.duplicateText, { color: colors.warning }]}>
-                Ya habías sellado este archivo antes — aquí está tu certificado. No se
-                generó un sello nuevo ni se gastó gas de nuevo.
+          {step === 'idle' || step === 'error' ? (
+            <>
+              <View style={styles.actions}>
+                <View ref={primaryButtonRef} collapsable={false}>
+                  <CameraButton
+                    onPress={() => handleCameraCapture('photo')}
+                    label="Tomar foto"
+                    icon="camera"
+                  />
+                </View>
+                <View style={styles.secondaryRow} ref={secondaryRowRef} collapsable={false}>
+                  <CameraButton
+                    onPress={() => handleCameraCapture('video')}
+                    label="Grabar video"
+                    icon="videocam-outline"
+                    secondary
+                    style={styles.secondaryHalf}
+                  />
+                  <CameraButton
+                    onPress={handleGalleryPick}
+                    label="Galería"
+                    icon="images-outline"
+                    secondary
+                    style={styles.secondaryHalf}
+                  />
+                </View>
+                {usage?.isPro && (
+                  <Text style={[styles.multiSelectHint, { color: colors.textMuted }]}>
+                    Con PRO puedes elegir varias fotos o videos de golpe en Galería.
+                  </Text>
+                )}
+              </View>
+
+              <View
+                ref={howCardRef}
+                collapsable={false}
+                style={[styles.howCard, { backgroundColor: colors.background, borderColor: colors.border }]}
+              >
+                <Text style={[styles.howTitle, { color: colors.textMuted }]}>CÓMO FUNCIONA</Text>
+                <HowStep
+                  icon="finger-print-outline"
+                  text="Se calcula una huella digital única de tu foto, dentro de tu teléfono."
+                />
+                <HowStep
+                  icon="link-outline"
+                  text="Esa huella se registra en Polygon, un registro público que nadie puede alterar."
+                />
+                <HowStep
+                  icon="ribbon-outline"
+                  text="Recibes un certificado con nivel de confianza, listo para compartir o verificar."
+                  last
+                />
+              </View>
+            </>
+          ) : null}
+
+          {(step === 'hashing' || step === 'anchoring') && (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={[styles.loadingText, { color: colors.textMuted }]}>
+                {step === 'hashing'
+                  ? 'Calculando huella digital...'
+                  : 'Registrando en el registro público...'}
               </Text>
             </View>
           )}
-          <StampReveal trigger={certificate.id}>
-            <View style={styles.stampedCardWrap}>
-              <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
-              <SealStamp trigger={certificate.id} />
-            </View>
-          </StampReveal>
-          <Pressable
-            style={[styles.sealAnotherButton, { borderColor: colors.accent }]}
-            onPress={handleSealAnother}
-          >
-            <Text style={[styles.sealAnotherText, { color: colors.accent }]}>Sellar otra foto</Text>
-          </Pressable>
-          <CertificateDetailModal
-            certificate={certificate}
-            visible={detailVisible}
-            onClose={() => setDetailVisible(false)}
-          />
+
+          {step === 'error' && errorMessage && (
+            <Text style={[styles.errorText, { color: colors.danger }]}>{errorMessage}</Text>
+          )}
+
+          {step === 'done' && certificate && (
+            <>
+              {isDuplicate && (
+                <View style={[styles.duplicateBox, { borderColor: colors.warning, backgroundColor: colors.background }]}>
+                  <Text style={[styles.duplicateText, { color: colors.warning }]}>
+                    Ya habías sellado este archivo antes — aquí está tu certificado. No se
+                    generó un sello nuevo ni se gastó gas de nuevo.
+                  </Text>
+                </View>
+              )}
+              <StampReveal trigger={certificate.id}>
+                <View style={styles.stampedCardWrap}>
+                  <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
+                  <SealStamp trigger={certificate.id} />
+                </View>
+              </StampReveal>
+              <Pressable
+                style={[styles.sealAnotherButton, { borderColor: colors.accent }]}
+                onPress={handleSealAnother}
+              >
+                <Text style={[styles.sealAnotherText, { color: colors.accent }]}>Sellar otra foto</Text>
+              </Pressable>
+              <CertificateDetailModal
+                certificate={certificate}
+                visible={detailVisible}
+                onClose={() => setDetailVisible(false)}
+              />
+            </>
+          )}
         </>
       )}
     </SafeAreaView>
@@ -622,6 +804,26 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   proStripText: { flex: 1, fontSize: 12, fontWeight: '700' },
+  multiSelectHint: { fontSize: 11.5, textAlign: 'center', marginTop: 2 },
+  batchBox: {
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderRadius: 20,
+  },
+  batchProgressTrack: {
+    width: '100%',
+    height: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  batchProgressFill: { height: '100%', borderRadius: 999 },
+  batchProgressLabel: { fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  batchSummaryTitle: { fontSize: 16, fontWeight: '800', textAlign: 'center' },
+  batchSummaryText: { fontSize: 13, textAlign: 'center', lineHeight: 19 },
   actions: { gap: 12 },
   secondaryRow: { flexDirection: 'row', gap: 12 },
   secondaryHalf: { flex: 1 },

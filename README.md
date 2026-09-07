@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.2.9.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.0.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -84,6 +84,12 @@ eso se evitaron deliberadamente en este MVP (ver decisión documentada en
   **respaldo/restauración de la wallet del dispositivo** (ver sección
   "Respaldo y recuperación" abajo — sin esto, borrar los datos de la
   app pierde la identidad con la que se selló para siempre).
+- **Sellado en lote (solo PRO)**: elegir varias fotos/videos de golpe
+  en Galería — se sellan uno por uno en segundo plano (nunca en
+  paralelo, para no chocar el nonce de la wallet) con una barra de
+  progreso general, y un resumen al final (cuántos se sellaron,
+  cuántos ya estaban repetidos). El plan gratis sigue siendo uno a la
+  vez, como siempre.
 - Freemium con RevenueCat conectado de verdad (ver "Freemium y pagos").
 - Splash screen animado, onboarding de 4 pantallas (incluye el plan
   gratis/PRO), y un recorrido guiado (coach marks) que resalta los
@@ -130,12 +136,6 @@ También se evaluó y se descartó por ahora:
 - **Guardar automáticamente en la galería del sistema**
   (`expo-media-library`): requiere development build, no funciona en
   Expo Go — pospuesto a la fase de armar el APK.
-- **Sellar varias fotos/videos a la vez (selección múltiple)**: pedido
-  real de un usuario de prueba — hoy la galería solo permite elegir un
-  archivo por vez. Pospuesto a la próxima fase (0.3.0): implica cola de
-  transacciones (cada anclaje es su propia transacción en la
-  blockchain), progreso por ítem, y respetar el límite del plan gratis
-  a mitad de lote.
 
 ## Respaldo y recuperación (qué pasa si pierdes el teléfono)
 
@@ -190,7 +190,7 @@ mano incluso cuando fue sellado desde OTRO dispositivo.
 - [x] Detalle de certificado dentro de la app, con reproducción real de video
 - [x] Onboarding de 4 pantallas + recorrido guiado por pestaña
 - [x] Freemium con RevenueCat conectado (límite real + paywall + restaurar compra)
-- [ ] Sellar varias fotos/videos a la vez (selección múltiple)
+- [x] Sellar varias fotos/videos a la vez (selección múltiple, solo PRO)
 - [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro)
 - [ ] Página pública de verificación (`verification/[id].html`)
 - [ ] Backend simple (`backend/`) para verificar por archivo sin número de sello
