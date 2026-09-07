@@ -19,6 +19,7 @@ import AnimatedIntro from './components/AnimatedIntro';
 import { initRevenueCat } from './services/revenuecatService';
 import { hasSeenOnboarding, markOnboardingSeen } from './utils/onboardingUtils';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
+import { useAppFonts } from './theme/fonts';
 
 function AppContent() {
   const { mode, colors } = useTheme();
@@ -67,6 +68,15 @@ function AppContent() {
 }
 
 export default function App() {
+  const [fontsLoaded] = useAppFonts();
+
+  // Mismo fondo que AnimatedIntro mientras carga la tipografía de marca
+  // (Playfair Display), para que no haya ningún parpadeo visible — la
+  // fuente es un solo archivo de ~190KB, esto tarda milisegundos.
+  if (!fontsLoaded) {
+    return <View style={{ flex: 1, backgroundColor: '#0B0B0F' }} />;
+  }
+
   return (
     <ThemeProvider>
       <SafeAreaProvider>

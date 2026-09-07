@@ -35,8 +35,10 @@ import { anchorHashOnChain } from '../services/blockchainService';
 import CameraButton from '../components/CameraButton';
 import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
+import StampReveal from '../components/StampReveal';
 import SettingsButton from '../components/SettingsButton';
 import { useTheme } from '../theme/ThemeContext';
+import { FONT_DISPLAY } from '../theme/fonts';
 import type {
   CaptureMetadata,
   TrustLevel,
@@ -286,7 +288,9 @@ export default function CaptureScreen() {
               generó un sello nuevo ni se gastó gas de nuevo.
             </Text>
           )}
-          <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
+          <StampReveal trigger={certificate.id}>
+            <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
+          </StampReveal>
           <Pressable
             style={[styles.sealAnotherButton, { backgroundColor: colors.surfaceAlt }]}
             onPress={handleSealAnother}
@@ -307,7 +311,7 @@ export default function CaptureScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24 },
   header: { position: 'relative', paddingRight: 48, marginBottom: 24 },
-  title: { fontSize: 24, fontWeight: '700', marginBottom: 8 },
+  title: { fontSize: 26, fontFamily: FONT_DISPLAY, marginBottom: 8 },
   subtitle: { fontSize: 14 },
   actions: { gap: 16 },
   loadingBox: { alignItems: 'center', marginTop: 40, gap: 12 },

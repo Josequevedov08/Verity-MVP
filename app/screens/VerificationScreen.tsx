@@ -42,6 +42,7 @@ import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
 import SettingsButton from '../components/SettingsButton';
 import { useTheme } from '../theme/ThemeContext';
+import { FONT_DISPLAY } from '../theme/fonts';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 type FileSearchResult =
@@ -290,7 +291,7 @@ export default function VerificationScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24 },
   header: { position: 'relative', paddingRight: 48, marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: '700' },
+  title: { fontSize: 26, fontFamily: FONT_DISPLAY },
   sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
   subtitle: { fontSize: 13, marginBottom: 14 },
   input: {

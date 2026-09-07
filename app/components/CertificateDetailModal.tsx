@@ -1,16 +1,18 @@
 /**
  * CertificateDetailModal.tsx
  * ---------------------------------------------------------------------------
- * Muestra el detalle completo de un certificado SIN salir de la app (a
- * diferencia de antes, que abría directamente el navegador al tocar "Ver
- * en el registro público"). El enlace externo al explorador de blockchain
- * ahora es una acción explícita dentro de este detalle, no automática.
+ * El certificado como DOCUMENTO, no como una tarjeta más de app: foto con
+ * marco, un sello real superpuesto (SealStamp) en vez de una pastilla de
+ * color, y el número de sello mostrado grande, como el serial de un
+ * billete. El enlace externo al explorador de blockchain es una acción
+ * explícita al final, nunca automática.
  */
 import React from 'react';
 import { View, Text, Image, StyleSheet, Modal, Pressable, Linking, ScrollView } from 'react-native';
-import TrustLevelBadge from './TrustLevelBadge';
+import SealStamp from './SealStamp';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 import { useTheme } from '../theme/ThemeContext';
+import { FONT_DISPLAY } from '../theme/fonts';
 
 export default function CertificateDetailModal({
   certificate,
@@ -35,13 +37,35 @@ export default function CertificateDetailModal({
 
         {certificate && (
           <>
-            <Text style={[styles.title, { color: colors.text }]}>Detalle del sello</Text>
+            <Text style={[styles.eyebrow, { color: colors.textMuted }]}>
+              CERTIFICADO DIGITAL · VERITY
+            </Text>
 
             {certificate.thumbnailUri && (
-              <Image source={{ uri: certificate.thumbnailUri }} style={styles.thumbnail} />
+              <View style={styles.photoFrame}>
+                <View style={[styles.photoBorder, { borderColor: colors.border }]}>
+                  <Image source={{ uri: certificate.thumbnailUri }} style={styles.thumbnail} />
+                </View>
+                <SealStamp level={certificate.trustLevel} style={styles.stampOverlay} />
+              </View>
+            )}
+            {!certificate.thumbnailUri && (
+              <View style={styles.sealOnly}>
+                <SealStamp level={certificate.trustLevel} />
+              </View>
             )}
 
-            <TrustLevelBadge level={certificate.trustLevel} />
+            <Text style={[styles.serialLabel, { color: colors.textMuted }]}>Número de sello</Text>
+            <Text
+              style={[styles.serial, { color: colors.text, fontFamily: FONT_DISPLAY }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              selectable
+            >
+              {shortHash(certificate.anchor.txHash)}
+            </Text>
+
+            <View style={[styles.divider, { borderColor: colors.border }]} />
 
             <Row label="Huella digital (SHA-256)" value={certificate.sha256} mono />
             <Row
@@ -55,7 +79,7 @@ export default function CertificateDetailModal({
                 value={`${certificate.metadata.latitude.toFixed(5)}, ${certificate.metadata.longitude.toFixed(5)}`}
               />
             )}
-            <Row label="Número de sello (hash de transacción)" value={certificate.anchor.txHash} mono />
+            <Row label="Número de sello completo" value={certificate.anchor.txHash} mono />
             <Row label="Wallet del dispositivo" value={certificate.anchor.walletAddress} mono />
 
             <Pressable
@@ -73,10 +97,16 @@ export default function CertificateDetailModal({
   );
 }
 
+/** Muestra los primeros y últimos caracteres del hash, como el serial de un billete. */
+function shortHash(hash: string): string {
+  const clean = hash.startsWith('0x') ? hash.slice(2) : hash;
+  return `${clean.slice(0, 6).toUpperCase()} · ${clean.slice(-6).toUpperCase()}`;
+}
+
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   const { colors } = useTheme();
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { borderColor: colors.border }]}>
       <Text style={[styles.rowLabel, { color: colors.textMuted }]}>{label}</Text>
       <Text style={[styles.rowValue, { color: colors.text }, mono && styles.mono]} selectable>
         {value}
@@ -89,10 +119,38 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   closeButton: { alignSelf: 'flex-end', marginBottom: 12 },
   closeText: { fontSize: 15, fontWeight: '600' },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 16 },
-  thumbnail: { width: '100%', height: 220, borderRadius: 16, marginBottom: 16 },
-  row: { marginTop: 16 },
-  rowLabel: { fontSize: 12, marginBottom: 4 },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  photoFrame: { alignSelf: 'center', marginBottom: 12 },
+  photoBorder: {
+    borderWidth: 4,
+    borderRadius: 4,
+    padding: 4,
+  },
+  thumbnail: { width: 220, height: 220, borderRadius: 2 },
+  stampOverlay: { position: 'absolute', bottom: -20, right: -20 },
+  sealOnly: { alignItems: 'center', marginBottom: 12 },
+  serialLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  serial: {
+    fontSize: 26,
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  divider: { borderTopWidth: 1, borderStyle: 'dashed', marginTop: 20 },
+  row: { paddingVertical: 14, borderBottomWidth: 1 },
+  rowLabel: { fontSize: 11, marginBottom: 4, letterSpacing: 0.5 },
   rowValue: { fontSize: 14 },
   mono: { fontFamily: 'monospace' },
   externalButton: {
