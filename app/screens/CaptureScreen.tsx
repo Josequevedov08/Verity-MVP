@@ -27,6 +27,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import * as VideoThumbnails from 'expo-video-thumbnails';
 import { Directory, File, Paths } from 'expo-file-system';
 import { randomUUID } from 'expo-crypto';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -37,6 +38,7 @@ import CameraButton from '../components/CameraButton';
 import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
 import StampReveal from '../components/StampReveal';
+import SealStamp from '../components/SealStamp';
 import SettingsButton from '../components/SettingsButton';
 import { useTheme } from '../theme/ThemeContext';
 import type {
@@ -56,12 +58,26 @@ export default function CaptureScreen() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [isDuplicate, setIsDuplicate] = useState(false);
 
-  /** Calcula el nivel de confianza según el origen del archivo y sus metadatos. */
+  /**
+   * Calcula el nivel de confianza según el origen del archivo y sus metadatos.
+   *
+   * Nota sobre videos de galería: `DateTimeOriginal` es un tag EXIF que solo
+   * existe en fotos — expo-image-picker no expone ninguna fecha de captura
+   * verificable para videos elegidos de la galería (ver ImagePickerAsset:
+   * no hay `creationTime`, solo `duration`). Con la regla original, eso
+   * hacía que TODO video de galería cayera siempre a BAJO sin importar el
+   * archivo, porque `capturedAt` nunca podía llenarse. Se trata como MEDIO
+   * (mismo nivel que una foto de galería con EXIF real) en vez de exigirle
+   * a los videos un dato que la plataforma no entrega.
+   */
   function computeTrustLevel(metadata: CaptureMetadata): TrustLevel {
     if (metadata.source === 'camera' && metadata.latitude && metadata.capturedAt) {
       return 'ALTO';
     }
     if (metadata.capturedAt) {
+      return 'MEDIO';
+    }
+    if (metadata.source === 'gallery' && metadata.mediaType === 'video') {
       return 'MEDIO';
     }
     return 'BAJO';
@@ -170,6 +186,13 @@ export default function CaptureScreen() {
           ? await saveCapturePermanently(asset.uri, `${certificateId}.${extension}`)
           : asset.uri;
 
+      // 2.5) Si es un video, generar un frame real como vista previa (una
+      // <Image> no puede decodificar video, así que sin esto solo se
+      // podría mostrar un ícono genérico). No es crítico: si falla, el
+      // sellado sigue su curso igual.
+      const previewImageUri =
+        metadata.mediaType === 'video' ? await generateVideoPreview(persistentUri, certificateId) : undefined;
+
       // 3) Registro en el "registro público" (Polygon Amoy testnet).
       setStep('anchoring');
       const anchor = await anchorHashOnChain(hashResult.sha256);
@@ -182,6 +205,7 @@ export default function CaptureScreen() {
         metadata,
         anchor,
         thumbnailUri: persistentUri,
+        previewImageUri,
       };
 
       await saveCertificate(newCertificate);
@@ -208,7 +232,36 @@ export default function CaptureScreen() {
     return match ? match[1].toLowerCase() : null;
   }
 
-  async function handleCameraCapture() {
+  /**
+   * Extrae un frame fijo de un video (al segundo 1) para usarlo como
+   * miniatura real en el historial, en vez de mostrar siempre el mismo
+   * ícono genérico de cámara. Se copia a la carpeta permanente de Verity
+   * (el archivo que genera expo-video-thumbnails vive en caché temporal).
+   * Si algo falla (formato no soportado, video muy corto, etc.), se
+   * devuelve undefined y MediaThumbnail cae de vuelta al ícono genérico —
+   * nunca debe tumbar el sellado completo por esto.
+   */
+  async function generateVideoPreview(videoUri: string, certificateId: string): Promise<string | undefined> {
+    try {
+      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, { time: 1000 });
+      return await saveCapturePermanently(uri, `${certificateId}-preview.jpg`);
+    } catch (error) {
+      console.warn('No se pudo generar la vista previa del video:', error);
+      return undefined;
+    }
+  }
+
+  /**
+   * `mode` fuerza qué abre la cámara nativa: antes se pedían fotos Y
+   * videos a la vez (mediaTypes: ['images','videos']), lo que en la
+   * práctica depende de que la app de cámara del teléfono ofrezca un
+   * selector claro de modo o un "mantener presionado" para grabar — en
+   * algunas cámaras (ej. MIUI) ese gesto se interpreta como ráfaga de
+   * fotos en vez de video, y no hay forma de grabar. Pidiendo un solo
+   * tipo (`['videos']` o `['images']`) la cámara nativa abre directo en
+   * ese modo, sin ambigüedad de gesto.
+   */
+  async function handleCameraCapture(mode: 'photo' | 'video' = 'photo') {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permiso necesario', 'Verity necesita acceso a la cámara para sellar fotos.');
@@ -216,10 +269,10 @@ export default function CaptureScreen() {
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      // Verity sella tanto fotos como videos.
-      mediaTypes: ['images', 'videos'],
+      mediaTypes: mode === 'video' ? ['videos'] : ['images'],
       quality: 1,
       exif: true,
+      ...(mode === 'video' ? { videoMaxDuration: 60 } : null),
     });
 
     if (!result.canceled && result.assets[0]) {
@@ -266,7 +319,7 @@ export default function CaptureScreen() {
   useEffect(() => {
     if (autoLaunchedRef.current) return;
     autoLaunchedRef.current = true;
-    handleCameraCapture();
+    handleCameraCapture('photo');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -284,7 +337,8 @@ export default function CaptureScreen() {
       {step === 'idle' || step === 'error' ? (
         <>
           <View style={styles.actions}>
-            <CameraButton onPress={handleCameraCapture} label="Tomar foto o video" />
+            <CameraButton onPress={() => handleCameraCapture('photo')} label="Tomar foto" />
+            <CameraButton onPress={() => handleCameraCapture('video')} label="Grabar video" secondary />
             <CameraButton onPress={handleGalleryPick} label="Elegir de galería" secondary />
           </View>
 
@@ -333,7 +387,10 @@ export default function CaptureScreen() {
             </View>
           )}
           <StampReveal trigger={certificate.id}>
-            <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
+            <View style={styles.stampedCardWrap}>
+              <CertificateCard certificate={certificate} onPress={() => setDetailVisible(true)} />
+              <SealStamp trigger={certificate.id} />
+            </View>
           </StampReveal>
           <Pressable
             style={[styles.sealAnotherButton, { borderColor: colors.accent }]}
@@ -385,6 +442,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '800', marginBottom: 8 },
   subtitle: { fontSize: 14 },
   actions: { gap: 16 },
+  stampedCardWrap: { position: 'relative', marginBottom: 12 },
   howCard: {
     marginTop: 24,
     borderRadius: 20,

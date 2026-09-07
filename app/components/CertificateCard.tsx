@@ -32,6 +32,7 @@ export default function CertificateCard({
       <MediaThumbnail
         uri={certificate.thumbnailUri}
         mediaType={certificate.metadata.mediaType}
+        previewUri={certificate.previewImageUri}
         style={styles.thumbnail}
         iconSize={26}
       />

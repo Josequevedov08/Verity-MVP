@@ -21,16 +21,18 @@
  * existía ningún botón) y copia el mensaje de verificación al
  * portapapeles para pegar junto con la foto.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Modal,
   Pressable,
   Linking,
   ScrollView,
   FlatList,
+  Animated,
   Dimensions,
   Alert,
 } from 'react-native';
@@ -119,6 +121,39 @@ export default function CertificateDetailModal({
 function CertificateDocument({ certificate }: { certificate: VerityCertificate }) {
   const { colors } = useTheme();
   const mediaLabel = certificate.metadata.mediaType === 'video' ? 'video' : 'foto';
+  const isVideo = certificate.metadata.mediaType === 'video';
+  // Qué imagen mostrar al voltear la carta: para foto, el archivo mismo;
+  // para video, el frame extraído al sellar (no hay forma de "reproducir"
+  // dentro de esta vista). Si no hay nada disponible localmente (ej. un
+  // certificado restaurado desde backup), tocar la carta no hace nada —
+  // no hay imagen que mostrar.
+  const revealUri = isVideo ? certificate.previewImageUri : certificate.thumbnailUri;
+  const canFlip = !!revealUri;
+
+  const flip = useRef(new Animated.Value(0)).current; // 0 = frente, 180 = reverso
+  const isFlipping = useRef(false);
+  const flipBackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleCardTap() {
+    if (!canFlip || isFlipping.current) return;
+    isFlipping.current = true;
+    Animated.spring(flip, { toValue: 180, friction: 8, tension: 10, useNativeDriver: true }).start(() => {
+      flipBackTimer.current = setTimeout(() => {
+        Animated.spring(flip, { toValue: 0, friction: 8, tension: 10, useNativeDriver: true }).start(() => {
+          isFlipping.current = false;
+        });
+      }, 2200);
+    });
+  }
+
+  const frontRotate = flip.interpolate({ inputRange: [0, 180], outputRange: ['0deg', '180deg'] });
+  const backRotate = flip.interpolate({ inputRange: [0, 180], outputRange: ['180deg', '360deg'] });
+
+  useEffect(() => {
+    return () => {
+      if (flipBackTimer.current) clearTimeout(flipBackTimer.current);
+    };
+  }, []);
 
   /**
    * Comparte el archivo por el panel nativo (WhatsApp, correo, etc.) Y
@@ -154,7 +189,16 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
+    <Pressable onPress={handleCardTap} disabled={!canFlip}>
+      <View style={styles.flipContainer}>
+        <Animated.View
+          style={[
+            styles.card,
+            { backgroundColor: colors.background, borderColor: colors.border },
+            styles.cardFace,
+            { transform: [{ perspective: 1400 }, { rotateY: frontRotate }] },
+          ]}
+        >
       {/* Encabezado: insignia + título + referencia, foto a la derecha */}
       <View style={styles.header}>
         <View style={[styles.badge, { backgroundColor: colors.accent }]}>
@@ -165,10 +209,16 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
             Ref. {shortRef(certificate.anchor.txHash)} · Polygon Amoy
           </Text>
+          {canFlip && (
+            <Text style={[styles.flipHint, { color: colors.accent }]}>
+              Toca la carta para ver {isVideo ? 'el video' : 'la foto'} ↻
+            </Text>
+          )}
         </View>
         <MediaThumbnail
           uri={certificate.thumbnailUri}
           mediaType={certificate.metadata.mediaType}
+          previewUri={certificate.previewImageUri}
           style={[styles.photo, { borderColor: colors.border }]}
           iconSize={22}
         />
@@ -218,7 +268,35 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
           Abrir en el navegador (registro público) ↗
         </Text>
       </Pressable>
-    </View>
+        </Animated.View>
+
+        {/* Reverso de la carta: la foto o el frame del video, a tamaño
+            completo. Solo existe si hay algo local que mostrar (canFlip) —
+            si no, la carta ni siquiera responde al toque. */}
+        {canFlip && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.card,
+              styles.cardFace,
+              styles.cardBack,
+              { backgroundColor: colors.background, borderColor: colors.border },
+              { transform: [{ perspective: 1400 }, { rotateY: backRotate }] },
+            ]}
+          >
+            <Image source={{ uri: revealUri }} style={styles.cardBackImage} resizeMode="cover" />
+            {isVideo && (
+              <View style={styles.cardBackPlayBadge}>
+                <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.9)" />
+              </View>
+            )}
+            <Text style={styles.cardBackLabel}>
+              CERTIFICADO VERITY — {isVideo ? 'FRAME DEL VIDEO' : 'FOTO ORIGINAL'}
+            </Text>
+          </Animated.View>
+        )}
+      </View>
+    </Pressable>
   );
 }
 
@@ -342,6 +420,40 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 4,
   },
+  // Carta "volteable": el frente vive en el flujo normal (define el alto
+  // del contenedor), el reverso se superpone exactamente encima con
+  // position:absolute + inset 0. backfaceVisibility:'hidden' es lo que
+  // hace que cada cara desaparezca al pasar de los 90°, sin necesidad de
+  // controlar la opacidad a mano.
+  flipContainer: { position: 'relative' },
+  cardFace: { backfaceVisibility: 'hidden' },
+  cardBack: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 0,
+  },
+  cardBackImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  cardBackPlayBadge: { alignItems: 'center', justifyContent: 'center' },
+  cardBackLabel: {
+    position: 'absolute',
+    bottom: 12,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    color: '#fff',
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowRadius: 4,
+  },
+  flipHint: { fontSize: 10.5, fontWeight: '700', marginTop: 4 },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   badge: {
     width: 40,

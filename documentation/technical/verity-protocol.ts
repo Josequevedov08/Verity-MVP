@@ -36,12 +36,17 @@ export type TrustLevel = 'ALTO' | 'MEDIO' | 'BAJO';
  * - MEDIO: el archivo viene de la galería y tiene metadatos EXIF
  *          (cámara, fecha) pero no fue capturado dentro de la app, por lo
  *          que esos metadatos no se pueden verificar de forma tan estricta.
+ *          Los videos de galería también caen aquí aunque no traigan EXIF:
+ *          `DateTimeOriginal` es un tag exclusivo de fotos, así que no
+ *          existe una fecha de captura verificable para videos que la
+ *          plataforma pueda entregar — exigirla los dejaría siempre en
+ *          BAJO sin importar el archivo.
  * - BAJO:  el archivo no trae metadatos utilizables (o fueron removidos,
  *          por ejemplo al pasar por WhatsApp u otra app de mensajería).
  */
 export const TRUST_LEVEL_CRITERIA: Record<TrustLevel, string> = {
   ALTO: 'Capturado con la cámara de la app (GPS + hora + dispositivo verificados).',
-  MEDIO: 'Archivo de galería con metadatos EXIF presentes.',
+  MEDIO: 'Archivo de galería con metadatos EXIF presentes (o un video de galería).',
   BAJO: 'Archivo sin metadatos verificables.',
 };
 
@@ -85,6 +90,14 @@ export interface VerityCertificate {
   };
   /** Miniatura local del archivo, solo para mostrar en el historial (no se sube). */
   thumbnailUri?: string;
+  /**
+   * Solo para videos: un frame extraído del video (imagen fija), generado
+   * en el dispositivo al sellar, para poder mostrar una vista previa real
+   * en vez de un ícono genérico de cámara. `thumbnailUri` sigue siendo el
+   * video en sí (necesario para compartirlo/reproducirlo); este campo es
+   * la imagen usada solo para mostrar la miniatura.
+   */
+  previewImageUri?: string;
 }
 
 /**
@@ -97,7 +110,7 @@ export interface VerityCertificate {
 export interface CertificatesBackup {
   version: 1;
   exportedAt: string;
-  certificates: Omit<VerityCertificate, 'thumbnailUri'>[];
+  certificates: Omit<VerityCertificate, 'thumbnailUri' | 'previewImageUri'>[];
 }
 
 /**

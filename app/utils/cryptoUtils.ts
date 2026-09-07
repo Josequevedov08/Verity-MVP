@@ -80,10 +80,11 @@ export async function buildBackup(): Promise<CertificatesBackup> {
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
-    // Se omite thumbnailUri a propósito: es una ruta local del dispositivo
-    // (no una foto en sí) que de todos modos no existirá en otro teléfono,
-    // y así queda explícito que el respaldo no contiene ninguna imagen.
-    certificates: all.map(({ thumbnailUri, ...rest }) => rest),
+    // Se omiten thumbnailUri y previewImageUri a propósito: son rutas
+    // locales del dispositivo (no una foto en sí) que de todos modos no
+    // existirán en otro teléfono, y así queda explícito que el respaldo
+    // no contiene ninguna imagen ni frame de video.
+    certificates: all.map(({ thumbnailUri, previewImageUri, ...rest }) => rest),
   };
 }
 
