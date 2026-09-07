@@ -15,7 +15,7 @@
  *        confirma que es real (mostrando la huella digital que quedó
  *        anclada), sin necesitar ningún archivo para compararlo.
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -58,6 +58,9 @@ type HashSearchResult =
   | { status: 'found-local'; certificate: VerityCertificate }
   | { status: 'found-on-chain'; sha256: string; explorerUrl: string }
   | { status: 'not-found' };
+
+/** Un número de sello completo tiene esta forma exacta: 0x + 64 hex. */
+const FULL_TX_HASH = /^0x[0-9a-fA-F]{64}$/;
 
 export default function VerificationScreen() {
   const { colors } = useTheme();
@@ -113,13 +116,7 @@ export default function VerificationScreen() {
 
   // ---------------- Búsqueda por número de sello ----------------
 
-  async function handleSearchBySeal() {
-    const seal = sealInput.trim();
-    if (!seal) {
-      Alert.alert('Falta el número de sello', 'Escribe el número de sello (0x...) a buscar.');
-      return;
-    }
-
+  async function runSealSearch(seal: string) {
     setHashResult({ status: 'checking' });
 
     // 1) ¿Es un sello hecho en ESTE dispositivo? Si sí, mostramos el
@@ -142,6 +139,44 @@ export default function VerificationScreen() {
       setHashResult({ status: 'not-found' });
     }
   }
+
+  function handleSearchBySeal() {
+    const seal = sealInput.trim();
+    if (!seal) {
+      Alert.alert('Falta el número de sello', 'Escribe el número de sello (0x...) a buscar.');
+      return;
+    }
+    runSealSearch(seal);
+  }
+
+  /**
+   * Antes, el resultado de una búsqueda anterior se quedaba "pegado" en
+   * pantalla aunque borraras o cambiaras el texto — se sentía roto,
+   * desconectado de lo que había en el campo. Ahora:
+   * - Cualquier cambio en el texto limpia el resultado anterior de
+   *   inmediato (nunca queda un resultado que no corresponde a lo que
+   *   se ve en el campo).
+   * - Si lo que queda escrito es un número de sello completo y válido
+   *   (0x + 64 caracteres — lo normal al pegar uno), se busca solo,
+   *   sin tener que tocar "Buscar" — se siente "en vivo".
+   */
+  const sealDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function handleSealInputChange(text: string) {
+    setSealInput(text);
+    setHashResult({ status: 'idle' });
+
+    if (sealDebounceRef.current) clearTimeout(sealDebounceRef.current);
+    const trimmed = text.trim();
+    if (FULL_TX_HASH.test(trimmed)) {
+      sealDebounceRef.current = setTimeout(() => runSealSearch(trimmed), 400);
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (sealDebounceRef.current) clearTimeout(sealDebounceRef.current);
+    };
+  }, []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -189,22 +224,32 @@ export default function VerificationScreen() {
           </View>
         )}
         {fileResult.status === 'found' && (
-          <Pressable
-            style={[styles.resultTintBox, { borderColor: colors.success, backgroundColor: colors.surface }]}
-            onPress={() => setFileDetailVisible(true)}
-          >
-            <Text style={[styles.matchText, { color: colors.success }]}>
-              ✅ Esta foto ya está sellada. Toca para ver el certificado completo.
-            </Text>
-          </Pressable>
+          <>
+            <Pressable
+              style={[styles.resultTintBox, { borderColor: colors.success, backgroundColor: colors.surface }]}
+              onPress={() => setFileDetailVisible(true)}
+            >
+              <Text style={[styles.matchText, { color: colors.success }]}>
+                ✅ Esta foto ya está sellada. Toca para ver el certificado completo.
+              </Text>
+            </Pressable>
+            <Pressable onPress={() => setFileResult({ status: 'idle' })}>
+              <Text style={[styles.clearResultLink, { color: colors.textMuted }]}>Limpiar resultado ✕</Text>
+            </Pressable>
+          </>
         )}
         {fileResult.status === 'not-found' && (
-          <View style={[styles.resultTintBox, { borderColor: colors.danger, backgroundColor: colors.surface }]}>
-            <Text style={[styles.noMatchText, { color: colors.danger }]}>
-              No encontramos esta foto en tu historial local. Si crees que fue sellada
-              desde otro dispositivo, usa "Por número de sello" más abajo.
-            </Text>
-          </View>
+          <>
+            <View style={[styles.resultTintBox, { borderColor: colors.danger, backgroundColor: colors.surface }]}>
+              <Text style={[styles.noMatchText, { color: colors.danger }]}>
+                No encontramos esta foto en tu historial local. Si crees que fue sellada
+                desde otro dispositivo, usa "Por número de sello" más abajo.
+              </Text>
+            </View>
+            <Pressable onPress={() => setFileResult({ status: 'idle' })}>
+              <Text style={[styles.clearResultLink, { color: colors.textMuted }]}>Limpiar resultado ✕</Text>
+            </Pressable>
+          </>
         )}
 
         {fileResult.status === 'found' && (
@@ -228,14 +273,25 @@ export default function VerificationScreen() {
           persona) para confirmar si existe de verdad.
         </Text>
 
-        <TextInput
-          style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-          placeholder="Número de sello (0x...)"
-          placeholderTextColor={colors.textMuted}
-          value={sealInput}
-          onChangeText={setSealInput}
-          autoCapitalize="none"
-        />
+        <View style={styles.inputRow}>
+          <TextInput
+            style={[styles.input, styles.inputFlex, { borderColor: colors.border, color: colors.text }]}
+            placeholder="Número de sello (0x...)"
+            placeholderTextColor={colors.textMuted}
+            value={sealInput}
+            onChangeText={handleSealInputChange}
+            autoCapitalize="none"
+          />
+          {sealInput.length > 0 && (
+            <Pressable
+              style={[styles.clearButton, { borderColor: colors.border }]}
+              onPress={() => handleSealInputChange('')}
+              hitSlop={8}
+            >
+              <Ionicons name="close" size={16} color={colors.textMuted} />
+            </Pressable>
+          )}
+        </View>
         <Pressable style={[styles.searchButton, { backgroundColor: colors.accent }]} onPress={handleSearchBySeal}>
           <Text style={[styles.searchButtonText, { color: colors.accentText }]}>Buscar</Text>
         </Pressable>
@@ -351,12 +407,24 @@ const styles = StyleSheet.create({
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   sectionTitle: { fontSize: 15, fontWeight: '700' },
   subtitle: { fontSize: 13, marginBottom: 14 },
+  inputRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   input: {
     borderWidth: 1,
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
   },
+  inputFlex: { flex: 1 },
+  clearButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  clearResultLink: { fontSize: 11.5, fontWeight: '600', textAlign: 'center', marginTop: 8 },
   searchButton: {
     borderRadius: 14,
     paddingVertical: 14,
