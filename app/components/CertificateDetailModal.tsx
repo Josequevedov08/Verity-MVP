@@ -9,14 +9,19 @@
  * Si se le pasa `certificates` (la lista completa donde vive este
  * certificado — ej. el historial de "Mis sellos"), se puede deslizar el
  * dedo izquierda/derecha para pasar al sello anterior/siguiente sin
- * cerrar el detalle. Si no hay más sellos en esa dirección, la tarjeta
- * "rebota" en vez de moverse — así el usuario siente que llegó al final,
- * no que el gesto no hizo nada.
+ * cerrar el detalle. Esto usa un FlatList horizontal con paginación
+ * NATIVA (no un gesto hecho a mano) — es más confiable dentro de un
+ * contenido que también se desplaza verticalmente, y el "rebote" en los
+ * extremos lo da gratis el sistema (efecto de borde de Android/iOS), sin
+ * necesitar animación personalizada.
  *
  * El enlace externo al explorador de blockchain sigue siendo una acción
- * secundaria y explícita — nunca automática.
+ * secundaria y explícita — nunca automática. "Compartir" comparte la
+ * foto de verdad (antes el texto decía "listo para compartir" pero no
+ * existía ningún botón) y copia el mensaje de verificación al
+ * portapapeles para pegar junto con la foto.
  */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -26,17 +31,17 @@ import {
   Pressable,
   Linking,
   ScrollView,
-  Animated,
-  PanResponder,
+  FlatList,
   Dimensions,
+  Alert,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
+import * as Sharing from 'expo-sharing';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 import { useTheme } from '../theme/ThemeContext';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const SWIPE_THRESHOLD = 90;
 
 export default function CertificateDetailModal({
   certificate,
@@ -52,74 +57,28 @@ export default function CertificateDetailModal({
   onClose: () => void;
 }) {
   const { colors } = useTheme();
-  const [activeCert, setActiveCert] = useState<VerityCertificate | null>(certificate);
-  const translateX = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Cada vez que se abre el modal con un certificado distinto, empezamos
-  // desde ESE (no desde donde había quedado la última vez que se cerró).
-  useEffect(() => {
-    if (visible) {
-      setActiveCert(certificate);
-      translateX.setValue(0);
-      opacity.setValue(1);
-    }
-  }, [visible, certificate]);
+  const list = certificates && certificates.length > 1 ? certificates : null;
+  const initialIndex = list && certificate ? Math.max(0, list.findIndex((c) => c.id === certificate.id)) : 0;
 
-  const list = certificates ?? [];
-  const index = activeCert ? list.findIndex((c) => c.id === activeCert.id) : -1;
-  const hasPrev = index > 0;
-  const hasNext = index >= 0 && index < list.length - 1;
-  const swipeEnabled = list.length > 1 && index >= 0;
-
-  function goTo(newIndex: number, direction: 'next' | 'prev') {
-    const offscreen = direction === 'next' ? -SCREEN_WIDTH : SCREEN_WIDTH;
-    Animated.parallel([
-      Animated.timing(translateX, { toValue: offscreen, duration: 160, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 0, duration: 160, useNativeDriver: true }),
-    ]).start(() => {
-      setActiveCert(list[newIndex]);
-      translateX.setValue(-offscreen);
-      Animated.parallel([
-        Animated.timing(translateX, { toValue: 0, duration: 200, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-      ]).start();
-    });
+  function handleMomentumEnd(offsetX: number) {
+    const newIndex = Math.round(offsetX / SCREEN_WIDTH);
+    setCurrentIndex(newIndex);
   }
-
-  function bounceBack() {
-    Animated.spring(translateX, { toValue: 0, friction: 4, tension: 80, useNativeDriver: true }).start();
-  }
-
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_evt, gesture) =>
-      swipeEnabled && Math.abs(gesture.dx) > 12 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
-    onPanResponderMove: (_evt, gesture) => {
-      const goingNext = gesture.dx < 0;
-      const blocked = (goingNext && !hasNext) || (!goingNext && !hasPrev);
-      // Resistencia: si no hay sello en esa dirección, el dedo se mueve
-      // pero la tarjeta apenas se desplaza (efecto "tope de goma").
-      translateX.setValue(blocked ? gesture.dx * 0.28 : gesture.dx);
-    },
-    onPanResponderRelease: (_evt, gesture) => {
-      if (gesture.dx <= -SWIPE_THRESHOLD && hasNext) {
-        goTo(index + 1, 'next');
-      } else if (gesture.dx >= SWIPE_THRESHOLD && hasPrev) {
-        goTo(index - 1, 'prev');
-      } else {
-        bounceBack();
-      }
-    },
-    onPanResponderTerminate: bounceBack,
-  });
 
   return (
-    <Modal visible={visible && !!activeCert} animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible && !!certificate}
+      animationType="slide"
+      onRequestClose={onClose}
+      onShow={() => setCurrentIndex(initialIndex)}
+    >
       <View style={[styles.page, { backgroundColor: colors.surface }]}>
         <View style={styles.topBar}>
-          {swipeEnabled && (
+          {list && (
             <Text style={[styles.counter, { color: colors.textMuted }]}>
-              {index + 1} de {list.length}
+              {currentIndex + 1} de {list.length} · desliza para ver más
             </Text>
           )}
           <Pressable onPress={onClose} style={styles.closeButton}>
@@ -127,92 +86,133 @@ export default function CertificateDetailModal({
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4 }}>
-          {activeCert && (
-            <Animated.View
-              {...panResponder.panHandlers}
-              style={[
-                styles.card,
-                { backgroundColor: colors.background, borderColor: colors.border },
-                { opacity, transform: [{ translateX }] },
-              ]}
-            >
-              {/* Encabezado: insignia + título + referencia, foto a la derecha */}
-              <View style={styles.header}>
-                <View style={[styles.badge, { backgroundColor: colors.accent }]}>
-                  <Ionicons name="shield-checkmark" size={22} color={colors.accentText} />
-                </View>
-                <View style={styles.headerText}>
-                  <Text style={[styles.title, { color: colors.text }]}>CERTIFICADO VERITY</Text>
-                  <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-                    Ref. {shortRef(activeCert.anchor.txHash)} · Polygon Amoy
-                  </Text>
-                </View>
-                {activeCert.thumbnailUri && (
-                  <Image source={{ uri: activeCert.thumbnailUri }} style={[styles.photo, { borderColor: colors.border }]} />
-                )}
+        {list ? (
+          <FlatList
+            data={list}
+            keyExtractor={(item) => item.id}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={initialIndex}
+            getItemLayout={(_data, i) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * i, index: i })}
+            onMomentumScrollEnd={(e) => handleMomentumEnd(e.nativeEvent.contentOffset.x)}
+            renderItem={({ item }) => (
+              <View style={{ width: SCREEN_WIDTH }}>
+                <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4 }}>
+                  <CertificateDocument certificate={item} />
+                </ScrollView>
               </View>
-
-              <View style={[styles.dashedDivider, { borderColor: colors.border }]} />
-
-              {/* Datos del sello */}
-              <DataRow label="Huella digital (SHA-256)" value={middleTruncate(activeCert.sha256, 8, 14)} />
-              <DataRow label="Número de sello" value={middleTruncate(activeCert.anchor.txHash, 8, 8)} />
-              <DataRow label="Sellado por" value={middleTruncate(activeCert.anchor.walletAddress, 6, 6)} />
-              <DataRow label="Fecha" value={formatDate(activeCert.anchor.anchoredAt)} />
-              <DataRow label="Red" value="Polygon Amoy (testnet)" last />
-
-              {/* Evidencia de origen — dinámica según los metadatos reales */}
-              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ORIGEN DEL ARCHIVO</Text>
-              <EvidenceLine
-                ok={activeCert.metadata.source === 'camera'}
-                trueText="Capturado con la cámara de la app"
-                falseText="Elegido desde la galería (no desde la cámara de la app)"
-              />
-              <EvidenceLine
-                ok={!!(activeCert.metadata.latitude && activeCert.metadata.longitude)}
-                trueText="Ubicación GPS registrada"
-                falseText="Sin ubicación GPS disponible"
-              />
-              <EvidenceLine
-                ok={!!activeCert.metadata.capturedAt}
-                trueText="Hora de captura verificada"
-                falseText="Sin metadatos de fecha verificables"
-              />
-
-              {/* Estado final: nivel de confianza */}
-              <TrustPill level={activeCert.trustLevel} />
-
-              <CopyableHash label="Número de sello completo" value={activeCert.anchor.txHash} />
-
-              <Pressable onPress={() => Linking.openURL(activeCert.anchor.explorerUrl)}>
-                <Text style={[styles.externalLink, { color: colors.accent }]}>
-                  Abrir en el navegador (registro público) ↗
-                </Text>
-              </Pressable>
-
-              {swipeEnabled && (
-                <View style={styles.swipeHintRow}>
-                  {hasPrev && (
-                    <View style={styles.swipeHint}>
-                      <Ionicons name="chevron-back" size={14} color={colors.textMuted} />
-                      <Text style={[styles.swipeHintText, { color: colors.textMuted }]}>anterior</Text>
-                    </View>
-                  )}
-                  <View style={{ flex: 1 }} />
-                  {hasNext && (
-                    <View style={styles.swipeHint}>
-                      <Text style={[styles.swipeHintText, { color: colors.textMuted }]}>siguiente</Text>
-                      <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
-                    </View>
-                  )}
-                </View>
-              )}
-            </Animated.View>
-          )}
-        </ScrollView>
+            )}
+          />
+        ) : (
+          certificate && (
+            <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4 }}>
+              <CertificateDocument certificate={certificate} />
+            </ScrollView>
+          )
+        )}
       </View>
     </Modal>
+  );
+}
+
+function CertificateDocument({ certificate }: { certificate: VerityCertificate }) {
+  const { colors } = useTheme();
+
+  /**
+   * Comparte la foto por el panel nativo (WhatsApp, correo, etc.) Y copia
+   * un mensaje de verificación al portapapeles, para que se pegue junto
+   * con la foto en el mismo chat. No existe una forma confiable en
+   * Android/iOS de adjuntar foto + texto libre en un solo "compartir" sin
+   * salir de Expo Go, así que se resuelve en dos pasos explícitos (el
+   * usuario ve un aviso claro de qué está pasando en cada uno).
+   */
+  async function handleShare() {
+    const message =
+      `Esta foto fue sellada con Verity. Número de sello: ${certificate.anchor.txHash} ` +
+      `— compruébala en ${certificate.anchor.explorerUrl}`;
+
+    await Clipboard.setStringAsync(message);
+
+    if (certificate.thumbnailUri) {
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        Alert.alert(
+          'Número de sello copiado',
+          'Se copió el mensaje de verificación al portapapeles. A continuación comparte la foto, y pega el mensaje en el mismo chat para que puedan validarla.',
+          [{ text: 'Entendido', onPress: () => Sharing.shareAsync(certificate.thumbnailUri!) }]
+        );
+        return;
+      }
+    }
+
+    Alert.alert(
+      'Mensaje de verificación copiado',
+      'Pégalo donde quieras compartirlo — incluye el número de sello y el enlace para comprobarlo.'
+    );
+  }
+
+  return (
+    <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
+      {/* Encabezado: insignia + título + referencia, foto a la derecha */}
+      <View style={styles.header}>
+        <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+          <Ionicons name="shield-checkmark" size={22} color={colors.accentText} />
+        </View>
+        <View style={styles.headerText}>
+          <Text style={[styles.title, { color: colors.text }]}>CERTIFICADO VERITY</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+            Ref. {shortRef(certificate.anchor.txHash)} · Polygon Amoy
+          </Text>
+        </View>
+        {certificate.thumbnailUri && (
+          <Image source={{ uri: certificate.thumbnailUri }} style={[styles.photo, { borderColor: colors.border }]} />
+        )}
+      </View>
+
+      <View style={[styles.dashedDivider, { borderColor: colors.border }]} />
+
+      {/* Datos del sello */}
+      <DataRow label="Huella digital (SHA-256)" value={middleTruncate(certificate.sha256, 8, 14)} />
+      <DataRow label="Número de sello" value={middleTruncate(certificate.anchor.txHash, 8, 8)} />
+      <DataRow label="Sellado por" value={middleTruncate(certificate.anchor.walletAddress, 6, 6)} />
+      <DataRow label="Fecha" value={formatDate(certificate.anchor.anchoredAt)} />
+      <DataRow label="Red" value="Polygon Amoy (testnet)" last />
+
+      {/* Evidencia de origen — dinámica según los metadatos reales */}
+      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ORIGEN DEL ARCHIVO</Text>
+      <EvidenceLine
+        ok={certificate.metadata.source === 'camera'}
+        trueText="Capturado con la cámara de la app"
+        falseText="Elegido desde la galería (no desde la cámara de la app)"
+      />
+      <EvidenceLine
+        ok={!!(certificate.metadata.latitude && certificate.metadata.longitude)}
+        trueText="Ubicación GPS registrada"
+        falseText="Sin ubicación GPS disponible"
+      />
+      <EvidenceLine
+        ok={!!certificate.metadata.capturedAt}
+        trueText="Hora de captura verificada"
+        falseText="Sin metadatos de fecha verificables"
+      />
+
+      {/* Estado final: nivel de confianza */}
+      <TrustPill level={certificate.trustLevel} />
+
+      <CopyableHash label="Número de sello completo" value={certificate.anchor.txHash} />
+
+      <Pressable style={[styles.shareButton, { backgroundColor: colors.accent }]} onPress={handleShare}>
+        <Ionicons name="share-social-outline" size={16} color={colors.accentText} />
+        <Text style={[styles.shareButtonText, { color: colors.accentText }]}>Compartir foto y sello</Text>
+      </Pressable>
+
+      <Pressable onPress={() => Linking.openURL(certificate.anchor.explorerUrl)}>
+        <Text style={[styles.externalLink, { color: colors.accent }]}>
+          Abrir en el navegador (registro público) ↗
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -321,6 +321,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 16,
+    paddingBottom: 8,
   },
   counter: { fontSize: 12, fontWeight: '600' },
   closeButton: { marginLeft: 'auto' },
@@ -375,8 +376,15 @@ const styles = StyleSheet.create({
   copyValue: { fontSize: 11, fontFamily: 'monospace', lineHeight: 15 },
   copyIconCol: { alignItems: 'center', gap: 2, minWidth: 44 },
   copyHint: { fontSize: 9.5, fontWeight: '700' },
-  externalLink: { fontSize: 13, fontWeight: '600', marginTop: 16, textAlign: 'center' },
-  swipeHintRow: { flexDirection: 'row', alignItems: 'center', marginTop: 18 },
-  swipeHint: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  swipeHintText: { fontSize: 10.5, fontWeight: '600' },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    borderRadius: 14,
+    paddingVertical: 14,
+  },
+  shareButtonText: { fontWeight: '700', fontSize: 14 },
+  externalLink: { fontSize: 13, fontWeight: '600', marginTop: 14, textAlign: 'center' },
 });
