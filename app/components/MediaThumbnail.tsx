@@ -7,14 +7,13 @@
  *   fotogramas de video), así que se muestra un ícono de cámara de
  *   video sobre fondo tintado, para diferenciarlo claramente de una foto.
  * - Sin archivo disponible (ej. certificado restaurado desde una copia
- *   de seguridad, que nunca incluye la foto): antes se mostraba un
- *   ícono gris de "documento con candado", muy pequeño sobre un fondo
- *   plano — de lejos se leía como un ícono roto, no como un estado
- *   intencional. Ahora se reutiliza el mismo lenguaje visual que ya
- *   funciona bien (la insignia de escudo de nivel de confianza): un
- *   escudo grande del color correspondiente (verde/ámbar/gris) sobre
- *   un fondo tintado del mismo color, así el "default" ya comunica
- *   algo por sí solo en vez de sentirse un espacio vacío.
+ *   de seguridad, que nunca incluye la foto): ícono neutro de "sin
+ *   vista previa" (foto o video según corresponda). Se probó usar el
+ *   escudo grande de nivel de confianza aquí, a todo color — pero en
+ *   la grilla, con varias miniaturas juntas, se leía como un HUD de
+ *   videojuego y duplicaba la insignia de confianza que ya muestra
+ *   CertificatesScreen en la esquina. El color de confianza vive SOLO
+ *   en esa insignia chica; este placeholder se mantiene neutro.
  *
  * Se usa en CertificateCard, CertificatesScreen (grilla) y
  * CertificateDetailModal — antes cada uno repetía esta lógica.
@@ -23,20 +22,15 @@ import React from 'react';
 import { View, Image, StyleSheet, type StyleProp, type ImageStyle, type ViewStyle } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
-import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 export default function MediaThumbnail({
   uri,
   mediaType,
-  trustLevel,
   style,
   iconSize = 22,
 }: {
   uri?: string;
   mediaType?: 'image' | 'video';
-  /** Nivel de confianza del certificado — colorea el ícono por defecto
-   * cuando no hay foto/video disponible localmente. */
-  trustLevel?: VerityCertificate['trustLevel'];
   /** Acepta el mismo objeto de estilo (width/height/border...) para
    * dimensionar tanto la <Image> como los placeholders de <View>. */
   style?: StyleProp<ImageStyle>;
@@ -60,14 +54,13 @@ export default function MediaThumbnail({
     );
   }
 
-  const trustIcon =
-    trustLevel === 'ALTO' ? 'shield-checkmark' : trustLevel === 'MEDIO' ? 'shield-half' : 'shield-outline';
-  const trustColor =
-    trustLevel === 'ALTO' ? colors.success : trustLevel === 'MEDIO' ? colors.warning : colors.tabBarInactive;
-
   return (
-    <View style={[viewStyle, styles.placeholder, { backgroundColor: `${trustColor}22` }]}>
-      <Ionicons name={trustIcon} size={Math.round(iconSize * 1.6)} color={trustColor} />
+    <View style={[viewStyle, styles.placeholder, { backgroundColor: colors.surfaceAlt }]}>
+      <Ionicons
+        name={mediaType === 'video' ? 'videocam-outline' : 'image-outline'}
+        size={Math.round(iconSize * 1.3)}
+        color={colors.textMuted}
+      />
     </View>
   );
 }
