@@ -33,6 +33,7 @@ import {
   ScrollView,
   FlatList,
   Animated,
+  Easing,
   Dimensions,
   Alert,
 } from 'react-native';
@@ -138,16 +139,27 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   const canFlip = true;
 
   const [flipped, setFlipped] = useState(false);
-  const flip = useRef(new Animated.Value(0)).current; // 0 = frente, 180 = reverso
+  // Un solo valor de 0 a 1 maneja TODO el giro de moneda (ver el mockup
+  // del usuario: coinFlip 0.7s — rotateY 0→180→360, translateY 0→-50→0,
+  // scale 1→1.1→1). A diferencia del "flip de carta" clásico (dos caras
+  // superpuestas con backfaceVisibility), aquí es UNA sola vista cuyo
+  // contenido se intercambia (`flipped`) justo en la mitad del giro
+  // (SPIN_DURATION_MS/2, con la carta de canto y casi invisible por la
+  // perspectiva) — por eso el giro completa 360° y no 180°: para volver
+  // a quedar de frente al usuario mostrando el contenido nuevo.
+  const spin = useRef(new Animated.Value(0)).current;
   const isAnimating = useRef(false);
   const flipBackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const swapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const SPIN_DURATION_MS = 700;
 
   /**
-   * Tocar la carta alterna frente/reverso. Para FOTO, además vuelve sola
-   * al frente a los ~2s (un vistazo rápido). Para VIDEO no hay auto-
-   * retorno: interrumpiría la reproducción justo cuando el usuario la
-   * empieza a ver — ahí toca la carta de nuevo (o los controles nativos)
-   * para volver.
+   * Tocar la carta dispara el giro de moneda. Para FOTO, además vuelve
+   * sola al frente a los ~2s (un vistazo rápido) repitiendo el mismo
+   * giro. Para VIDEO no hay auto-retorno: interrumpiría la reproducción
+   * justo cuando el usuario la empieza a ver — ahí toca la carta de
+   * nuevo (o los controles nativos) para volver.
    */
   function handleCardTap() {
     if (!canFlip || isAnimating.current) return;
@@ -157,39 +169,32 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
     }
     isAnimating.current = true;
     const goingToBack = !flipped;
-    // Importante para video: `flipped` se actualiza ANTES de animar, no
-    // en el callback de .start(). Así <VideoBackFace> se monta (o
-    // desmonta, liberando el reproductor nativo) apenas se toca la
-    // carta, no recién cuando termina de girar — reproducir un video
-    // recién montado exactamente cuando ya es visible da tiempo de
-    // sobra a inicializarse durante el giro, que de todos modos está
-    // oculto (backfaceVisibility) hasta pasar los 90°.
-    setFlipped(goingToBack);
-    Animated.spring(flip, {
-      toValue: goingToBack ? 180 : 0,
-      friction: 8,
-      tension: 10,
+    spin.setValue(0);
+    // El contenido se intercambia a la mitad del giro (de canto, casi
+    // invisible por la perspectiva), no al terminar — así lo que
+    // "aterriza" en la segunda mitad del giro ya es el contenido nuevo.
+    swapTimer.current = setTimeout(() => setFlipped(goingToBack), SPIN_DURATION_MS / 2);
+    Animated.timing(spin, {
+      toValue: 1,
+      duration: SPIN_DURATION_MS,
+      easing: Easing.inOut(Easing.quad),
       useNativeDriver: true,
     }).start(() => {
       isAnimating.current = false;
       if (goingToBack && !isVideo) {
-        flipBackTimer.current = setTimeout(() => {
-          isAnimating.current = true;
-          setFlipped(false);
-          Animated.spring(flip, { toValue: 0, friction: 8, tension: 10, useNativeDriver: true }).start(() => {
-            isAnimating.current = false;
-          });
-        }, 2200);
+        flipBackTimer.current = setTimeout(handleCardTap, 2200);
       }
     });
   }
 
-  const frontRotate = flip.interpolate({ inputRange: [0, 180], outputRange: ['0deg', '180deg'] });
-  const backRotate = flip.interpolate({ inputRange: [0, 180], outputRange: ['180deg', '360deg'] });
+  const rotateY = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const translateY = spin.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -50, 0] });
+  const scale = spin.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.1, 1] });
 
   useEffect(() => {
     return () => {
       if (flipBackTimer.current) clearTimeout(flipBackTimer.current);
+      if (swapTimer.current) clearTimeout(swapTimer.current);
     };
   }, []);
 
@@ -228,140 +233,116 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
 
   return (
     <Pressable onPress={handleCardTap} disabled={!canFlip}>
-      <View style={styles.flipContainer}>
-        <Animated.View
-          style={[
-            styles.card,
-            { backgroundColor: colors.background, borderColor: colors.border },
-            styles.cardFace,
-            { transform: [{ perspective: 1400 }, { rotateY: frontRotate }] },
-          ]}
-        >
-      {/* Encabezado: insignia + título + referencia, foto a la derecha */}
-      <View style={styles.header}>
-        <View style={[styles.badge, { backgroundColor: colors.accent }]}>
-          <Ionicons name="shield-checkmark" size={22} color={colors.accentText} />
-        </View>
-        <View style={styles.headerText}>
-          <Text style={[styles.title, { color: colors.text }]}>CERTIFICADO VERITY</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            Ref. {shortRef(certificate.anchor.txHash)} · Polygon Amoy
-          </Text>
-          {/* Este hint vive en el frente, así que solo importa el caso "sin
-              voltear" — cuando está volteada, el frente no es visible. */}
-          <Text style={[styles.flipHint, { color: colors.accent }]}>
-            {hasLocalMedia
-              ? isVideo
-                ? 'Toca la carta para reproducir el video'
-                : 'Toca la carta para ver la foto ↻'
-              : 'Toca la carta para ver el sello ↻'}
-          </Text>
-        </View>
-        <MediaThumbnail
-          uri={certificate.thumbnailUri}
-          mediaType={certificate.metadata.mediaType}
-          previewUri={certificate.previewImageUri}
-          trustLevel={certificate.trustLevel}
-          style={[styles.photo, { borderColor: colors.border }]}
-          iconSize={22}
-        />
-      </View>
-
-      <View style={[styles.dashedDivider, { borderColor: colors.border }]} />
-
-      {/* Datos del sello */}
-      <DataRow label="Huella digital (SHA-256)" value={middleTruncate(certificate.sha256, 8, 14)} />
-      <DataRow label="Número de sello" value={middleTruncate(certificate.anchor.txHash, 8, 8)} />
-      <DataRow label="Sellado por" value={middleTruncate(certificate.anchor.walletAddress, 6, 6)} />
-      <DataRow label="Fecha" value={formatDate(certificate.anchor.anchoredAt)} />
-      <DataRow label="Red" value="Polygon Amoy (testnet)" last />
-
-      {/* Evidencia de origen — dinámica según los metadatos reales */}
-      <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ORIGEN DEL ARCHIVO</Text>
-      <EvidenceLine
-        ok={certificate.metadata.source === 'camera'}
-        trueText="Capturado con la cámara de la app"
-        falseText="Elegido desde la galería (no desde la cámara de la app)"
-      />
-      <EvidenceLine
-        ok={!!(certificate.metadata.latitude && certificate.metadata.longitude)}
-        trueText="Ubicación GPS registrada"
-        falseText="Sin ubicación GPS disponible"
-      />
-      <EvidenceLine
-        ok={!!certificate.metadata.capturedAt}
-        trueText="Hora de captura verificada"
-        falseText="Sin metadatos de fecha verificables"
-      />
-
-      {/* Estado final: nivel de confianza */}
-      <TrustPill level={certificate.trustLevel} />
-
-      <CopyableHash label="Número de sello completo" value={certificate.anchor.txHash} />
-
-      <Pressable style={[styles.shareButton, { backgroundColor: colors.accent }]} onPress={handleShare}>
-        <Ionicons name="share-social-outline" size={16} color={colors.accentText} />
-        <Text style={[styles.shareButtonText, { color: colors.accentText }]}>
-          Compartir {mediaLabel} y sello
-        </Text>
-      </Pressable>
-
-      <Pressable onPress={() => Linking.openURL(certificate.anchor.explorerUrl)}>
-        <Text style={[styles.externalLink, { color: colors.accent }]}>
-          Abrir en el navegador (registro público) ↗
-        </Text>
-      </Pressable>
-        </Animated.View>
-
-        {/* Reverso de la carta. Con archivo local: la foto, o el VIDEO
-            real (con reproducción de verdad, no solo el frame). Sin
-            archivo local (ej. certificado restaurado desde backup): la
-            estampilla de nivel de confianza + un mensaje corto que
-            tranquiliza — el sello sigue siendo válido, solo no hay
-            imagen guardada en ESTE teléfono. pointerEvents normal (no
-            'none') para video: así los controles nativos del reproductor
-            (play/pausa/barra) son tocables; tocar el video fuera de esos
-            controles sigue volteando la carta de vuelta, gracias al
-            Pressable que envuelve todo. */}
-        <Animated.View
-          style={[
-            styles.card,
-            styles.cardFace,
-            styles.cardBack,
-            { backgroundColor: colors.background, borderColor: colors.border },
-            { transform: [{ perspective: 1400 }, { rotateY: backRotate }] },
-          ]}
-        >
-          {isVideo && hasLocalMedia ? (
-            // Montaje perezoso: el reproductor nativo (ExoPlayer/AVPlayer)
-            // solo existe mientras la carta está volteada. Si se
-            // instanciara siempre (aunque en pausa), la lista horizontal
-            // de certificados podría llegar a montar varios reproductores
-            // a la vez (el actual + vecinos que React Native pre-renderiza
-            // para el scroll) — eso fue lo que causaba que la app se
-            // cerrara sola al tocar la carta.
-            flipped && <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
-          ) : hasLocalMedia ? (
-            <>
-              <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
-              <Text style={styles.cardBackLabel}>CERTIFICADO VERITY — FOTO ORIGINAL</Text>
-            </>
-          ) : (
-            <View style={styles.cardBackNoMedia}>
-              <SealMedallion
+      <Animated.View
+        style={[
+          styles.card,
+          !flipped && styles.cardFront,
+          { backgroundColor: colors.background, borderColor: colors.border },
+          { transform: [{ perspective: 1000 }, { translateY }, { scale }, { rotateY }] },
+        ]}
+      >
+        {!flipped ? (
+          <>
+            {/* Encabezado: insignia + título + referencia, foto a la derecha */}
+            <View style={styles.header}>
+              <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+                <Ionicons name="shield-checkmark" size={22} color={colors.accentText} />
+              </View>
+              <View style={styles.headerText}>
+                <Text style={[styles.title, { color: colors.text }]}>CERTIFICADO VERITY</Text>
+                <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+                  Ref. {shortRef(certificate.anchor.txHash)} · Polygon Amoy
+                </Text>
+                <Text style={[styles.flipHint, { color: colors.accent }]}>
+                  {hasLocalMedia
+                    ? isVideo
+                      ? 'Toca la carta para reproducir el video'
+                      : 'Toca la carta para ver la foto ↻'
+                    : 'Toca la carta para ver el sello ↻'}
+                </Text>
+              </View>
+              <MediaThumbnail
+                uri={certificate.thumbnailUri}
                 mediaType={certificate.metadata.mediaType}
+                previewUri={certificate.previewImageUri}
                 trustLevel={certificate.trustLevel}
-                size={190}
+                style={[styles.photo, { borderColor: colors.border }]}
+                iconSize={22}
               />
-              <Text style={[styles.cardBackNoMediaText, { color: colors.textMuted }]}>
-                Este {mediaLabel} no está guardado en este teléfono (el certificado se restauró desde una
-                copia de seguridad, que nunca incluye archivos), pero el sello sigue siendo 100% válido —
-                anclado en Polygon Amoy con el número de sello de arriba.
-              </Text>
             </View>
-          )}
-        </Animated.View>
-      </View>
+
+            <View style={[styles.dashedDivider, { borderColor: colors.border }]} />
+
+            {/* Datos del sello */}
+            <DataRow label="Huella digital (SHA-256)" value={middleTruncate(certificate.sha256, 8, 14)} />
+            <DataRow label="Número de sello" value={middleTruncate(certificate.anchor.txHash, 8, 8)} />
+            <DataRow label="Sellado por" value={middleTruncate(certificate.anchor.walletAddress, 6, 6)} />
+            <DataRow label="Fecha" value={formatDate(certificate.anchor.anchoredAt)} />
+            <DataRow label="Red" value="Polygon Amoy (testnet)" last />
+
+            {/* Evidencia de origen — dinámica según los metadatos reales */}
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ORIGEN DEL ARCHIVO</Text>
+            <EvidenceLine
+              ok={certificate.metadata.source === 'camera'}
+              trueText="Capturado con la cámara de la app"
+              falseText="Elegido desde la galería (no desde la cámara de la app)"
+            />
+            <EvidenceLine
+              ok={!!(certificate.metadata.latitude && certificate.metadata.longitude)}
+              trueText="Ubicación GPS registrada"
+              falseText="Sin ubicación GPS disponible"
+            />
+            <EvidenceLine
+              ok={!!certificate.metadata.capturedAt}
+              trueText="Hora de captura verificada"
+              falseText="Sin metadatos de fecha verificables"
+            />
+
+            {/* Estado final: nivel de confianza */}
+            <TrustPill level={certificate.trustLevel} />
+
+            <CopyableHash label="Número de sello completo" value={certificate.anchor.txHash} />
+
+            <Pressable style={[styles.shareButton, { backgroundColor: colors.accent }]} onPress={handleShare}>
+              <Ionicons name="share-social-outline" size={16} color={colors.accentText} />
+              <Text style={[styles.shareButtonText, { color: colors.accentText }]}>
+                Compartir {mediaLabel} y sello
+              </Text>
+            </Pressable>
+
+            <Pressable onPress={() => Linking.openURL(certificate.anchor.explorerUrl)}>
+              <Text style={[styles.externalLink, { color: colors.accent }]}>
+                Abrir en el navegador (registro público) ↗
+              </Text>
+            </Pressable>
+          </>
+        ) : (
+          // Reverso: la foto, el VIDEO real (con reproducción de verdad,
+          // no solo el frame), o — sin archivo local (ej. certificado
+          // restaurado desde backup) — el sello de nivel de confianza +
+          // un mensaje corto que tranquiliza: el sello sigue siendo
+          // válido, solo no hay archivo guardado en ESTE teléfono.
+          <View style={styles.cardBack}>
+            {isVideo && hasLocalMedia ? (
+              <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
+            ) : hasLocalMedia ? (
+              <>
+                <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
+                <Text style={styles.cardBackLabel}>CERTIFICADO VERITY — FOTO ORIGINAL</Text>
+              </>
+            ) : (
+              <View style={styles.cardBackNoMedia}>
+                <SealMedallion trustLevel={certificate.trustLevel} size={190} />
+                <Text style={[styles.cardBackNoMediaText, { color: colors.textMuted }]}>
+                  Este {mediaLabel} no está guardado en este teléfono (el certificado se restauró desde una
+                  copia de seguridad, que nunca incluye archivos), pero el sello sigue siendo 100% válido —
+                  anclado en Polygon Amoy con el número de sello de arriba.
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+      </Animated.View>
     </Pressable>
   );
 }
@@ -514,30 +495,23 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 24,
     borderWidth: 1,
-    padding: 20,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
     elevation: 4,
   },
-  // Carta "volteable": el frente vive en el flujo normal (define el alto
-  // del contenedor), el reverso se superpone exactamente encima con
-  // position:absolute + inset 0. backfaceVisibility:'hidden' es lo que
-  // hace que cada cara desaparezca al pasar de los 90°, sin necesidad de
-  // controlar la opacidad a mano.
-  flipContainer: { position: 'relative' },
-  cardFace: { backfaceVisibility: 'hidden' },
+  // El frente necesita el padding normal de una tarjeta; el reverso
+  // (foto/video a pantalla completa) lo pierde a propósito para poder
+  // llegar hasta el borde — se aplica por separado en el JSX según
+  // `flipped`, no como parte fija de `card`.
+  cardFront: { padding: 20 },
   cardBack: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: 'hidden',
+    minHeight: 420,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 0,
   },
   cardBackImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   cardBackNoMedia: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },

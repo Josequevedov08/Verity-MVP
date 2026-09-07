@@ -23,6 +23,7 @@ import React from 'react';
 import { View, Image, StyleSheet, type StyleProp, type ImageStyle, type ViewStyle } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import SealMedallion from './SealMedallion';
+import { useTheme } from '../theme/ThemeContext';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 export default function MediaThumbnail({
@@ -38,14 +39,15 @@ export default function MediaThumbnail({
   /** Frame real extraído del video, si se generó al sellar (solo aplica
    * cuando mediaType === 'video'). */
   previewUri?: string;
-  /** Solo se usa para colorear SealPlaceholder cuando no hay nada más
-   * que mostrar. */
+  /** Solo se usa para colorear SealMedallion cuando no hay nada más que
+   * mostrar. */
   trustLevel?: VerityCertificate['trustLevel'];
   /** Acepta el mismo objeto de estilo (width/height/border...) para
    * dimensionar tanto la <Image> como los placeholders de <View>. */
   style?: StyleProp<ImageStyle>;
   iconSize?: number;
 }) {
+  const { colors } = useTheme();
   // Los placeholders son <View>, que no acepta todas las propiedades de
   // ImageStyle (ej. `resizeMode`) -- en la práctica solo se les pasan
   // estilos de layout (width/height/border...), válidos en ambos.
@@ -67,11 +69,19 @@ export default function MediaThumbnail({
   }
 
   return (
-    <SealMedallion mediaType={mediaType} trustLevel={trustLevel} style={viewStyle} size={iconSize * 3} />
+    <View style={[viewStyle, styles.medallionSlot, { backgroundColor: colors.surfaceAlt }]}>
+      <SealMedallion trustLevel={trustLevel} size={Math.round(iconSize * 3.3)} />
+      {mediaType === 'video' && (
+        <View style={[styles.videoBadge, { backgroundColor: 'rgba(0,0,0,0.55)' }]} pointerEvents="none">
+          <Ionicons name="videocam" size={Math.max(10, Math.round(iconSize * 0.5))} color="#fff" />
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  medallionSlot: { alignItems: 'center', justifyContent: 'center' },
   videoBadge: {
     position: 'absolute',
     top: 4,
