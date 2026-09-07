@@ -103,8 +103,12 @@ export const LEGAL_DOCS: Record<LegalDocId, LegalDoc> = {
         body: 'Eres responsable del contenido que sellas. Verity no revisa ni modera lo que sellas — solo calcula y ancla su huella digital.',
       },
       {
-        heading: 'Plan gratuito y Pro (futuro)',
-        body: 'El plan gratuito de Verity incluye un número limitado de sellos por mes. Un plan Pro (de pago, gestionado a través de RevenueCat) podrá levantar ese límite. Estos términos se actualizarán cuando esa función esté disponible.',
+        heading: 'Plan gratuito y PRO',
+        body: 'El plan gratuito incluye un número limitado de sellos por mes (ver la app para el número actual). Verity PRO ($4.99/mes, gestionado a través de RevenueCat y la Google Play Store) lo deja ilimitado. La suscripción se renueva automáticamente cada mes hasta que la canceles — puedes cancelarla en cualquier momento desde la Play Store, sin permanencia ni penalidad; seguirá activa hasta el final del período ya pagado.',
+      },
+      {
+        heading: 'Cómo se identifica quién es PRO (sin cuenta)',
+        body: 'Verity no pide cuenta ni login, así que tu suscripción se identifica con un ID guardado en tu teléfono, vinculado a tu cuenta de Google Play. Si borras los datos de la app, la desinstalas, o cambias de teléfono, ese ID se pierde — usa "Restaurar compra" (en Ajustes o en la pantalla de PRO) para recuperar tu suscripción; funciona mientras sigas usando la MISMA cuenta de Google Play. Esto es igual en cualquier app con este modelo (Spotify, Netflix, etc.), no es una limitación exclusiva de Verity. Si cambias de cuenta de Google sin restaurar antes, no hay forma automática de recuperarla — en ese caso escríbenos con tu recibo de compra de Google Play.',
       },
       {
         heading: 'Cambios',
@@ -127,6 +131,10 @@ export const LEGAL_DOCS: Record<LegalDocId, LegalDoc> = {
       {
         heading: '¿"Confianza Baja" quiere decir que mi foto es falsa?',
         body: 'No, para nada. Alta/Media/Baja solo dice qué tanta información extra tenemos sobre CÓMO se tomó la foto o video (por ejemplo, si sabemos dónde y a qué hora). No dice si el contenido es real o falso. Una foto tuya, 100% real, puede salir en "Baja" simplemente porque viene de tu galería y no trae esos datos extra (por ejemplo, si te la mandaron por WhatsApp). Eso no la invalida: el sello sigue siendo válido igual.',
+      },
+      {
+        heading: 'Me hice PRO y ahora no me reconoce como PRO, ¿qué pasó?',
+        body: 'Probablemente borraste los datos de la app, la reinstalaste, o cambiaste de teléfono — como Verity no pide cuenta, tu suscripción vive vinculada a tu cuenta de Google Play, no a la app en sí. Ve a Ajustes (o a la pantalla de PRO) y toca "Restaurar compra": mientras sigas con la misma cuenta de Google Play, se reactiva sola.',
       },
       {
         heading: '¿Polygon Amoy es dinero real?',

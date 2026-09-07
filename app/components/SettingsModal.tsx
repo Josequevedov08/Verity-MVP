@@ -33,14 +33,14 @@ import {
   restoreDeviceWalletFromPrivateKey,
 } from '../services/blockchainService';
 import { resetAllCoachMarks } from '../utils/coachMarkUtils';
-import { getSealUsage, type SealUsage } from '../services/revenuecatService';
+import { getSealUsage, restorePurchases, type SealUsage } from '../services/revenuecatService';
 import LegalContentModal, { LEGAL_DOCS, type LegalDocId } from './LegalContentModal';
 import PaywallModal from './PaywallModal';
 import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.2.3';
+const APP_VERSION = '0.2.4';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -64,6 +64,29 @@ export default function SettingsModal({
   // para el porqué de que ya NO se repita ahí).
   const [usage, setUsage] = useState<SealUsage | null>(null);
   const [paywallVisible, setPaywallVisible] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+
+  /** Ver PaywallModal.tsx / revenuecatService.ts para el porqué de
+   * esto: sin cuenta/login, si alguien borra los datos de la app o
+   * reinstala, la app deja de reconocerlo como PRO aunque ya haya
+   * pagado — restaurar le pregunta directo a Google Play. */
+  async function handleRestore() {
+    setRestoring(true);
+    try {
+      const outcome = await restorePurchases();
+      if (outcome.restored) {
+        getSealUsage().then(setUsage);
+        Alert.alert('Listo', 'Encontramos tu suscripción PRO y la reactivamos.');
+      } else {
+        Alert.alert(
+          'No encontramos una compra',
+          outcome.error ?? 'No encontramos ninguna suscripción PRO activa en esta cuenta de Google Play.'
+        );
+      }
+    } finally {
+      setRestoring(false);
+    }
+  }
 
   /**
    * Antes esto solo reiniciaba una bandera en AsyncStorage sin ningún
@@ -256,6 +279,13 @@ export default function SettingsModal({
                   <Text style={styles.proBannerSubtitle}>Sellos ilimitados · gracias por tu apoyo 🙌</Text>
                 </View>
               </LinearGradient>
+            )}
+            {usage && !usage.isPro && (
+              <Pressable onPress={handleRestore} disabled={restoring} hitSlop={8} style={styles.restoreLink}>
+                <Text style={[styles.restoreLinkText, { color: colors.accent }]}>
+                  {restoring ? 'Buscando...' : '¿Ya pagaste antes? Restaurar compra'}
+                </Text>
+              </Pressable>
             )}
 
             <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>APARIENCIA</Text>
@@ -497,6 +527,8 @@ const styles = StyleSheet.create({
   proBannerCta: { alignItems: 'center' },
   proBannerPrice: { fontSize: 20, fontWeight: '800', color: '#fff' },
   proBannerPricePeriod: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
+  restoreLink: { alignItems: 'center', marginBottom: 20, marginTop: -8 },
+  restoreLinkText: { fontSize: 12.5, fontWeight: '700' },
   sectionLabel: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, marginBottom: 10 },
   subtitle: { fontSize: 13, marginBottom: 8 },
   option: {

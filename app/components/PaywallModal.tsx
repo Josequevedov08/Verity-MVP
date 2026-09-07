@@ -26,7 +26,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
-import { presentPaywall, type SealUsage } from '../services/revenuecatService';
+import { presentPaywall, restorePurchases, type SealUsage } from '../services/revenuecatService';
 import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
 
 const BENEFITS = [
@@ -50,6 +50,7 @@ export default function PaywallModal({
 }) {
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   async function handleSubscribe() {
     setLoading(true);
@@ -66,6 +67,28 @@ export default function PaywallModal({
       // 'cancelled': el usuario cerró el diálogo de compra, no hace falta avisar nada.
     } finally {
       setLoading(false);
+    }
+  }
+
+  /** Para cuando alguien YA pagó antes pero la app dejó de reconocerlo
+   * como PRO (reinstaló, borró datos, etc. — ver revenuecatService.ts).
+   * Sin esto no hay forma de recuperar la suscripción sin escribirle a
+   * soporte. */
+  async function handleRestore() {
+    setRestoring(true);
+    try {
+      const outcome = await restorePurchases();
+      if (outcome.restored) {
+        onPurchased();
+        Alert.alert('Listo', 'Encontramos tu suscripción PRO y la reactivamos.');
+      } else {
+        Alert.alert(
+          'No encontramos una compra',
+          outcome.error ?? 'No encontramos ninguna suscripción PRO activa en esta cuenta de Google Play.'
+        );
+      }
+    } finally {
+      setRestoring(false);
     }
   }
 
@@ -141,8 +164,16 @@ export default function PaywallModal({
           </Pressable>
 
           <Text style={[styles.disclaimer, { color: colors.textMuted }]}>
-            Puedes seguir usando el plan gratis ({FREEMIUM_LIMITS.FREE_SEALS_PER_MONTH} sellos/mes) sin problema.
+            Se renueva automáticamente cada mes. Cancela cuando quieras desde la Play Store — no hay
+            permanencia ni penalidad. Puedes seguir usando el plan gratis (
+            {FREEMIUM_LIMITS.FREE_SEALS_PER_MONTH} sellos/mes) sin problema.
           </Text>
+
+          <Pressable onPress={handleRestore} disabled={restoring} hitSlop={8} style={styles.restoreLink}>
+            <Text style={[styles.restoreLinkText, { color: colors.accent }]}>
+              {restoring ? 'Buscando...' : '¿Ya pagaste antes? Restaurar compra'}
+            </Text>
+          </Pressable>
         </View>
       </View>
     </Modal>
@@ -223,5 +254,7 @@ const styles = StyleSheet.create({
     minHeight: 54,
   },
   subscribeButtonText: { fontSize: 16, fontWeight: '800' },
-  disclaimer: { fontSize: 11.5, marginTop: 14, marginBottom: 20, textAlign: 'center' },
+  disclaimer: { fontSize: 11.5, marginTop: 14, lineHeight: 16, textAlign: 'center' },
+  restoreLink: { marginTop: 14, marginBottom: 24 },
+  restoreLinkText: { fontSize: 12.5, fontWeight: '700' },
 });

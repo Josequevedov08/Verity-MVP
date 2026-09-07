@@ -103,3 +103,31 @@ export async function presentPaywall(): Promise<PaywallOutcome> {
     return { status: 'unavailable' };
   }
 }
+
+export type RestoreOutcome = { restored: boolean; error?: string };
+
+/**
+ * "Restaurar compra": sin cuenta/login, Verity identifica al usuario
+ * con un ID anónimo guardado en el teléfono — si se borran los datos
+ * de la app o se reinstala, ese ID se pierde y, sin esto, alguien que
+ * SÍ pagó dejaría de verse como PRO (un problema real: se le estaría
+ * cobrando sin reconocerle lo que pagó). Esta función le pregunta
+ * directo a la tienda (Google Play) "¿esta cuenta ya compró PRO?" —
+ * funciona mientras sea la MISMA cuenta de Google Play en el
+ * dispositivo (igual que Spotify, Netflix, etc.; no es una limitación
+ * exclusiva de no tener login propio). Se usa desde Ajustes y desde el
+ * paywall.
+ */
+export async function restorePurchases(): Promise<RestoreOutcome> {
+  if (!initialized) {
+    return { restored: false, error: 'La tienda de pago no está lista todavía.' };
+  }
+  try {
+    const info = await Purchases.restorePurchases();
+    const restored = info.entitlements.active[FREEMIUM_LIMITS.PRO_ENTITLEMENT_ID] !== undefined;
+    return { restored };
+  } catch (error) {
+    console.warn('No se pudo restaurar la compra:', error);
+    return { restored: false, error: 'No se pudo consultar la tienda. Intenta de nuevo más tarde.' };
+  }
+}
