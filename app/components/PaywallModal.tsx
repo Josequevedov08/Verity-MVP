@@ -5,14 +5,14 @@
  * gratis mensual (ver CaptureScreen.tsx) o cuando toca voluntariamente
  * el estado del plan (Ajustes → "Plan").
  *
- * El diseño (imagen/degradado de fondo + tarjeta que sube desde abajo
- * superpuesta con una insignia grande) sigue una referencia visual que
- * el usuario compartió — adaptada a los componentes reales de la app
- * (React Native puro, sin Tailwind/shadcn: esta app no es web) y a su
- * lenguaje de marca: en vez de una foto de stock se usa un degradado
- * con el color de acento de Verity + la insignia de escudo que ya se
- * usa en el resto de la app, para que se sienta parte de Verity y no
- * un componente pegado.
+ * El diseño (imagen de fondo + tarjeta que sube desde abajo superpuesta
+ * con una insignia grande) sigue una referencia visual que el usuario
+ * compartió — adaptada a los componentes reales de la app (React
+ * Native puro, sin Tailwind/shadcn: esta app no es web). La imagen del
+ * hero (assets/images/paywall-hero.jpg) es del propio usuario, no de un
+ * banco de fotos. Encima lleva un degradado con los colores del tema
+ * (acento → fondo) para que funcione igual de bien en claro y oscuro —
+ * la foto es fija, pero el degradado se adapta.
  *
  * Ver revenuecatService.ts para el porqué de 'unavailable': hasta que
  * exista un producto de suscripción real en Google Play Console (fase
@@ -21,9 +21,11 @@
  * de fallar en silencio o fingir una compra que no es real.
  */
 import React, { useState } from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, Modal, Pressable, StyleSheet, Alert, ActivityIndicator, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+
+const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import { presentPaywall, restorePurchases, type SealUsage } from '../services/revenuecatService';
@@ -95,21 +97,23 @@ export default function PaywallModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.page, { backgroundColor: colors.surface }]}>
-        {/* Hero: degradado de marca en vez de una foto — mismo espíritu
-            visual de la referencia (imagen de fondo + botón de cerrar
-            flotante) sin depender de una imagen externa. */}
-        <LinearGradient
-          colors={[colors.accent, colors.surface]}
-          start={{ x: 0.15, y: 0 }}
-          end={{ x: 0.9, y: 1 }}
-          style={styles.hero}
-        >
+        {/* Hero: la foto del usuario, con un degradado de los colores del
+            TEMA encima (no fijo) — así se adapta a claro/oscuro aunque
+            la imagen en sí sea siempre la misma, y se funde limpio con
+            la tarjeta de abajo (termina exactamente en colors.surface). */}
+        <ImageBackground source={HERO_IMAGE} style={styles.hero} resizeMode="cover">
+          <LinearGradient
+            colors={[`${colors.accent}55`, colors.surface]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
           <SafeAreaView edges={['top']} style={styles.heroSafeArea}>
             <Pressable style={styles.closeButton} onPress={onClose} hitSlop={8}>
               <Ionicons name="close" size={20} color="#fff" />
             </Pressable>
           </SafeAreaView>
-        </LinearGradient>
+        </ImageBackground>
 
         {/* Insignia superpuesta entre el degradado y la tarjeta (mismo
             truco visual que la referencia: el ícono "flota" partido

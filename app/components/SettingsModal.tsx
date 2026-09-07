@@ -15,7 +15,7 @@
  * para hacer scroll y visualmente consistente con el resto de la app.
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, Image, ScrollView, Alert } from 'react-native';
+import { View, Text, Modal, Pressable, StyleSheet, Image, ImageBackground, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 // Import directo al submódulo (ver SettingsButton.tsx para el porqué:
@@ -39,8 +39,11 @@ import PaywallModal from './PaywallModal';
 import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
+// Foto propia del usuario (no de un banco de imágenes) — mismo archivo
+// que el hero del paywall, ver PaywallModal.tsx para el detalle.
+const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.2.4';
+const APP_VERSION = '0.2.5';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -234,12 +237,17 @@ export default function SettingsModal({
                 pasar por alto. */}
             {usage && !usage.isPro && (
               <Pressable onPress={() => setPaywallVisible(true)}>
-                <LinearGradient
-                  colors={[colors.accent, darken(colors.accent, 28)]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                <ImageBackground
+                  source={HERO_IMAGE}
                   style={styles.proBanner}
+                  imageStyle={{ borderRadius: 20 }}
                 >
+                  <LinearGradient
+                    colors={[`${colors.accent}CC`, `${darken(colors.accent, 35)}E6`]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+                  />
                   <View style={styles.proBannerBadge}>
                     <Ionicons name="shield-checkmark" size={26} color="#fff" />
                   </View>
@@ -261,16 +269,17 @@ export default function SettingsModal({
                     <Text style={styles.proBannerPricePeriod}>/mes</Text>
                     <Ionicons name="chevron-forward" size={16} color="#fff" style={{ marginTop: 4 }} />
                   </View>
-                </LinearGradient>
+                </ImageBackground>
               </Pressable>
             )}
             {usage && usage.isPro && (
-              <LinearGradient
-                colors={[colors.accent, darken(colors.accent, 28)]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.proBanner}
-              >
+              <ImageBackground source={HERO_IMAGE} style={styles.proBanner} imageStyle={{ borderRadius: 20 }}>
+                <LinearGradient
+                  colors={[`${colors.accent}CC`, `${darken(colors.accent, 35)}E6`]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
+                />
                 <View style={styles.proBannerBadge}>
                   <Ionicons name="shield-checkmark" size={26} color="#fff" />
                 </View>
@@ -278,7 +287,7 @@ export default function SettingsModal({
                   <Text style={styles.proBannerTitle}>Verity PRO activo</Text>
                   <Text style={styles.proBannerSubtitle}>Sellos ilimitados · gracias por tu apoyo 🙌</Text>
                 </View>
-              </LinearGradient>
+              </ImageBackground>
             )}
             {usage && !usage.isPro && (
               <Pressable onPress={handleRestore} disabled={restoring} hitSlop={8} style={styles.restoreLink}>
