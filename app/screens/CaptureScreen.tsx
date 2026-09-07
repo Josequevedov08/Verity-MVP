@@ -348,6 +348,7 @@ export default function CaptureScreen() {
   }, []);
 
   return (
+    <>
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Sellar contenido</Text>
@@ -453,8 +454,12 @@ export default function CaptureScreen() {
           />
         </>
       )}
+    </SafeAreaView>
 
-      <CoachMark
+    {/* Hermano del SafeAreaView (no hijo) — ver nota en CoachMark.tsx
+        sobre por qué esto es necesario para que el recuadro apunte al
+        lugar correcto. */}
+    <CoachMark
         visible={showTour && (step === 'idle' || step === 'error')}
         steps={[
           {
@@ -478,7 +483,7 @@ export default function CaptureScreen() {
           markCoachMarkSeen('capture');
         }}
       />
-    </SafeAreaView>
+    </>
   );
 }
 

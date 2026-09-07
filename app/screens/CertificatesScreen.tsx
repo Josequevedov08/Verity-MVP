@@ -130,6 +130,7 @@ export default function CertificatesScreen() {
   }
 
   return (
+    <>
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Mis sellos</Text>
@@ -212,8 +213,10 @@ export default function CertificatesScreen() {
         visible={!!selected}
         onClose={() => setSelected(null)}
       />
+    </SafeAreaView>
 
-      <CoachMark
+    {/* Hermano del SafeAreaView (no hijo) — ver nota en CoachMark.tsx. */}
+    <CoachMark
         visible={showTour}
         steps={[
           {
@@ -232,7 +235,7 @@ export default function CertificatesScreen() {
           markCoachMarkSeen('certificates');
         }}
       />
-    </SafeAreaView>
+    </>
   );
 }
 

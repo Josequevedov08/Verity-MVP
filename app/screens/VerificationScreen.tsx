@@ -192,6 +192,7 @@ export default function VerificationScreen() {
   }, []);
 
   return (
+    <>
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
@@ -400,8 +401,10 @@ export default function VerificationScreen() {
           />
         </SafeAreaView>
       </Modal>
+    </SafeAreaView>
 
-      <CoachMark
+    {/* Hermano del SafeAreaView (no hijo) — ver nota en CoachMark.tsx. */}
+    <CoachMark
         visible={showTour}
         steps={[
           {
@@ -420,7 +423,7 @@ export default function VerificationScreen() {
           markCoachMarkSeen('verification');
         }}
       />
-    </SafeAreaView>
+    </>
   );
 }
 

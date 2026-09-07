@@ -7,16 +7,21 @@
  * con `measureInWindow` sobre un ref) con un recorte en el overlay
  * oscuro — no es un ícono decorativo, señala el botón/campo real.
  *
- * IMPORTANTE — por qué es un <Modal>: `measureInWindow` da coordenadas
- * absolutas de la VENTANA completa del sistema (todo el celular, desde
- * arriba del todo). Si el overlay se dibuja como una <View> normal
- * DENTRO de la pantalla (que vive dentro de un SafeAreaView con su
- * propio desplazamiento por el notch/barra de estado), esas coordenadas
- * ya no coinciden: el recuadro sale desalineado del botón real (esto
- * pasaba en la primera versión). Un <Modal> de React Native se monta en
- * la raíz nativa, fuera de ese árbol, así que su (0,0) SÍ coincide con
- * el de `measureInWindow` — con `statusBarTranslucent` para que también
- * coincida en Android incluyendo el área de la barra de estado.
+ * IMPORTANTE — dónde se monta este componente: `measureInWindow` da
+ * coordenadas absolutas de la VENTANA completa (todo el celular, desde
+ * arriba del todo). Si este overlay se renderiza ANIDADO dentro del
+ * SafeAreaView de la pantalla (que aplica su propio padding por el
+ * notch/barra de estado), sus coordenadas locales ya no coinciden con
+ * las de `measureInWindow` — el recuadro sale desalineado del botón
+ * real. Por eso cada pantalla debe renderizar <CoachMark> como
+ * HERMANO del SafeAreaView (fuera de él, ambos dentro de un
+ * fragmento <>...</>), nunca como hijo suyo — así comparte el mismo
+ * origen (0,0) que toda la ventana. (Se probó envolverlo en un
+ * <Modal> para resolver esto mismo, pero en Android
+ * `statusBarTranslucent` hace que la pantalla de fondo se reacomode
+ * al aparecer el Modal, desalineando la medición de otra forma —
+ * ser hermano del SafeAreaView evita el problema de raíz sin tocar
+ * la barra de estado.)
  *
  * El "recorte" (spotlight) se logra con 4 rectángulos oscuros alrededor
  * del área resaltada (arriba/abajo/izquierda/derecha), en vez de una
@@ -24,7 +29,7 @@
  * idéntico para un recorte rectangular.
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Modal, Dimensions } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -75,7 +80,7 @@ export default function CoachMark({
     return () => clearTimeout(timer);
   }, [visible, stepIndex, step]);
 
-  if (!visible) return null;
+  if (!visible || !step || !rect) return null;
 
   function handleNext() {
     if (isLast) {
@@ -86,25 +91,21 @@ export default function CoachMark({
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onFinish}>
-      {step && rect && (
-        <CoachMarkOverlay
-          step={step}
-          rect={rect}
-          stepIndex={stepIndex}
-          totalSteps={steps.length}
-          isLast={isLast}
-          onNext={handleNext}
-          onSkip={onFinish}
-          accentColor={colors.accent}
-          accentTextColor={colors.accentText}
-          bgColor={colors.background}
-          borderColor={colors.border}
-          textColor={colors.text}
-          mutedColor={colors.textMuted}
-        />
-      )}
-    </Modal>
+    <CoachMarkOverlay
+      step={step}
+      rect={rect}
+      stepIndex={stepIndex}
+      totalSteps={steps.length}
+      isLast={isLast}
+      onNext={handleNext}
+      onSkip={onFinish}
+      accentColor={colors.accent}
+      accentTextColor={colors.accentText}
+      bgColor={colors.background}
+      borderColor={colors.border}
+      textColor={colors.text}
+      mutedColor={colors.textMuted}
+    />
   );
 }
 
