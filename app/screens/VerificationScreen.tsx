@@ -102,7 +102,10 @@ export default function VerificationScreen() {
       return;
     }
 
-    const picked = await ImagePicker.launchImageLibraryAsync({ quality: 1 });
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
+      quality: 1,
+    });
     if (picked.canceled || !picked.assets[0]) return;
 
     await checkFile(picked.assets[0].uri);
@@ -281,6 +284,10 @@ export default function VerificationScreen() {
             value={sealInput}
             onChangeText={handleSealInputChange}
             autoCapitalize="none"
+            // Android dibuja su propia línea de subrayado por defecto en
+            // los TextInput, que quedaba visible debajo de nuestro borde
+            // personalizado como una línea negra extra ("se ve horrible").
+            underlineColorAndroid="transparent"
           />
           {sealInput.length > 0 && (
             <Pressable

@@ -134,6 +134,11 @@ export default function CaptureScreen() {
         }
       }
 
+      // Verity sella tanto fotos como videos. `asset.type` viene del
+      // picker; si por algún motivo no llega, se infiere por la
+      // extensión del archivo como respaldo.
+      metadata.mediaType = asset.type === 'video' ? 'video' : 'image';
+
       const certificateId = randomUUID();
 
       // 1) Huella digital, calculada 100% en el dispositivo (sobre el
@@ -156,9 +161,13 @@ export default function CaptureScreen() {
       // permanente de la app (la caché de la cámara se puede borrar en
       // cualquier momento). Si viene de galería, ya vive en un lugar
       // persistente del sistema.
+      // La extensión NO puede quedar fija en .jpg: ahora también se
+      // sellan videos (.mp4 típicamente). Se toma del archivo original;
+      // si no se puede determinar, se usa un respaldo según el tipo.
+      const extension = getFileExtension(asset.uri) ?? (metadata.mediaType === 'video' ? 'mp4' : 'jpg');
       const persistentUri =
         source === 'camera'
-          ? await saveCapturePermanently(asset.uri, `${certificateId}.jpg`)
+          ? await saveCapturePermanently(asset.uri, `${certificateId}.${extension}`)
           : asset.uri;
 
       // 3) Registro en el "registro público" (Polygon Amoy testnet).
@@ -181,11 +190,22 @@ export default function CaptureScreen() {
       setStep('done');
     } catch (error) {
       console.error('Error al sellar el archivo:', error);
-      setErrorMessage(
-        'No pudimos completar el sello. Revisa tu conexión e inténtalo de nuevo.'
-      );
+      // Los errores que lanzamos nosotros mismos (ej. archivo demasiado
+      // pesado) ya vienen en un texto pensado para el usuario -- se
+      // muestran tal cual en vez del mensaje genérico de conexión.
+      const message =
+        error instanceof Error && error.message.includes('demasiado pesado')
+          ? error.message
+          : 'No pudimos completar el sello. Revisa tu conexión e inténtalo de nuevo.';
+      setErrorMessage(message);
       setStep('error');
     }
+  }
+
+  /** Extrae la extensión de un archivo a partir de su URI (sin el punto), o null si no se puede determinar. */
+  function getFileExtension(uri: string): string | null {
+    const match = uri.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
+    return match ? match[1].toLowerCase() : null;
   }
 
   async function handleCameraCapture() {
@@ -196,6 +216,8 @@ export default function CaptureScreen() {
     }
 
     const result = await ImagePicker.launchCameraAsync({
+      // Verity sella tanto fotos como videos.
+      mediaTypes: ['images', 'videos'],
       quality: 1,
       exif: true,
     });
@@ -213,6 +235,7 @@ export default function CaptureScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
       quality: 1,
       exif: true,
     });
@@ -252,8 +275,8 @@ export default function CaptureScreen() {
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Sellar contenido</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          Crea una huella digital única de tu foto y regístrala en un registro
-          público, sin subir el archivo a ningún lado.
+          Crea una huella digital única de tu foto o video y regístrala en un
+          registro público, sin subir el archivo a ningún lado.
         </Text>
         <SettingsButton />
       </View>
@@ -261,7 +284,7 @@ export default function CaptureScreen() {
       {step === 'idle' || step === 'error' ? (
         <>
           <View style={styles.actions}>
-            <CameraButton onPress={handleCameraCapture} label="Tomar foto" />
+            <CameraButton onPress={handleCameraCapture} label="Tomar foto o video" />
             <CameraButton onPress={handleGalleryPick} label="Elegir de galería" secondary />
           </View>
 

@@ -7,7 +7,8 @@
  * CaptureScreen (recién sellado) como en CertificatesScreen (historial).
  */
 import React from 'react';
-import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import MediaThumbnail from './MediaThumbnail';
 import TrustLevelBadge from './TrustLevelBadge';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 import { useTheme } from '../theme/ThemeContext';
@@ -28,9 +29,12 @@ export default function CertificateCard({
       style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}
       onPress={onPress}
     >
-      {certificate.thumbnailUri && (
-        <Image source={{ uri: certificate.thumbnailUri }} style={styles.thumbnail} />
-      )}
+      <MediaThumbnail
+        uri={certificate.thumbnailUri}
+        mediaType={certificate.metadata.mediaType}
+        style={styles.thumbnail}
+        iconSize={26}
+      />
 
       <View style={styles.info}>
         <TrustLevelBadge level={certificate.trustLevel} />
@@ -68,6 +72,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   thumbnail: { width: 72, height: 72, borderRadius: 12 },
+  thumbnailPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1, gap: 4 },
   label: { fontSize: 11, marginTop: 6 },
   value: { fontSize: 13 },

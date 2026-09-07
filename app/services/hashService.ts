@@ -29,6 +29,17 @@ export interface HashResult {
 }
 
 /**
+ * Límite de tamaño para hashear un archivo. Este método lee el archivo
+ * COMPLETO en memoria como base64 (ver nota abajo) — funciona bien para
+ * fotos (unos pocos MB) y videos cortos, pero un video largo/pesado
+ * podría agotar la memoria de la app y hacerla fallar en vez de mostrar
+ * un error claro. 80MB es un límite conservador para el MVP; una
+ * versión futura debería hashear por streaming/chunks para no tener
+ * este techo.
+ */
+const MAX_HASHABLE_BYTES = 80 * 1024 * 1024;
+
+/**
  * Calcula el SHA-256 de un archivo local a partir de su URI (la que entrega
  * expo-image-picker o expo-camera, ej: "file:///.../photo.jpg").
  *
@@ -49,6 +60,12 @@ export async function hashFile(fileUri: string): Promise<HashResult> {
 
   if (!file.exists) {
     throw new Error('El archivo no existe en el dispositivo.');
+  }
+
+  if ((file.size ?? 0) > MAX_HASHABLE_BYTES) {
+    throw new Error(
+      'Este archivo es demasiado pesado para sellarlo en esta versión de Verity (el límite actual es 80MB). Prueba con un video más corto.'
+    );
   }
 
   // Leemos el contenido como base64. Esto SOLO ocurre en memoria local,

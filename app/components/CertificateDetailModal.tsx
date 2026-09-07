@@ -25,7 +25,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   Modal,
   Pressable,
@@ -38,6 +37,7 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
 import * as Sharing from 'expo-sharing';
+import MediaThumbnail from './MediaThumbnail';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -118,19 +118,20 @@ export default function CertificateDetailModal({
 
 function CertificateDocument({ certificate }: { certificate: VerityCertificate }) {
   const { colors } = useTheme();
+  const mediaLabel = certificate.metadata.mediaType === 'video' ? 'video' : 'foto';
 
   /**
-   * Comparte la foto por el panel nativo (WhatsApp, correo, etc.) Y copia
-   * un mensaje de verificación al portapapeles, para que se pegue junto
-   * con la foto en el mismo chat. No existe una forma confiable en
-   * Android/iOS de adjuntar foto + texto libre en un solo "compartir" sin
-   * salir de Expo Go, así que se resuelve en dos pasos explícitos (el
-   * usuario ve un aviso claro de qué está pasando en cada uno).
+   * Comparte el archivo por el panel nativo (WhatsApp, correo, etc.) Y
+   * copia un mensaje de verificación al portapapeles, para que se pegue
+   * junto con el archivo en el mismo chat. No existe una forma confiable
+   * en Android/iOS de adjuntar archivo + texto libre en un solo
+   * "compartir" sin salir de Expo Go, así que se resuelve en dos pasos
+   * explícitos (el usuario ve un aviso claro de qué está pasando en cada uno).
    */
   async function handleShare() {
     const message =
-      `Esta foto fue sellada con Verity. Número de sello: ${certificate.anchor.txHash} ` +
-      `— compruébala en ${certificate.anchor.explorerUrl}`;
+      `Este/a ${mediaLabel} fue sellado/a con Verity. Número de sello: ${certificate.anchor.txHash} ` +
+      `— compruébalo en ${certificate.anchor.explorerUrl}`;
 
     await Clipboard.setStringAsync(message);
 
@@ -139,7 +140,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
       if (canShare) {
         Alert.alert(
           'Número de sello copiado',
-          'Se copió el mensaje de verificación al portapapeles. A continuación comparte la foto, y pega el mensaje en el mismo chat para que puedan validarla.',
+          `Se copió el mensaje de verificación al portapapeles. A continuación comparte el/la ${mediaLabel}, y pega el mensaje en el mismo chat para que puedan validarlo.`,
           [{ text: 'Entendido', onPress: () => Sharing.shareAsync(certificate.thumbnailUri!) }]
         );
         return;
@@ -165,9 +166,12 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
             Ref. {shortRef(certificate.anchor.txHash)} · Polygon Amoy
           </Text>
         </View>
-        {certificate.thumbnailUri && (
-          <Image source={{ uri: certificate.thumbnailUri }} style={[styles.photo, { borderColor: colors.border }]} />
-        )}
+        <MediaThumbnail
+          uri={certificate.thumbnailUri}
+          mediaType={certificate.metadata.mediaType}
+          style={[styles.photo, { borderColor: colors.border }]}
+          iconSize={22}
+        />
       </View>
 
       <View style={[styles.dashedDivider, { borderColor: colors.border }]} />
@@ -204,7 +208,9 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
 
       <Pressable style={[styles.shareButton, { backgroundColor: colors.accent }]} onPress={handleShare}>
         <Ionicons name="share-social-outline" size={16} color={colors.accentText} />
-        <Text style={[styles.shareButtonText, { color: colors.accentText }]}>Compartir foto y sello</Text>
+        <Text style={[styles.shareButtonText, { color: colors.accentText }]}>
+          Compartir {mediaLabel} y sello
+        </Text>
       </Pressable>
 
       <Pressable onPress={() => Linking.openURL(certificate.anchor.explorerUrl)}>
@@ -348,6 +354,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
   subtitle: { fontSize: 12, marginTop: 2 },
   photo: { width: 56, height: 56, borderRadius: 10, borderWidth: 1 },
+  photoPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   dashedDivider: { borderTopWidth: 1, borderStyle: 'dashed', marginVertical: 18 },
   dataRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 11 },
   dataLabel: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.4, maxWidth: '45%' },

@@ -20,7 +20,7 @@
  * solo restaura tu propio índice de "qué sellé y cuándo".
  */
 import React, { useCallback, useState } from 'react';
-import { FlatList, Text, StyleSheet, Pressable, Alert, View, Image } from 'react-native';
+import { FlatList, Text, StyleSheet, Pressable, Alert, View } from 'react-native';
 // SafeAreaView de 'react-native' está deprecado; se usa el de
 // react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,6 +32,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
+import MediaThumbnail from '../components/MediaThumbnail';
 import SettingsButton from '../components/SettingsButton';
 import { useTheme } from '../theme/ThemeContext';
 import { getCertificates, buildBackup, importBackup } from '../utils/cryptoUtils';
@@ -211,10 +212,13 @@ export default function CertificatesScreen() {
 function TrustLegend() {
   const { colors } = useTheme();
   return (
-    <View style={[styles.legend, { backgroundColor: colors.background, borderColor: colors.border }]}>
-      <LegendItem icon="shield-checkmark" color={colors.success} label="Confianza alta" />
-      <LegendItem icon="shield-half" color={colors.warning} label="Media" />
-      <LegendItem icon="shield-outline" color={colors.tabBarInactive} label="Baja" />
+    <View>
+      <Text style={[styles.legendTitle, { color: colors.textMuted }]}>NIVEL DE CONFIANZA</Text>
+      <View style={[styles.legend, { backgroundColor: colors.background, borderColor: colors.border }]}>
+        <LegendItem icon="shield-checkmark" color={colors.success} label="Alta" />
+        <LegendItem icon="shield-half" color={colors.warning} label="Media" />
+        <LegendItem icon="shield-outline" color={colors.tabBarInactive} label="Baja" />
+      </View>
     </View>
   );
 }
@@ -254,11 +258,12 @@ function GridTile({ certificate, onPress }: { certificate: VerityCertificate; on
 
   return (
     <Pressable style={styles.gridTile} onPress={onPress}>
-      {certificate.thumbnailUri ? (
-        <Image source={{ uri: certificate.thumbnailUri }} style={[styles.gridImage, { borderColor: colors.border }]} />
-      ) : (
-        <View style={[styles.gridImage, styles.gridImagePlaceholder, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]} />
-      )}
+      <MediaThumbnail
+        uri={certificate.thumbnailUri}
+        mediaType={certificate.metadata.mediaType}
+        style={[styles.gridImage, { borderColor: colors.border }]}
+        iconSize={22}
+      />
       <View style={[styles.gridBadge, { backgroundColor: colors.background }]}>
         <Ionicons name={trustIcon} size={13} color={trustColor} />
       </View>
@@ -288,6 +293,7 @@ const styles = StyleSheet.create({
   },
   backupButtonText: { fontWeight: '600', fontSize: 12, textAlign: 'center' },
   empty: { marginTop: 40, textAlign: 'center' },
+  legendTitle: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.6, marginBottom: 6 },
   legend: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -302,7 +308,7 @@ const styles = StyleSheet.create({
   gridRow: { gap: 8, marginBottom: 8 },
   gridTile: { flex: 1 / 3, aspectRatio: 1, position: 'relative' },
   gridImage: { flex: 1, borderRadius: 12, borderWidth: 1 },
-  gridImagePlaceholder: {},
+  gridImagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
   gridBadge: {
     position: 'absolute',
     bottom: 6,

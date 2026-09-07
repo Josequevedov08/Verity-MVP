@@ -52,6 +52,13 @@ export interface CaptureMetadata {
   capturedAt?: string; // ISO 8601
   deviceModel?: string;
   source: 'camera' | 'gallery';
+  /**
+   * Verity sella tanto fotos como videos. Se usa para decidir cómo
+   * mostrar la miniatura (un video no se puede renderizar con <Image>).
+   * Ausente = imagen, por compatibilidad con certificados creados antes
+   * de agregar este campo.
+   */
+  mediaType?: 'image' | 'video';
 }
 
 /**
