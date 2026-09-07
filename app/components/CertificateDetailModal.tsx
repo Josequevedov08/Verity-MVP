@@ -10,9 +10,10 @@
  * El enlace externo al explorador de blockchain sigue siendo una acción
  * secundaria y explícita — nunca automática.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, Modal, Pressable, Linking, ScrollView } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Clipboard from 'expo-clipboard';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -90,13 +91,7 @@ export default function CertificateDetailModal({
             {/* Estado final: nivel de confianza */}
             <TrustPill level={certificate.trustLevel} />
 
-            <Text
-              style={[styles.hashFull, { color: colors.textMuted }]}
-              selectable
-              numberOfLines={2}
-            >
-              Número de sello completo: {certificate.anchor.txHash}
-            </Text>
+            <CopyableHash label="Número de sello completo" value={certificate.anchor.txHash} />
 
             <Pressable onPress={() => Linking.openURL(certificate.anchor.explorerUrl)}>
               <Text style={[styles.externalLink, { color: colors.accent }]}>
@@ -156,6 +151,48 @@ function EvidenceLine({ ok, trueText, falseText }: { ok: boolean; trueText: stri
   );
 }
 
+/**
+ * Bloque tocable que copia el hash completo al portapapeles y muestra
+ * una confirmación breve ("Copiado ✓") antes de volver a su estado
+ * normal. Antes solo era texto `selectable` — servía, pero no era obvio
+ * que se podía copiar y requería mantener presionado y elegir "Copiar"
+ * del menú del sistema.
+ */
+function CopyableHash({ label, value }: { label: string; value: string }) {
+  const { colors } = useTheme();
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    await Clipboard.setStringAsync(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
+
+  return (
+    <Pressable
+      onPress={handleCopy}
+      style={[styles.copyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.copyLabel, { color: colors.textMuted }]}>{label}</Text>
+        <Text style={[styles.copyValue, { color: colors.text }]} numberOfLines={2}>
+          {value}
+        </Text>
+      </View>
+      <View style={styles.copyIconCol}>
+        <Ionicons
+          name={copied ? 'checkmark-circle' : 'copy-outline'}
+          size={20}
+          color={copied ? colors.success : colors.accent}
+        />
+        <Text style={[styles.copyHint, { color: copied ? colors.success : colors.accent }]}>
+          {copied ? 'Copiado' : 'Copiar'}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
 function TrustPill({ level }: { level: VerityCertificate['trustLevel'] }) {
   const { colors } = useTheme();
   const color = level === 'ALTO' ? colors.success : level === 'MEDIO' ? colors.warning : colors.tabBarInactive;
@@ -208,6 +245,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pillText: { fontWeight: '800', fontSize: 13, letterSpacing: 0.5 },
-  hashFull: { fontSize: 10.5, fontFamily: 'monospace', marginTop: 14, lineHeight: 15 },
-  externalLink: { fontSize: 13, fontWeight: '600', marginTop: 12, textAlign: 'center' },
+  copyBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+  },
+  copyLabel: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.4, marginBottom: 3 },
+  copyValue: { fontSize: 11, fontFamily: 'monospace', lineHeight: 15 },
+  copyIconCol: { alignItems: 'center', gap: 2, minWidth: 44 },
+  copyHint: { fontSize: 9.5, fontWeight: '700' },
+  externalLink: { fontSize: 13, fontWeight: '600', marginTop: 16, textAlign: 'center' },
 });
