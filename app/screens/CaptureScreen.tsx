@@ -40,6 +40,7 @@ import CertificateDetailModal from '../components/CertificateDetailModal';
 import StampReveal from '../components/StampReveal';
 import SealStamp from '../components/SealStamp';
 import SettingsButton from '../components/SettingsButton';
+import CoachMark from '../components/CoachMark';
 import { useTheme } from '../theme/ThemeContext';
 import type {
   CaptureMetadata,
@@ -47,6 +48,7 @@ import type {
   VerityCertificate,
 } from '../../documentation/technical/verity-protocol';
 import { saveCertificate, findCertificateByHash } from '../utils/cryptoUtils';
+import { hasSeenCoachMark, markCoachMarkSeen } from '../utils/coachMarkUtils';
 
 type CaptureStep = 'idle' | 'hashing' | 'anchoring' | 'done' | 'error';
 
@@ -57,6 +59,15 @@ export default function CaptureScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [isDuplicate, setIsDuplicate] = useState(false);
+
+  // Recorrido guiado (una sola vez, la primera vez que se entra a esta
+  // pestaña — ver coachMarkUtils.ts). `collapsable={false}` en el View
+  // que envuelve el botón es necesario en Android para poder medirlo.
+  const [showTour, setShowTour] = useState(false);
+  const primaryButtonRef = useRef<View>(null);
+  useEffect(() => {
+    hasSeenCoachMark('capture').then((seen) => setShowTour(!seen));
+  }, []);
 
   /**
    * Calcula el nivel de confianza según el origen del archivo y sus metadatos.
@@ -348,11 +359,13 @@ export default function CaptureScreen() {
       {step === 'idle' || step === 'error' ? (
         <>
           <View style={styles.actions}>
-            <CameraButton
-              onPress={() => handleCameraCapture('photo')}
-              label="Tomar foto"
-              icon="camera"
-            />
+            <View ref={primaryButtonRef} collapsable={false}>
+              <CameraButton
+                onPress={() => handleCameraCapture('photo')}
+                label="Tomar foto"
+                icon="camera"
+              />
+            </View>
             <View style={styles.secondaryRow}>
               <CameraButton
                 onPress={() => handleCameraCapture('video')}
@@ -434,6 +447,21 @@ export default function CaptureScreen() {
           />
         </>
       )}
+
+      <CoachMark
+        visible={showTour && (step === 'idle' || step === 'error')}
+        steps={[
+          {
+            targetRef: primaryButtonRef,
+            title: 'Sella tu primera foto o video',
+            text: 'Toca aquí para tomar una foto o grabar un video — Verity calcula su huella digital y la registra en un registro público, sin subir el archivo a ningún lado.',
+          },
+        ]}
+        onFinish={() => {
+          setShowTour(false);
+          markCoachMarkSeen('capture');
+        }}
+      />
     </SafeAreaView>
   );
 }

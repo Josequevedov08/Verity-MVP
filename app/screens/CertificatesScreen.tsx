@@ -19,7 +19,7 @@
  * hashes y números de sello — así que por sí solo no prueba autoría,
  * solo restaura tu propio índice de "qué sellé y cuándo".
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Text, StyleSheet, Pressable, Alert, View } from 'react-native';
 // SafeAreaView de 'react-native' está deprecado; se usa el de
 // react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
@@ -34,8 +34,10 @@ import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
 import MediaThumbnail from '../components/MediaThumbnail';
 import SettingsButton from '../components/SettingsButton';
+import CoachMark from '../components/CoachMark';
 import { useTheme } from '../theme/ThemeContext';
 import { getCertificates, buildBackup, importBackup } from '../utils/cryptoUtils';
+import { hasSeenCoachMark, markCoachMarkSeen } from '../utils/coachMarkUtils';
 import type { VerityCertificate, CertificatesBackup } from '../../documentation/technical/verity-protocol';
 
 type ViewMode = 'list' | 'grid';
@@ -53,6 +55,13 @@ export default function CertificatesScreen() {
       getCertificates().then(setCertificates);
     }, [])
   );
+
+  // Recorrido guiado (una sola vez, la primera vez que se entra aquí).
+  const [showTour, setShowTour] = useState(false);
+  const toggleButtonRef = useRef<View>(null);
+  useEffect(() => {
+    hasSeenCoachMark('certificates').then((seen) => setShowTour(!seen));
+  }, []);
 
   async function handleExport() {
     try {
@@ -124,17 +133,19 @@ export default function CertificatesScreen() {
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Mis sellos</Text>
         <View style={styles.headerIcons}>
-          <Pressable
-            style={[styles.iconButton, { backgroundColor: colors.surfaceAlt }]}
-            onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-            hitSlop={8}
-          >
-            <Ionicons
-              name={viewMode === 'list' ? 'grid-outline' : 'reorder-three-outline'}
-              size={20}
-              color={colors.textMuted}
-            />
-          </Pressable>
+          <View ref={toggleButtonRef} collapsable={false}>
+            <Pressable
+              style={[styles.iconButton, { backgroundColor: colors.surfaceAlt }]}
+              onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+              hitSlop={8}
+            >
+              <Ionicons
+                name={viewMode === 'list' ? 'grid-outline' : 'reorder-three-outline'}
+                size={20}
+                color={colors.textMuted}
+              />
+            </Pressable>
+          </View>
           <SettingsButton inline />
         </View>
       </View>
@@ -199,6 +210,21 @@ export default function CertificatesScreen() {
         certificates={certificates}
         visible={!!selected}
         onClose={() => setSelected(null)}
+      />
+
+      <CoachMark
+        visible={showTour}
+        steps={[
+          {
+            targetRef: toggleButtonRef,
+            title: 'Lista o grilla, como prefieras',
+            text: 'Toca aquí para cambiar entre ver tu historial en lista (con detalle) o en grilla (como una galería) — el nivel de confianza de cada sello se ve igual en ambas.',
+          },
+        ]}
+        onFinish={() => {
+          setShowTour(false);
+          markCoachMarkSeen('certificates');
+        }}
       />
     </SafeAreaView>
   );

@@ -16,7 +16,7 @@ import { View, Text, Modal, Pressable, ScrollView, StyleSheet } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 
-export type LegalDocId = 'privacy' | 'terms' | 'faq';
+export type LegalDocId = 'usage' | 'privacy' | 'terms' | 'faq';
 
 interface LegalSection {
   heading: string;
@@ -30,6 +30,28 @@ interface LegalDoc {
 }
 
 export const LEGAL_DOCS: Record<LegalDocId, LegalDoc> = {
+  usage: {
+    title: 'Modo de uso',
+    updated: '',
+    sections: [
+      {
+        heading: 'Sellar',
+        body: 'Toca "Tomar foto" o "Grabar video" para capturar algo nuevo con la cámara de Verity (el nivel de confianza más alto, porque se verifica GPS y hora reales), o "Galería" para sellar algo que ya tenías. En unos segundos obtienes un certificado con su nivel de confianza.',
+      },
+      {
+        heading: 'Mis sellos',
+        body: 'Aquí vive el historial de todo lo que has sellado en este teléfono. Toca el ícono junto al engranaje para cambiar entre lista y grilla. Toca cualquier certificado para ver el detalle completo, y toca la CARTA (no la lista) para verla girar y mostrar la foto o reproducir el video real. Desliza el dedo dentro del detalle para pasar al sello anterior/siguiente.',
+      },
+      {
+        heading: 'Verificar',
+        body: 'Dos formas de comprobar algo: "Por archivo" (eliges una foto/video y Verity revisa sola si ya la sellaste) o "Por número de sello" (pegas un número de sello que te haya compartido alguien, y se consulta directo en el registro público — no necesitas el archivo).',
+      },
+      {
+        heading: 'Copia de seguridad',
+        body: 'Desde "Mis sellos", "Exportar copia de seguridad" guarda tu historial local (sin fotos, solo hashes y fechas) para poder restaurarlo si cambias de teléfono o desinstalas la app.',
+      },
+    ],
+  },
   privacy: {
     title: 'Política de privacidad',
     updated: 'Última actualización: septiembre de 2026',
@@ -103,8 +125,8 @@ export const LEGAL_DOCS: Record<LegalDocId, LegalDoc> = {
         body: 'Pierdes el historial local (miniaturas, fechas). Pero cada sello que hiciste sigue existiendo en Polygon para siempre — puedes recuperarlo buscando su número de sello desde cualquier teléfono, en "Verificar". Por eso conviene exportar una copia de seguridad de tu historial de vez en cuando.',
       },
       {
-        heading: '¿Qué significa el nivel de confianza (Alta/Media/Baja)?',
-        body: 'Alta: se tomó con la cámara de Verity y se pudo verificar ubicación y hora. Media: viene de tu galería pero trae metadatos verificables (o es un video, que no trae ese tipo de metadato). Baja: no hay metadatos que respalden el origen del archivo.',
+        heading: '¿"Confianza Baja" quiere decir que mi foto es falsa?',
+        body: 'No, para nada. Alta/Media/Baja solo dice qué tanta información extra tenemos sobre CÓMO se tomó la foto o video (por ejemplo, si sabemos dónde y a qué hora). No dice si el contenido es real o falso. Una foto tuya, 100% real, puede salir en "Baja" simplemente porque viene de tu galería y no trae esos datos extra (por ejemplo, si te la mandaron por WhatsApp). Eso no la invalida: el sello sigue siendo válido igual.',
       },
       {
         heading: '¿Polygon Amoy es dinero real?',

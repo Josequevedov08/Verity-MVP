@@ -43,7 +43,9 @@ import CameraButton from '../components/CameraButton';
 import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
 import SettingsButton from '../components/SettingsButton';
+import CoachMark from '../components/CoachMark';
 import { useTheme } from '../theme/ThemeContext';
+import { hasSeenCoachMark, markCoachMarkSeen } from '../utils/coachMarkUtils';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 type FileSearchResult =
@@ -80,6 +82,13 @@ export default function VerificationScreen() {
       getCertificates().then(setCertificates);
     }, [])
   );
+
+  // Recorrido guiado (una sola vez, la primera vez que se entra aquí).
+  const [showTour, setShowTour] = useState(false);
+  const sealInputRef = useRef<View>(null);
+  useEffect(() => {
+    hasSeenCoachMark('verification').then((seen) => setShowTour(!seen));
+  }, []);
 
   // ---------------- Búsqueda por archivo ----------------
 
@@ -284,7 +293,11 @@ export default function VerificationScreen() {
               dispositivos, así que además la recortamos físicamente:
               overflow:'hidden' en el contenedor con el mismo borderRadius
               corta cualquier decoración nativa que sobresalga del borde. */}
-          <View style={[styles.inputWrapper, styles.inputFlex, { borderColor: colors.border }]}>
+          <View
+            ref={sealInputRef}
+            collapsable={false}
+            style={[styles.inputWrapper, styles.inputFlex, { borderColor: colors.border }]}
+          >
             <TextInput
               style={[styles.input, { color: colors.text }]}
               placeholder="Número de sello (0x...)"
@@ -386,6 +399,21 @@ export default function VerificationScreen() {
           />
         </SafeAreaView>
       </Modal>
+
+      <CoachMark
+        visible={showTour}
+        steps={[
+          {
+            targetRef: sealInputRef,
+            title: 'Comprueba cualquier sello',
+            text: 'Pega aquí un número de sello (0x...) que te haya compartido alguien — Verity lo busca directo en el registro público para confirmar si es real, sin necesitar el archivo.',
+          },
+        ]}
+        onFinish={() => {
+          setShowTour(false);
+          markCoachMarkSeen('verification');
+        }}
+      />
     </SafeAreaView>
   );
 }

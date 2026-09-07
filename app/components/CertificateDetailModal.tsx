@@ -38,6 +38,7 @@ import {
   Alert,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useEventListener } from 'expo';
 import * as Clipboard from 'expo-clipboard';
 import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -103,7 +104,7 @@ export default function CertificateDetailModal({
             onMomentumScrollEnd={(e) => handleMomentumEnd(e.nativeEvent.contentOffset.x)}
             renderItem={({ item }) => (
               <View style={{ width: SCREEN_WIDTH }}>
-                <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4 }}>
+                <ScrollView contentContainerStyle={styles.documentScrollContent}>
                   <CertificateDocument certificate={item} />
                 </ScrollView>
               </View>
@@ -111,7 +112,7 @@ export default function CertificateDetailModal({
           />
         ) : (
           certificate && (
-            <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4 }}>
+            <ScrollView contentContainerStyle={styles.documentScrollContent}>
               <CertificateDocument certificate={certificate} />
             </ScrollView>
           )
@@ -249,6 +250,20 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
     );
   }
 
+  /**
+   * "Ref. #XXXXXX" es puramente decorativa (los primeros 6 caracteres
+   * del número de sello, ver shortRef más abajo) — solo para reconocer
+   * visualmente esta tarjeta de un vistazo. Varios usuarios preguntaron
+   * qué significaba, así que se explica al tocarla en vez de dejarla
+   * como un dato misterioso sin contexto.
+   */
+  function handleRefInfo() {
+    Alert.alert(
+      '¿Qué es esta referencia?',
+      'Es solo un apodo cortico para reconocer esta tarjeta a simple vista. El número que de verdad sirve para comprobar el sello es el completo, más abajo ("Número de sello completo").'
+    );
+  }
+
   // Mientras se ve el VIDEO, tocar la carta NO debe voltearla de vuelta
   // — antes cualquier toque (incluso uno pensado para los controles
   // nativos de play/pausa) también disparaba el giro de regreso al
@@ -277,9 +292,12 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
               </View>
               <View style={styles.headerText}>
                 <Text style={[styles.title, { color: colors.text }]}>CERTIFICADO VERITY</Text>
-                <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-                  Ref. {shortRef(certificate.anchor.txHash)} · Polygon Amoy
-                </Text>
+                <Pressable onPress={handleRefInfo} hitSlop={6} style={styles.refRow}>
+                  <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+                    Ref. {shortRef(certificate.anchor.txHash)} · Polygon Amoy
+                  </Text>
+                  <Ionicons name="information-circle-outline" size={13} color={colors.textMuted} />
+                </Pressable>
                 <Text style={[styles.flipHint, { color: colors.accent }]}>
                   {hasLocalMedia
                     ? isVideo
@@ -325,8 +343,20 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
               falseText="Sin metadatos de fecha verificables"
             />
 
-            {/* Estado final: nivel de confianza */}
+            {/* Estado final: nivel de confianza. IMPORTANTE dejar claro qué
+                significa (y qué NO significa) — un usuario que sube una
+                foto real, tomada por él mismo, desde la galería, va a ver
+                "CONFIANZA BAJA" (falta GPS/hora verificables) y podría
+                pensar que la app está diciendo que su foto es falsa o una
+                estafa. No es así: mide qué tan verificable es el ORIGEN
+                según los metadatos disponibles (ver "ORIGEN DEL ARCHIVO"
+                arriba), no si el contenido es auténtico. */}
             <TrustPill level={certificate.trustLevel} />
+            <Text style={[styles.trustCaption, { color: colors.textMuted }]}>
+              "Baja" no significa que sea falsa. Solo dice que falta información extra (como la
+              ubicación) para confirmar cómo se tomó. Tu foto sigue siendo tuya y el sello sigue
+              siendo válido.
+            </Text>
 
             <CopyableHash label="Número de sello completo" value={certificate.anchor.txHash} />
 
@@ -352,7 +382,11 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
           <View style={styles.cardBack}>
             {isVideo && hasLocalMedia ? (
               <>
-                <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
+                <VideoBackFace
+                  uri={certificate.thumbnailUri!}
+                  active={flipped}
+                  onPlaybackEnded={handleCardTap}
+                />
                 {/* Acción explícita para volver — separada de tocar el
                     video (que ahora solo controla play/pausa). */}
                 <Pressable style={styles.backToCardButton} onPress={handleCardTap} hitSlop={8}>
@@ -391,12 +425,46 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
  *
  * `loop = false` a propósito: el video reproduce una vez y se queda en
  * pausa en el último frame al terminar — los controles nativos ya
- * muestran un botón de "reproducir de nuevo" en ese estado, sin
- * necesidad de repetir solo automáticamente.
+ * muestran un botón de "reproducir de nuevo" en ese estado.
+ *
+ * `onPlaybackEnded` se llama 3 segundos después de que el video termina
+ * (para que el último frame se alcance a ver, no un corte seco), y
+ * dispara el giro de vuelta al certificado. Si el usuario le da "play"
+ * de nuevo (reproducir otra vez) ANTES de que pasen esos 3 segundos,
+ * la espera se cancela — solo vuelve sola cuando el video se queda
+ * quieto en pausa, nunca interrumpiendo una reproducción en curso.
  */
-function VideoBackFace({ uri, active }: { uri: string; active: boolean }) {
+function VideoBackFace({
+  uri,
+  active,
+  onPlaybackEnded,
+}: {
+  uri: string;
+  active: boolean;
+  onPlaybackEnded: () => void;
+}) {
   const player = useVideoPlayer(uri, (p) => {
     p.loop = false;
+  });
+  const endTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function clearEndTimer() {
+    if (endTimer.current) {
+      clearTimeout(endTimer.current);
+      endTimer.current = null;
+    }
+  }
+
+  useEventListener(player, 'playToEnd', () => {
+    clearEndTimer();
+    endTimer.current = setTimeout(onPlaybackEnded, 3000);
+  });
+
+  // Si el usuario le da "play" de nuevo (reproducir otra vez tras
+  // terminar) antes de que se cumplan los 3 segundos, se cancela el
+  // retorno automático — no debe volver sola a mitad de una repetición.
+  useEventListener(player, 'playingChange', ({ isPlaying }) => {
+    if (isPlaying) clearEndTimer();
   });
 
   useEffect(() => {
@@ -409,6 +477,7 @@ function VideoBackFace({ uri, active }: { uri: string; active: boolean }) {
 
   useEffect(() => {
     return () => {
+      clearEndTimer();
       try {
         player.pause();
       } catch {
@@ -521,6 +590,15 @@ function TrustPill({ level }: { level: VerityCertificate['trustLevel'] }) {
 
 const styles = StyleSheet.create({
   page: { flex: 1 },
+  // flexGrow:1 + justifyContent:'center' es el patrón estándar para
+  // "centrar contenido corto, pero seguir permitiendo scroll si el
+  // contenido es más alto que la pantalla": el frente del certificado
+  // (con todos los campos) normalmente es más alto que la pantalla, así
+  // que se comporta como scroll normal desde arriba; el reverso
+  // (foto/video/sello) es mucho más corto, y antes quedaba pegado
+  // arriba con un montón de espacio vacío debajo — ahora queda
+  // centrado verticalmente en la pantalla.
+  documentScrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingTop: 4 },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -594,6 +672,7 @@ const styles = StyleSheet.create({
   headerText: { flex: 1 },
   title: { fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
   subtitle: { fontSize: 12, marginTop: 2 },
+  refRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
   photo: { width: 56, height: 56, borderRadius: 10, borderWidth: 1 },
   photoPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   dashedDivider: { borderTopWidth: 1, borderStyle: 'dashed', marginVertical: 18 },
@@ -611,6 +690,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pillText: { fontWeight: '800', fontSize: 13, letterSpacing: 0.5 },
+  trustCaption: { fontSize: 11, lineHeight: 15.5, marginTop: 8, fontStyle: 'italic' },
   copyBox: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -24,6 +24,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
 import { useTheme, type ThemePreference } from '../theme/ThemeContext';
 import { getDeviceWalletAddress } from '../services/blockchainService';
+import { resetAllCoachMarks } from '../utils/coachMarkUtils';
 import LegalContentModal, { LEGAL_DOCS, type LegalDocId } from './LegalContentModal';
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
@@ -47,6 +48,13 @@ export default function SettingsModal({
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [openDoc, setOpenDoc] = useState<LegalDocId | null>(null);
+  const [replayed, setReplayed] = useState(false);
+
+  async function handleReplayTour() {
+    await resetAllCoachMarks();
+    setReplayed(true);
+    setTimeout(() => setReplayed(false), 3000);
+  }
 
   useEffect(() => {
     if (visible && !walletAddress) {
@@ -175,6 +183,13 @@ export default function SettingsModal({
               ))}
             </View>
 
+            <Pressable style={styles.replayTourButton} onPress={handleReplayTour}>
+              <Ionicons name="play-circle-outline" size={16} color={colors.accent} />
+              <Text style={[styles.replayTourText, { color: colors.accent }]}>
+                {replayed ? 'Guía reiniciada ✓ — vuelve a cada pestaña para verla' : 'Ver la guía de nuevo'}
+              </Text>
+            </Pressable>
+
         </ScrollView>
       </SafeAreaView>
 
@@ -242,4 +257,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   legalRowLabel: { fontSize: 13.5, fontWeight: '600' },
+  replayTourButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    paddingVertical: 12,
+  },
+  replayTourText: { fontSize: 13, fontWeight: '700' },
 });
