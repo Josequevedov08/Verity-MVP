@@ -41,7 +41,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import MediaThumbnail from './MediaThumbnail';
-import SealPlaceholder from './SealPlaceholder';
+import SealMedallion from './SealMedallion';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -348,11 +348,10 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
             </>
           ) : (
             <View style={styles.cardBackNoMedia}>
-              <SealPlaceholder
+              <SealMedallion
                 mediaType={certificate.metadata.mediaType}
                 trustLevel={certificate.trustLevel}
-                size={140}
-                showLabel
+                size={190}
               />
               <Text style={[styles.cardBackNoMediaText, { color: colors.textMuted }]}>
                 Este {mediaLabel} no está guardado en este teléfono (el certificado se restauró desde una

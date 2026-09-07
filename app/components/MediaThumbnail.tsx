@@ -11,11 +11,10 @@
  *   se podía mostrar un ícono genérico).
  * - Cualquier otro caso (video sin vista previa, o sin archivo local en
  *   absoluto — ej. un certificado restaurado desde una copia de
- *   seguridad, que nunca incluye la foto/video): SealPlaceholder, la
- *   "estampilla" con estilo postal coloreada según el nivel de
- *   confianza. Antes esto era un ícono plano en un cuadro gris que se
- *   sentía "vacío/roto"; ahora siempre hay algo reconocible que mirar,
- *   distinto por nivel de confianza y tipo de medio (6 variantes).
+ *   seguridad, que nunca incluye la foto/video): SealMedallion, el
+ *   sello circular de verificación coloreado según el nivel de
+ *   confianza (NO una imagen del contenido — a propósito, para no
+ *   confundir "esto certifica el hash" con "esto es la foto real").
  *
  * Se usa en CertificateCard, CertificatesScreen (grilla) y
  * CertificateDetailModal — antes cada uno repetía esta lógica.
@@ -23,7 +22,7 @@
 import React from 'react';
 import { View, Image, StyleSheet, type StyleProp, type ImageStyle, type ViewStyle } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import SealPlaceholder from './SealPlaceholder';
+import SealMedallion from './SealMedallion';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 export default function MediaThumbnail({
@@ -68,7 +67,7 @@ export default function MediaThumbnail({
   }
 
   return (
-    <SealPlaceholder mediaType={mediaType} trustLevel={trustLevel} style={viewStyle} size={iconSize * 3} />
+    <SealMedallion mediaType={mediaType} trustLevel={trustLevel} style={viewStyle} size={iconSize * 3} />
   );
 }
 
