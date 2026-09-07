@@ -39,6 +39,7 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
 import * as Sharing from 'expo-sharing';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import MediaThumbnail from './MediaThumbnail';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 import { useTheme } from '../theme/ThemeContext';
@@ -122,27 +123,51 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   const { colors } = useTheme();
   const mediaLabel = certificate.metadata.mediaType === 'video' ? 'video' : 'foto';
   const isVideo = certificate.metadata.mediaType === 'video';
-  // Qué imagen mostrar al voltear la carta: para foto, el archivo mismo;
-  // para video, el frame extraído al sellar (no hay forma de "reproducir"
-  // dentro de esta vista). Si no hay nada disponible localmente (ej. un
-  // certificado restaurado desde backup), tocar la carta no hace nada —
-  // no hay imagen que mostrar.
-  const revealUri = isVideo ? certificate.previewImageUri : certificate.thumbnailUri;
-  const canFlip = !!revealUri;
+  // thumbnailUri es el ARCHIVO real (foto o video), no solo una miniatura
+  // — para video, se usa directo como fuente de reproducción real (con
+  // expo-video), no solo el frame estático (previewImageUri es únicamente
+  // para las miniaturas chicas de lista/grilla). Si no hay archivo local
+  // (ej. certificado restaurado desde backup), tocar la carta no hace
+  // nada — no hay nada que mostrar.
+  const canFlip = !!certificate.thumbnailUri;
 
+  const [flipped, setFlipped] = useState(false);
   const flip = useRef(new Animated.Value(0)).current; // 0 = frente, 180 = reverso
-  const isFlipping = useRef(false);
+  const isAnimating = useRef(false);
   const flipBackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /**
+   * Tocar la carta alterna frente/reverso. Para FOTO, además vuelve sola
+   * al frente a los ~2s (un vistazo rápido). Para VIDEO no hay auto-
+   * retorno: interrumpiría la reproducción justo cuando el usuario la
+   * empieza a ver — ahí toca la carta de nuevo (o los controles nativos)
+   * para volver.
+   */
   function handleCardTap() {
-    if (!canFlip || isFlipping.current) return;
-    isFlipping.current = true;
-    Animated.spring(flip, { toValue: 180, friction: 8, tension: 10, useNativeDriver: true }).start(() => {
-      flipBackTimer.current = setTimeout(() => {
-        Animated.spring(flip, { toValue: 0, friction: 8, tension: 10, useNativeDriver: true }).start(() => {
-          isFlipping.current = false;
-        });
-      }, 2200);
+    if (!canFlip || isAnimating.current) return;
+    if (flipBackTimer.current) {
+      clearTimeout(flipBackTimer.current);
+      flipBackTimer.current = null;
+    }
+    isAnimating.current = true;
+    const goingToBack = !flipped;
+    Animated.spring(flip, {
+      toValue: goingToBack ? 180 : 0,
+      friction: 8,
+      tension: 10,
+      useNativeDriver: true,
+    }).start(() => {
+      isAnimating.current = false;
+      setFlipped(goingToBack);
+      if (goingToBack && !isVideo) {
+        flipBackTimer.current = setTimeout(() => {
+          isAnimating.current = true;
+          Animated.spring(flip, { toValue: 0, friction: 8, tension: 10, useNativeDriver: true }).start(() => {
+            isAnimating.current = false;
+            setFlipped(false);
+          });
+        }, 2200);
+      }
     });
   }
 
@@ -209,9 +234,11 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>
             Ref. {shortRef(certificate.anchor.txHash)} · Polygon Amoy
           </Text>
+          {/* Este hint vive en el frente, así que solo importa el caso "sin
+              voltear" — cuando está volteada, el frente no es visible. */}
           {canFlip && (
             <Text style={[styles.flipHint, { color: colors.accent }]}>
-              Toca la carta para ver {isVideo ? 'el video' : 'la foto'} ↻
+              {isVideo ? 'Toca la carta para reproducir el video' : 'Toca la carta para ver la foto ↻'}
             </Text>
           )}
         </View>
@@ -270,12 +297,16 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
       </Pressable>
         </Animated.View>
 
-        {/* Reverso de la carta: la foto o el frame del video, a tamaño
-            completo. Solo existe si hay algo local que mostrar (canFlip) —
-            si no, la carta ni siquiera responde al toque. */}
+        {/* Reverso de la carta: la foto o el VIDEO real (con reproducción
+            de verdad, no solo el frame) a tamaño completo. Solo existe si
+            hay archivo local que mostrar (canFlip) — si no, la carta ni
+            siquiera responde al toque. pointerEvents normal (no 'none')
+            para video: así los controles nativos del reproductor
+            (play/pausa/barra) son tocables; tocar el video fuera de esos
+            controles sigue volteando la carta de vuelta, gracias al
+            Pressable que envuelve todo. */}
         {canFlip && (
           <Animated.View
-            pointerEvents="none"
             style={[
               styles.card,
               styles.cardFace,
@@ -284,19 +315,53 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
               { transform: [{ perspective: 1400 }, { rotateY: backRotate }] },
             ]}
           >
-            <Image source={{ uri: revealUri }} style={styles.cardBackImage} resizeMode="cover" />
-            {isVideo && (
-              <View style={styles.cardBackPlayBadge}>
-                <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.9)" />
-              </View>
+            {isVideo ? (
+              <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
+            ) : (
+              <>
+                <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
+                <Text style={styles.cardBackLabel}>CERTIFICADO VERITY — FOTO ORIGINAL</Text>
+              </>
             )}
-            <Text style={styles.cardBackLabel}>
-              CERTIFICADO VERITY — {isVideo ? 'FRAME DEL VIDEO' : 'FOTO ORIGINAL'}
-            </Text>
           </Animated.View>
         )}
       </View>
     </Pressable>
+  );
+}
+
+/**
+ * Reproductor de video real para el reverso de la carta (no un frame
+ * estático). `active` refleja si la carta está actualmente volteada hacia
+ * este lado — se usa para pausar automáticamente el video en cuanto deja
+ * de estar visible (al voltear de vuelta o al cerrar el detalle), en vez
+ * de dejarlo sonando de fondo.
+ */
+function VideoBackFace({ uri, active }: { uri: string; active: boolean }) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = true;
+  });
+
+  useEffect(() => {
+    if (active) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [active, player]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        player.pause();
+      } catch {
+        // el player puede ya estar liberado al desmontar — ignorar
+      }
+    };
+  }, [player]);
+
+  return (
+    <VideoView player={player} style={styles.cardBackImage} nativeControls contentFit="cover" />
   );
 }
 
@@ -439,7 +504,6 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   cardBackImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  cardBackPlayBadge: { alignItems: 'center', justifyContent: 'center' },
   cardBackLabel: {
     position: 'absolute',
     bottom: 12,

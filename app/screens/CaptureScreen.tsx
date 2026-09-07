@@ -103,11 +103,22 @@ export default function CaptureScreen() {
       }
 
       const destination = new File(capturesDir, fileName);
-      const source = new File(uri);
-      await source.copy(destination);
+      // Antes se usaba source.copy(destination) (File.copy() de la API
+      // nueva de expo-file-system), pero falla con "Missing READ
+      // permission" para algunas URIs content:// que devuelve la cámara
+      // nativa al grabar video (ej. en MIUI) — la app SÍ puede leer esa
+      // URI (el hasheo y la generación del frame de video funcionan bien
+      // con ella), solo File.copy() específicamente la rechaza. fetch()
+      // sí puede leerla sin problema (mismo truco ya usado para leer el
+      // backup elegido con DocumentPicker), así que se lee el contenido
+      // completo y se escribe a mano en vez de depender de copy().
+      const response = await fetch(uri);
+      const buffer = await response.arrayBuffer();
+      if (!destination.exists) destination.create({ intermediates: true });
+      destination.write(new Uint8Array(buffer));
       return destination.uri;
     } catch (error) {
-      console.warn('No se pudo guardar la copia permanente de la foto:', error);
+      console.warn('No se pudo guardar la copia permanente del archivo:', error);
       return uri;
     }
   }
@@ -337,9 +348,27 @@ export default function CaptureScreen() {
       {step === 'idle' || step === 'error' ? (
         <>
           <View style={styles.actions}>
-            <CameraButton onPress={() => handleCameraCapture('photo')} label="Tomar foto" />
-            <CameraButton onPress={() => handleCameraCapture('video')} label="Grabar video" secondary />
-            <CameraButton onPress={handleGalleryPick} label="Elegir de galería" secondary />
+            <CameraButton
+              onPress={() => handleCameraCapture('photo')}
+              label="Tomar foto"
+              icon="camera"
+            />
+            <View style={styles.secondaryRow}>
+              <CameraButton
+                onPress={() => handleCameraCapture('video')}
+                label="Grabar video"
+                icon="videocam-outline"
+                secondary
+                style={styles.secondaryHalf}
+              />
+              <CameraButton
+                onPress={handleGalleryPick}
+                label="Galería"
+                icon="images-outline"
+                secondary
+                style={styles.secondaryHalf}
+              />
+            </View>
           </View>
 
           <View style={[styles.howCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
@@ -441,7 +470,9 @@ const styles = StyleSheet.create({
   header: { position: 'relative', paddingRight: 48, marginBottom: 24 },
   title: { fontSize: 24, fontWeight: '800', marginBottom: 8 },
   subtitle: { fontSize: 14 },
-  actions: { gap: 16 },
+  actions: { gap: 12 },
+  secondaryRow: { flexDirection: 'row', gap: 12 },
+  secondaryHalf: { flex: 1 },
   stampedCardWrap: { position: 'relative', marginBottom: 12 },
   howCard: {
     marginTop: 24,

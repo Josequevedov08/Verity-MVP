@@ -75,19 +75,34 @@ export default function MediaThumbnail({
     );
   }
 
+  // Sin nada que mostrar: en vez de un ícono plano flotando sobre un
+  // fondo gris (se sentía roto/de baja calidad, "vacío"), el ícono vive
+  // dentro de una insignia circular con un tinte suave del color de
+  // marca — se lee como un estado diseñado a propósito, no como un
+  // hueco. Sigue siendo neutro (no usa colores de confianza, ver nota
+  // arriba).
+  const badgeDiameter = Math.round(iconSize * 2.3);
   return (
     <View style={[viewStyle, styles.placeholder, { backgroundColor: colors.surfaceAlt }]}>
-      <Ionicons
-        name={mediaType === 'video' ? 'videocam-outline' : 'image-outline'}
-        size={Math.round(iconSize * 1.3)}
-        color={colors.textMuted}
-      />
+      <View
+        style={[
+          styles.placeholderBadge,
+          { width: badgeDiameter, height: badgeDiameter, borderRadius: badgeDiameter / 2, backgroundColor: `${colors.accent}1F` },
+        ]}
+      >
+        <Ionicons
+          name={mediaType === 'video' ? 'videocam-outline' : 'image-outline'}
+          size={iconSize}
+          color={colors.accent}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   placeholder: { alignItems: 'center', justifyContent: 'center' },
+  placeholderBadge: { alignItems: 'center', justifyContent: 'center' },
   videoBadge: {
     position: 'absolute',
     top: 4,
