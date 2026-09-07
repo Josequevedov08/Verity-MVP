@@ -20,39 +20,42 @@ import { initRevenueCat } from './services/revenuecatService';
 import { hasSeenOnboarding, markOnboardingSeen } from './utils/onboardingUtils';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 
-type AppStage = 'intro' | 'onboarding' | 'home';
-
 function AppContent() {
   const { mode, colors } = useTheme();
   // null = todavía no sabemos si mostrar onboarding (evita parpadeo).
   const [seenOnboarding, setSeenOnboarding] = useState<boolean | null>(null);
-  const [stage, setStage] = useState<AppStage>('intro');
+  const [introFinished, setIntroFinished] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(false);
 
   useEffect(() => {
     initRevenueCat();
     hasSeenOnboarding().then(setSeenOnboarding);
   }, []);
 
-  function handleIntroFinish() {
-    // Si ya sabemos que el onboarding fue visto, saltamos directo a home;
-    // si todavía no llega la respuesta de AsyncStorage, esperamos un
-    // instante más en la propia intro (poco frecuente, solo primer frame).
-    if (seenOnboarding === null) {
-      setTimeout(handleIntroFinish, 50);
-      return;
-    }
-    setStage(seenOnboarding ? 'home' : 'onboarding');
-  }
+  // Antes, la decisión de a dónde ir después del intro vivía en una
+  // función (handleIntroFinish) pasada como prop y capturada UNA sola
+  // vez dentro de un useEffect de AnimatedIntro -- si en ese momento
+  // `seenOnboarding` todavía era `null`, esa función quedaba "congelada"
+  // para siempre con ese valor, y el setTimeout que reintentaba llamaba
+  // una y otra vez a la MISMA función obsoleta (nunca a una versión
+  // actualizada), dejando la app trabada en pantalla negra. Un efecto
+  // que reacciona a los estados actuales evita ese problema por diseño.
+  const stage: 'intro' | 'onboarding' | 'home' =
+    !introFinished || seenOnboarding === null
+      ? 'intro'
+      : onboardingDone || seenOnboarding
+        ? 'home'
+        : 'onboarding';
 
   async function handleOnboardingDone() {
     await markOnboardingSeen();
-    setStage('home');
+    setOnboardingDone(true);
   }
 
   return (
     <>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-      {stage === 'intro' && <AnimatedIntro onFinish={handleIntroFinish} />}
+      {stage === 'intro' && <AnimatedIntro onFinish={() => setIntroFinished(true)} />}
       {stage === 'onboarding' && <OnboardingScreen onDone={handleOnboardingDone} />}
       {stage === 'home' && (
         <View style={{ flex: 1, backgroundColor: colors.background }}>
