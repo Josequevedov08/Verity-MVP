@@ -68,16 +68,19 @@ export default function CoachMark({
       return;
     }
     setRect(null);
-    // Pequeño delay: da tiempo a que la pantalla termine de montar/
-    // acomodar su layout, y a que el propio Modal termine de aparecer,
-    // antes de medir (medir muy pronto puede dar un rect en (0,0)
-    // todavía sin acomodar, o medido antes de que el Modal exista).
-    const timer = setTimeout(() => {
+    // Se mide más de una vez a propósito: si el layout todavía se está
+    // acomodando (ej. justo después de volver de la cámara nativa, o
+    // mientras cargan datos async arriba en la pantalla), una sola
+    // medición temprana puede quedar desactualizada. Cada medición
+    // posterior SOBRESCRIBE a la anterior con la posición más reciente,
+    // así que el resultado final es siempre el más fiable.
+    const measure = () => {
       step?.targetRef.current?.measureInWindow((x, y, width, height) => {
-        setRect({ x, y, width, height });
+        if (width > 0 && height > 0) setRect({ x, y, width, height });
       });
-    }, 200);
-    return () => clearTimeout(timer);
+    };
+    const timers = [setTimeout(measure, 120), setTimeout(measure, 350), setTimeout(measure, 700)];
+    return () => timers.forEach(clearTimeout);
   }, [visible, stepIndex, step]);
 
   if (!visible || !step || !rect) return null;

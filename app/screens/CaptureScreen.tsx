@@ -47,8 +47,8 @@ import type {
   TrustLevel,
   VerityCertificate,
 } from '../../documentation/technical/verity-protocol';
-import { saveCertificate, findCertificateByHash } from '../utils/cryptoUtils';
-import { hasSeenCoachMark, markCoachMarkSeen } from '../utils/coachMarkUtils';
+import { saveCertificate, findCertificateByHash, getNextSequenceNumber } from '../utils/cryptoUtils';
+import { hasSeenCoachMark, markCoachMarkSeen, useCoachMarkResetVersion } from '../utils/coachMarkUtils';
 
 type CaptureStep = 'idle' | 'hashing' | 'anchoring' | 'done' | 'error';
 
@@ -67,9 +67,10 @@ export default function CaptureScreen() {
   const primaryButtonRef = useRef<View>(null);
   const secondaryRowRef = useRef<View>(null);
   const howCardRef = useRef<View>(null);
+  const coachResetVersion = useCoachMarkResetVersion();
   useEffect(() => {
     hasSeenCoachMark('capture').then((seen) => setShowTour(!seen));
-  }, []);
+  }, [coachResetVersion]);
 
   /**
    * Calcula el nivel de confianza según el origen del archivo y sus metadatos.
@@ -222,6 +223,7 @@ export default function CaptureScreen() {
       const anchor = await anchorHashOnChain(hashResult.sha256);
 
       // 4) Armar el certificado y guardarlo en el historial local.
+      const sequenceNumber = await getNextSequenceNumber();
       const newCertificate: VerityCertificate = {
         id: certificateId,
         sha256: hashResult.sha256,
@@ -230,6 +232,7 @@ export default function CaptureScreen() {
         anchor,
         thumbnailUri: persistentUri,
         previewImageUri,
+        sequenceNumber,
       };
 
       await saveCertificate(newCertificate);

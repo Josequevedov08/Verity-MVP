@@ -45,7 +45,7 @@ import CertificateDetailModal from '../components/CertificateDetailModal';
 import SettingsButton from '../components/SettingsButton';
 import CoachMark from '../components/CoachMark';
 import { useTheme } from '../theme/ThemeContext';
-import { hasSeenCoachMark, markCoachMarkSeen } from '../utils/coachMarkUtils';
+import { hasSeenCoachMark, markCoachMarkSeen, useCoachMarkResetVersion } from '../utils/coachMarkUtils';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 type FileSearchResult =
@@ -87,9 +87,10 @@ export default function VerificationScreen() {
   const [showTour, setShowTour] = useState(false);
   const byFileRef = useRef<View>(null);
   const sealInputRef = useRef<View>(null);
+  const coachResetVersion = useCoachMarkResetVersion();
   useEffect(() => {
     hasSeenCoachMark('verification').then((seen) => setShowTour(!seen));
-  }, []);
+  }, [coachResetVersion]);
 
   // ---------------- Búsqueda por archivo ----------------
 

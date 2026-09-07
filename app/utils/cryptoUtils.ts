@@ -13,6 +13,21 @@ import type {
 } from '../../documentation/technical/verity-protocol';
 
 const CERTIFICATES_STORAGE_KEY = 'verity_certificates_history';
+const SEQUENCE_STORAGE_KEY = 'verity_next_sequence_number';
+
+/**
+ * Devuelve el próximo número de secuencia de este teléfono (1, 2, 3...)
+ * y avanza el contador — una sola secuencia para fotos y videos, cámara
+ * o galería, en el orden en que se sellaron. Es un número real y útil
+ * (sirve para nombrar/ordenar tus propios archivos), no uno inventado
+ * solo para verse bien. Ver VerityCertificate.sequenceNumber.
+ */
+export async function getNextSequenceNumber(): Promise<number> {
+  const raw = await AsyncStorage.getItem(SEQUENCE_STORAGE_KEY);
+  const next = raw ? parseInt(raw, 10) + 1 : 1;
+  await AsyncStorage.setItem(SEQUENCE_STORAGE_KEY, String(next));
+  return next;
+}
 
 /** Guarda un certificado nuevo al principio del historial local. */
 export async function saveCertificate(certificate: VerityCertificate): Promise<void> {

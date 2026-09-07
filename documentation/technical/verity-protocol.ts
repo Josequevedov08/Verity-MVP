@@ -98,6 +98,20 @@ export interface VerityCertificate {
    * la imagen usada solo para mostrar la miniatura.
    */
   previewImageUri?: string;
+  /**
+   * Número de orden en el que se selló ESTE archivo en ESTE teléfono
+   * (el 1º, 2º, 3º... que sellaste, foto o video, cámara o galería —
+   * una sola secuencia). Se asigna una sola vez al crear el
+   * certificado (ver cryptoUtils.ts: getNextSequenceNumber) y viaja
+   * con el certificado para siempre, incluso en una copia de
+   * seguridad. Es lo que se muestra como "referencia" en el detalle
+   * del certificado — a diferencia de un identificador decorativo
+   * inventado, este número SÍ sirve para algo real: nombrar/ordenar
+   * tus propios archivos o documentos ("sello #A00001" es siempre el
+   * primero que hiciste). Ausente en certificados creados antes de
+   * este campo.
+   */
+  sequenceNumber?: number;
 }
 
 /**

@@ -37,7 +37,7 @@ import SettingsButton from '../components/SettingsButton';
 import CoachMark from '../components/CoachMark';
 import { useTheme } from '../theme/ThemeContext';
 import { getCertificates, buildBackup, importBackup } from '../utils/cryptoUtils';
-import { hasSeenCoachMark, markCoachMarkSeen } from '../utils/coachMarkUtils';
+import { hasSeenCoachMark, markCoachMarkSeen, useCoachMarkResetVersion } from '../utils/coachMarkUtils';
 import type { VerityCertificate, CertificatesBackup } from '../../documentation/technical/verity-protocol';
 
 type ViewMode = 'list' | 'grid';
@@ -60,9 +60,10 @@ export default function CertificatesScreen() {
   const [showTour, setShowTour] = useState(false);
   const toggleButtonRef = useRef<View>(null);
   const backupRowRef = useRef<View>(null);
+  const coachResetVersion = useCoachMarkResetVersion();
   useEffect(() => {
     hasSeenCoachMark('certificates').then((seen) => setShowTour(!seen));
-  }, []);
+  }, [coachResetVersion]);
 
   async function handleExport() {
     try {

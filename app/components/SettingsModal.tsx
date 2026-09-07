@@ -48,12 +48,20 @@ export default function SettingsModal({
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [openDoc, setOpenDoc] = useState<LegalDocId | null>(null);
-  const [replayed, setReplayed] = useState(false);
 
+  /**
+   * Antes esto solo reiniciaba una bandera en AsyncStorage sin ningún
+   * efecto visible inmediato — la pestaña donde estabas (ej. Sellar)
+   * ya estaba montada de antes y no volvía a revisar su propio estado
+   * solo porque el dato cambió. resetAllCoachMarks ahora también avisa
+   * en memoria a las pantallas ya montadas (ver
+   * useCoachMarkResetVersion), y aquí cerramos Ajustes de inmediato:
+   * al volver a la pantalla de siempre, su recorrido ya aparece solo,
+   * sin tener que salir y re-entrar a la pestaña.
+   */
   async function handleReplayTour() {
     await resetAllCoachMarks();
-    setReplayed(true);
-    setTimeout(() => setReplayed(false), 3000);
+    onClose();
   }
 
   useEffect(() => {
@@ -185,9 +193,7 @@ export default function SettingsModal({
 
             <Pressable style={styles.replayTourButton} onPress={handleReplayTour}>
               <Ionicons name="play-circle-outline" size={16} color={colors.accent} />
-              <Text style={[styles.replayTourText, { color: colors.accent }]}>
-                {replayed ? 'Guía reiniciada ✓ — vuelve a cada pestaña para verla' : 'Ver la guía de nuevo'}
-              </Text>
+              <Text style={[styles.replayTourText, { color: colors.accent }]}>Ver la guía de nuevo</Text>
             </Pressable>
 
         </ScrollView>

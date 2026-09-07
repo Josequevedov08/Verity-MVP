@@ -251,16 +251,33 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   }
 
   /**
-   * "Ref. #XXXXXX" es puramente decorativa (los primeros 6 caracteres
-   * del número de sello, ver shortRef más abajo) — solo para reconocer
-   * visualmente esta tarjeta de un vistazo. Varios usuarios preguntaron
-   * qué significaba, así que se explica al tocarla en vez de dejarla
-   * como un dato misterioso sin contexto.
+   * "Sello #A00001" es un número REAL de orden: el 1º, 2º, 3º...
+   * archivo que sellaste en ESTE teléfono (foto o video, cámara o
+   * galería, una sola secuencia — ver getNextSequenceNumber en
+   * cryptoUtils.ts). Antes era un dato decorativo inventado sin
+   * ninguna utilidad; ahora sirve de verdad para nombrar/ordenar tus
+   * propios archivos o documentos.
    */
+  /**
+   * Explica los 3 niveles DE UNA VEZ (no solo "Baja") — el punto clave
+   * a dejar clarísimo: esto NO evalúa si el contenido es real o falso,
+   * solo qué tanta información de origen hay disponible.
+   */
+  function handleTrustInfo() {
+    Alert.alert(
+      '¿Qué significa el nivel de confianza?',
+      'No dice si tu foto o video es real o falso — dice qué tanta información tenemos sobre CÓMO se tomó.\n\n' +
+        '• Alta: se tomó con la cámara de Verity, con ubicación y hora confirmadas.\n' +
+        '• Media: viene de tu galería, pero trae información de fecha (o es un video).\n' +
+        '• Baja: no hay información extra disponible (común en fotos de galería sin esos datos, por ejemplo si te las mandaron por WhatsApp).\n\n' +
+        'En los 3 casos el sello es igual de válido — la diferencia es solo cuánta evidencia extra tenemos sobre el origen.'
+    );
+  }
+
   function handleRefInfo() {
     Alert.alert(
-      '¿Qué es esta referencia?',
-      'Es solo un apodo cortico para reconocer esta tarjeta a simple vista. El número que de verdad sirve para comprobar el sello es el completo, más abajo ("Número de sello completo").'
+      '¿Qué es este número?',
+      'Es el número de orden en que sellaste este archivo en tu teléfono (ej. tu sello #1, #2, #3...) — te sirve para nombrar u ordenar tus propios archivos. No es el número de sello para verificar: para eso usa el "Número de sello completo" de más abajo.'
     );
   }
 
@@ -288,13 +305,13 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
             {/* Encabezado: insignia + título + referencia, foto a la derecha */}
             <View style={styles.header}>
               <View style={[styles.badge, { backgroundColor: colors.accent }]}>
-                <Ionicons name="shield-checkmark" size={22} color={colors.accentText} />
+                <Ionicons name="shield-checkmark" size={28} color={colors.accentText} />
               </View>
               <View style={styles.headerText}>
                 <Text style={[styles.title, { color: colors.text }]}>CERTIFICADO VERITY</Text>
                 <Pressable onPress={handleRefInfo} hitSlop={6} style={styles.refRow}>
                   <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-                    Ref. {shortRef(certificate.anchor.txHash)} · Polygon Amoy
+                    Sello {formatSequenceRef(certificate)} · Polygon Amoy
                   </Text>
                   <Ionicons name="information-circle-outline" size={13} color={colors.textMuted} />
                 </Pressable>
@@ -348,15 +365,12 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                 foto real, tomada por él mismo, desde la galería, va a ver
                 "CONFIANZA BAJA" (falta GPS/hora verificables) y podría
                 pensar que la app está diciendo que su foto es falsa o una
-                estafa. No es así: mide qué tan verificable es el ORIGEN
-                según los metadatos disponibles (ver "ORIGEN DEL ARCHIVO"
-                arriba), no si el contenido es auténtico. */}
-            <TrustPill level={certificate.trustLevel} />
-            <Text style={[styles.trustCaption, { color: colors.textMuted }]}>
-              "Baja" no significa que sea falsa. Solo dice que falta información extra (como la
-              ubicación) para confirmar cómo se tomó. Tu foto sigue siendo tuya y el sello sigue
-              siendo válido.
-            </Text>
+                estafa. Antes había un párrafo largo siempre visible debajo
+                de la insignia (se veía poco profesional, en especial
+                repetido en cada certificado) — ahora toda la insignia es
+                tocable y explica los 3 niveles de una vez, en un solo
+                lugar, sin ocupar espacio permanente en la tarjeta. */}
+            <TrustPill level={certificate.trustLevel} onPress={handleTrustInfo} />
 
             <CopyableHash label="Número de sello completo" value={certificate.anchor.txHash} />
 
@@ -497,9 +511,20 @@ function middleTruncate(value: string, head: number, tail: number): string {
   return `${value.slice(0, head)}...${value.slice(-tail)}`;
 }
 
-/** Referencia corta puramente decorativa para el subtítulo (NO es el número de sello a usar en Verificar — ese es el completo, mostrado abajo). */
-function shortRef(txHash: string): string {
-  const clean = txHash.startsWith('0x') ? txHash.slice(2) : txHash;
+/**
+ * Número de orden real (ver VerityCertificate.sequenceNumber). Los
+ * certificados creados antes de que existiera este campo no lo tienen
+ * — para esos, en vez de mentir con un "#1" que no es cierto, se cae a
+ * los primeros caracteres del número de sello (sigue siendo único y
+ * estable, solo que no es secuencial).
+ */
+function formatSequenceRef(certificate: VerityCertificate): string {
+  if (certificate.sequenceNumber) {
+    return `#A${String(certificate.sequenceNumber).padStart(5, '0')}`;
+  }
+  const clean = certificate.anchor.txHash.startsWith('0x')
+    ? certificate.anchor.txHash.slice(2)
+    : certificate.anchor.txHash;
   return `#${clean.slice(0, 6).toUpperCase()}`;
 }
 
@@ -577,14 +602,15 @@ function CopyableHash({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TrustPill({ level }: { level: VerityCertificate['trustLevel'] }) {
+function TrustPill({ level, onPress }: { level: VerityCertificate['trustLevel']; onPress: () => void }) {
   const { colors } = useTheme();
   const color = level === 'ALTO' ? colors.success : level === 'MEDIO' ? colors.warning : colors.tabBarInactive;
   const label = level === 'ALTO' ? 'CONFIANZA ALTA' : level === 'MEDIO' ? 'CONFIANZA MEDIA' : 'CONFIANZA BAJA';
   return (
-    <View style={[styles.pill, { borderColor: color }]}>
+    <Pressable onPress={onPress} style={[styles.pill, { borderColor: color }]} hitSlop={4}>
       <Text style={[styles.pillText, { color }]}>{label}</Text>
-    </View>
+      <Ionicons name="information-circle-outline" size={15} color={color} />
+    </Pressable>
   );
 }
 
@@ -662,9 +688,13 @@ const styles = StyleSheet.create({
   },
   flipHint: { fontSize: 10.5, fontWeight: '700', marginTop: 4 },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  // Mismo tamaño que .photo (56x56) a propósito: antes el escudo (40x40)
+  // y la miniatura de la derecha (56x56) no coincidían, así que el
+  // renglón se veía disparejo — ninguno de los dos quedaba alineado
+  // limpiamente con la altura del bloque de texto del medio.
   badge: {
-    width: 40,
-    height: 40,
+    width: 56,
+    height: 56,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -682,15 +712,21 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.6, marginTop: 20, marginBottom: 10 },
   evidenceLine: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   evidenceText: { fontSize: 13, flex: 1 },
+  // flexDirection:'row' para que quepa el ícono de info junto al texto
+  // — toda la insignia es tocable y explica los 3 niveles (ver
+  // handleTrustInfo), en vez del párrafo largo que había antes siempre
+  // visible debajo.
   pill: {
     marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
     borderWidth: 1.5,
     borderRadius: 999,
     paddingVertical: 12,
-    alignItems: 'center',
   },
   pillText: { fontWeight: '800', fontSize: 13, letterSpacing: 0.5 },
-  trustCaption: { fontSize: 11, lineHeight: 15.5, marginTop: 8, fontStyle: 'italic' },
   copyBox: {
     flexDirection: 'row',
     alignItems: 'center',
