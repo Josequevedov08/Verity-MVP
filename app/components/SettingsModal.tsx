@@ -36,7 +36,7 @@ import LegalContentModal, { LEGAL_DOCS, type LegalDocId } from './LegalContentMo
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.2.0';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
