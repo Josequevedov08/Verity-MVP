@@ -59,6 +59,7 @@ export default function CertificatesScreen() {
   // Recorrido guiado (una sola vez, la primera vez que se entra aquí).
   const [showTour, setShowTour] = useState(false);
   const toggleButtonRef = useRef<View>(null);
+  const backupRowRef = useRef<View>(null);
   useEffect(() => {
     hasSeenCoachMark('certificates').then((seen) => setShowTour(!seen));
   }, []);
@@ -150,7 +151,7 @@ export default function CertificatesScreen() {
         </View>
       </View>
 
-      <View style={styles.backupRow}>
+      <View style={styles.backupRow} ref={backupRowRef} collapsable={false}>
         <Pressable
           style={[styles.backupButton, { borderColor: colors.accent }]}
           onPress={handleExport}
@@ -219,6 +220,11 @@ export default function CertificatesScreen() {
             targetRef: toggleButtonRef,
             title: 'Lista o grilla, como prefieras',
             text: 'Toca aquí para cambiar entre ver tu historial en lista (con detalle) o en grilla (como una galería) — el nivel de confianza de cada sello se ve igual en ambas.',
+          },
+          {
+            targetRef: backupRowRef,
+            title: 'No pierdas tu historial',
+            text: 'Exporta una copia de seguridad de vez en cuando (sin fotos, solo hashes y fechas) para poder restaurarla si cambias de teléfono. Tip: toca cualquier certificado y luego LA CARTA para verla girar y mostrar la foto o video real.',
           },
         ]}
         onFinish={() => {

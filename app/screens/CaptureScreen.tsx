@@ -65,6 +65,8 @@ export default function CaptureScreen() {
   // que envuelve el botón es necesario en Android para poder medirlo.
   const [showTour, setShowTour] = useState(false);
   const primaryButtonRef = useRef<View>(null);
+  const secondaryRowRef = useRef<View>(null);
+  const howCardRef = useRef<View>(null);
   useEffect(() => {
     hasSeenCoachMark('capture').then((seen) => setShowTour(!seen));
   }, []);
@@ -366,7 +368,7 @@ export default function CaptureScreen() {
                 icon="camera"
               />
             </View>
-            <View style={styles.secondaryRow}>
+            <View style={styles.secondaryRow} ref={secondaryRowRef} collapsable={false}>
               <CameraButton
                 onPress={() => handleCameraCapture('video')}
                 label="Grabar video"
@@ -384,7 +386,11 @@ export default function CaptureScreen() {
             </View>
           </View>
 
-          <View style={[styles.howCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <View
+            ref={howCardRef}
+            collapsable={false}
+            style={[styles.howCard, { backgroundColor: colors.background, borderColor: colors.border }]}
+          >
             <Text style={[styles.howTitle, { color: colors.textMuted }]}>CÓMO FUNCIONA</Text>
             <HowStep
               icon="finger-print-outline"
@@ -454,7 +460,17 @@ export default function CaptureScreen() {
           {
             targetRef: primaryButtonRef,
             title: 'Sella tu primera foto o video',
-            text: 'Toca aquí para tomar una foto o grabar un video — Verity calcula su huella digital y la registra en un registro público, sin subir el archivo a ningún lado.',
+            text: 'Toca aquí para tomar una foto con la cámara de Verity — Verity calcula su huella digital y la registra en un registro público, sin subir el archivo a ningún lado.',
+          },
+          {
+            targetRef: secondaryRowRef,
+            title: 'También puedes grabar video o usar la galería',
+            text: '"Grabar video" abre la cámara directo en modo video. "Galería" sella algo que ya tenías guardado en el teléfono.',
+          },
+          {
+            targetRef: howCardRef,
+            title: 'Así funciona, en 3 pasos',
+            text: 'Huella digital → registro público → certificado con nivel de confianza. Nunca se sube tu foto ni tu video a ningún lado, solo su huella.',
           },
         ]}
         onFinish={() => {

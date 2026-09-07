@@ -85,6 +85,7 @@ export default function VerificationScreen() {
 
   // Recorrido guiado (una sola vez, la primera vez que se entra aquí).
   const [showTour, setShowTour] = useState(false);
+  const byFileRef = useRef<View>(null);
   const sealInputRef = useRef<View>(null);
   useEffect(() => {
     hasSeenCoachMark('verification').then((seen) => setShowTour(!seen));
@@ -221,7 +222,7 @@ export default function VerificationScreen() {
           Elige una foto y Verity revisa sola si ya la sellaste.
         </Text>
 
-        <View style={styles.actions}>
+        <View style={styles.actions} ref={byFileRef} collapsable={false}>
           <CameraButton label="Elegir de mi galería" onPress={handlePickFromGallery} />
           <CameraButton
             label="Elegir de Mis sellos"
@@ -403,6 +404,11 @@ export default function VerificationScreen() {
       <CoachMark
         visible={showTour}
         steps={[
+          {
+            targetRef: byFileRef,
+            title: '¿Ya sellaste esta foto?',
+            text: 'Elige una foto o video (de tu galería o de "Mis sellos") y Verity revisa sola si coincide con algo que ya sellaste en este teléfono.',
+          },
           {
             targetRef: sealInputRef,
             title: 'Comprueba cualquier sello',

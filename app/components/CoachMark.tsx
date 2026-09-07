@@ -7,13 +7,24 @@
  * con `measureInWindow` sobre un ref) con un recorte en el overlay
  * oscuro — no es un ícono decorativo, señala el botón/campo real.
  *
+ * IMPORTANTE — por qué es un <Modal>: `measureInWindow` da coordenadas
+ * absolutas de la VENTANA completa del sistema (todo el celular, desde
+ * arriba del todo). Si el overlay se dibuja como una <View> normal
+ * DENTRO de la pantalla (que vive dentro de un SafeAreaView con su
+ * propio desplazamiento por el notch/barra de estado), esas coordenadas
+ * ya no coinciden: el recuadro sale desalineado del botón real (esto
+ * pasaba en la primera versión). Un <Modal> de React Native se monta en
+ * la raíz nativa, fuera de ese árbol, así que su (0,0) SÍ coincide con
+ * el de `measureInWindow` — con `statusBarTranslucent` para que también
+ * coincida en Android incluyendo el área de la barra de estado.
+ *
  * El "recorte" (spotlight) se logra con 4 rectángulos oscuros alrededor
  * del área resaltada (arriba/abajo/izquierda/derecha), en vez de una
  * máscara real — más simple, sin depender de SVG, y visualmente
  * idéntico para un recorte rectangular.
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Modal, Dimensions } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -51,26 +62,20 @@ export default function CoachMark({
       setRect(null);
       return;
     }
+    setRect(null);
     // Pequeño delay: da tiempo a que la pantalla termine de montar/
-    // acomodar su layout antes de medir (medir muy pronto puede dar un
-    // rect en (0,0) todavía sin acomodar).
+    // acomodar su layout, y a que el propio Modal termine de aparecer,
+    // antes de medir (medir muy pronto puede dar un rect en (0,0)
+    // todavía sin acomodar, o medido antes de que el Modal exista).
     const timer = setTimeout(() => {
       step?.targetRef.current?.measureInWindow((x, y, width, height) => {
         setRect({ x, y, width, height });
       });
-    }, 150);
+    }, 200);
     return () => clearTimeout(timer);
   }, [visible, stepIndex, step]);
 
-  if (!visible || !step || !rect) return null;
-
-  const highlightTop = rect.y - PADDING;
-  const highlightBottom = rect.y + rect.height + PADDING;
-  const highlightLeft = rect.x - PADDING;
-  const highlightRight = rect.x + rect.width + PADDING;
-
-  // El tooltip se ubica debajo del elemento si hay espacio, si no arriba.
-  const tooltipBelow = highlightBottom + 140 < SCREEN_HEIGHT;
+  if (!visible) return null;
 
   function handleNext() {
     if (isLast) {
@@ -81,16 +86,74 @@ export default function CoachMark({
   }
 
   return (
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onFinish}>
+      {step && rect && (
+        <CoachMarkOverlay
+          step={step}
+          rect={rect}
+          stepIndex={stepIndex}
+          totalSteps={steps.length}
+          isLast={isLast}
+          onNext={handleNext}
+          onSkip={onFinish}
+          accentColor={colors.accent}
+          accentTextColor={colors.accentText}
+          bgColor={colors.background}
+          borderColor={colors.border}
+          textColor={colors.text}
+          mutedColor={colors.textMuted}
+        />
+      )}
+    </Modal>
+  );
+}
+
+/** Fuera del componente padre a propósito: si viviera anidada, React la
+ * redefiniría en cada render (una función nueva cada vez), perdiendo su
+ * identidad de componente y remontándose sin necesidad. */
+function CoachMarkOverlay({
+  step,
+  rect,
+  stepIndex,
+  totalSteps,
+  isLast,
+  onNext,
+  onSkip,
+  accentColor,
+  accentTextColor,
+  bgColor,
+  borderColor,
+  textColor,
+  mutedColor,
+}: {
+  step: CoachStep;
+  rect: { x: number; y: number; width: number; height: number };
+  stepIndex: number;
+  totalSteps: number;
+  isLast: boolean;
+  onNext: () => void;
+  onSkip: () => void;
+  accentColor: string;
+  accentTextColor: string;
+  bgColor: string;
+  borderColor: string;
+  textColor: string;
+  mutedColor: string;
+}) {
+  const highlightTop = rect.y - PADDING;
+  const highlightBottom = rect.y + rect.height + PADDING;
+  const highlightLeft = rect.x - PADDING;
+  const highlightRight = rect.x + rect.width + PADDING;
+
+  // El tooltip se ubica debajo del elemento si hay espacio, si no arriba.
+  const tooltipBelow = highlightBottom + 140 < SCREEN_HEIGHT;
+
+  return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* 4 franjas oscuras alrededor del recorte — el "agujero" queda
           transparente porque ninguna franja lo cubre. */}
       <View style={[styles.dark, { top: 0, left: 0, right: 0, height: Math.max(0, highlightTop) }]} />
-      <View
-        style={[
-          styles.dark,
-          { top: highlightBottom, left: 0, right: 0, bottom: 0 },
-        ]}
-      />
+      <View style={[styles.dark, { top: highlightBottom, left: 0, right: 0, bottom: 0 }]} />
       <View
         style={[
           styles.dark,
@@ -115,7 +178,7 @@ export default function CoachMark({
             left: highlightLeft,
             width: rect.width + PADDING * 2,
             height: rect.height + PADDING * 2,
-            borderColor: colors.accent,
+            borderColor: accentColor,
           },
         ]}
       />
@@ -124,18 +187,18 @@ export default function CoachMark({
       <View
         style={[
           styles.tooltip,
-          { backgroundColor: colors.background, borderColor: colors.border },
+          { backgroundColor: bgColor, borderColor },
           tooltipBelow ? { top: highlightBottom + 12 } : { top: Math.max(60, highlightTop - 130) },
         ]}
       >
-        <Text style={[styles.tooltipTitle, { color: colors.text }]}>{step.title}</Text>
-        <Text style={[styles.tooltipText, { color: colors.textMuted }]}>{step.text}</Text>
+        <Text style={[styles.tooltipTitle, { color: textColor }]}>{step.title}</Text>
+        <Text style={[styles.tooltipText, { color: mutedColor }]}>{step.text}</Text>
         <View style={styles.tooltipFooter}>
-          <Text style={[styles.tooltipStep, { color: colors.textMuted }]}>
-            {stepIndex + 1} / {steps.length}
+          <Text style={[styles.tooltipStep, { color: mutedColor }]}>
+            {stepIndex + 1} / {totalSteps}
           </Text>
-          <Pressable style={[styles.nextButton, { backgroundColor: colors.accent }]} onPress={handleNext}>
-            <Text style={[styles.nextButtonText, { color: colors.accentText }]}>
+          <Pressable style={[styles.nextButton, { backgroundColor: accentColor }]} onPress={onNext}>
+            <Text style={[styles.nextButtonText, { color: accentTextColor }]}>
               {isLast ? 'Entendido' : 'Siguiente'}
             </Text>
           </Pressable>
@@ -143,7 +206,7 @@ export default function CoachMark({
       </View>
 
       {/* Saltar el recorrido por completo — siempre visible, arriba. */}
-      <Pressable style={styles.skipButton} onPress={onFinish} hitSlop={8}>
+      <Pressable style={styles.skipButton} onPress={onSkip} hitSlop={8}>
         <Text style={styles.skipText}>Saltar ✕</Text>
       </Pressable>
     </View>
