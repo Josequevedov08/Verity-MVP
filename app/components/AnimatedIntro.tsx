@@ -13,22 +13,26 @@
  *   2. Inmediatamente después, "VRT" aparece encima en blanco con un
  *      efecto rápido tipo "golpe de sello" (opacidad + escala, arranca
  *      grande y se asienta de golpe).
- *   3. Pausa fija de 2000ms con todo quieto en pantalla.
- *   4. El contenedor crece un 15% y luego todo se desvanece (fade out).
- *   5. Al terminar, se llama a `onFinish()` — quien lo use decide qué
+ *   3. Debajo del ícono, "VERITY" se revela letra por letra en cascada
+ *      (ver CascadeText.tsx) — automático, sin esperar ningún toque.
+ *   4. Pausa fija de 2000ms con todo quieto en pantalla.
+ *   5. Todo el conjunto (ícono + VRT + VERITY) crece un 15% y luego se
+ *      desvanece (fade out).
+ *   6. Al terminar, se llama a `onFinish()` — quien lo use decide qué
  *      desmontar/montar (ver App.tsx: pasa a onboarding o a home).
  */
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Animated, StyleSheet, Easing } from 'react-native';
+import CascadeText from './CascadeText';
 
 const GROWTH_SCALE = 1.15; // "agrandarse un 15%"
 const PAUSE_MS = 2000; // "exactamente 2 segundos de pausa"
 
 export default function AnimatedIntro({ onFinish }: { onFinish: () => void }) {
-  // Escala del contenedor: 0 → 1 (rebote de entrada), y más adelante
-  // 1 → 1.15 (crecimiento de salida). Un solo valor maneja ambos pasos:
-  // como el texto vive DENTRO del contenedor, crece junto con él sin
-  // necesitar su propia animación de crecimiento.
+  // Escala de TODO el conjunto (ícono + VRT + VERITY): 0 → 1 (rebote de
+  // entrada) y, al final, 1 → 1.15 (crecimiento de salida). Vive en el
+  // envoltorio exterior, no en el ícono solo, para que el wordmark
+  // "VERITY" crezca junto con él en el paso final.
   const containerScale = useRef(new Animated.Value(0)).current;
   // Overlay del texto "VRT": arranca grande y transparente, y se asienta
   // de golpe — el mismo lenguaje visual de "sello de tinta" ya usado en
@@ -38,9 +42,14 @@ export default function AnimatedIntro({ onFinish }: { onFinish: () => void }) {
   // Opacidad general: solo se usa al final, para el fundido de salida.
   const overallOpacity = useRef(new Animated.Value(1)).current;
 
+  // "VERITY" no arranca solo — espera a que el ícono termine de rebotar
+  // Y el golpe de sello de "VRT" se asiente, para que se sienta como
+  // una secuencia (ícono → sello → wordmark), no todo junto de golpe.
+  const [playCascade, setPlayCascade] = useState(false);
+
   useEffect(() => {
     Animated.sequence([
-      // 1) Entrada con rebote del contenedor, vacío.
+      // 1) Entrada con rebote de TODO el conjunto, vacío.
       Animated.spring(containerScale, {
         toValue: 1,
         friction: 4,
@@ -61,35 +70,51 @@ export default function AnimatedIntro({ onFinish }: { onFinish: () => void }) {
           useNativeDriver: true,
         }),
       ]),
-      // 3) Pausa fija.
-      Animated.delay(PAUSE_MS),
-      // 4a) Crecimiento del 15%.
-      Animated.timing(containerScale, {
-        toValue: GROWTH_SCALE,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      // 4b) Fundido de salida general.
-      Animated.timing(overallOpacity, {
-        toValue: 0,
-        duration: 380,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start(() => onFinish());
+    ]).start(() => setPlayCascade(true));
   }, []);
+
+  /** Se llama cuando la última letra de "VERITY" termina de revelarse —
+   * recién ahí empieza la pausa fija, no antes (si no, la pausa se
+   * comería parte de la propia animación de las letras). */
+  function handleCascadeComplete() {
+    setTimeout(() => {
+      Animated.sequence([
+        Animated.timing(containerScale, {
+          toValue: GROWTH_SCALE,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(overallOpacity, {
+          toValue: 0,
+          duration: 380,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start(() => onFinish());
+    }, PAUSE_MS);
+  }
 
   return (
     <View style={styles.page}>
-      <Animated.View style={{ opacity: overallOpacity }}>
-        <Animated.View style={[styles.container, { transform: [{ scale: containerScale }] }]}>
+      <Animated.View
+        style={{
+          opacity: overallOpacity,
+          alignItems: 'center',
+          transform: [{ scale: containerScale }],
+        }}
+      >
+        <View style={styles.container}>
           <Animated.Text
             style={[styles.vrtText, { opacity: textOpacity, transform: [{ scale: textScale }] }]}
           >
             VRT
           </Animated.Text>
-        </Animated.View>
+        </View>
+
+        <View style={styles.wordmarkWrap}>
+          <CascadeText text="VERITY" play={playCascade} onComplete={handleCascadeComplete} />
+        </View>
       </Animated.View>
     </View>
   );
@@ -123,4 +148,5 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 2,
   },
+  wordmarkWrap: { marginTop: 18 },
 });
