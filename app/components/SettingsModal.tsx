@@ -17,6 +17,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, Pressable, StyleSheet, Image, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 // Import directo al submódulo (ver SettingsButton.tsx para el porqué:
 // el barrel de @expo/vector-icons carga las 15 familias de íconos de
 // una sola vez, ~3MB de fuentes de más).
@@ -39,7 +40,7 @@ import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.2.1';
+const APP_VERSION = '0.2.2';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -209,29 +210,52 @@ export default function SettingsModal({
                 banner arriba de todo, siempre visible, no se puede
                 pasar por alto. */}
             {usage && !usage.isPro && (
-              <Pressable
-                style={[styles.proBanner, { backgroundColor: colors.accent }]}
-                onPress={() => setPaywallVisible(true)}
-              >
-                <Ionicons name="ribbon" size={22} color={colors.accentText} />
-                <View style={styles.proBannerText}>
-                  <Text style={[styles.proBannerTitle, { color: colors.accentText }]}>
-                    Hazte Verity PRO — ${FREEMIUM_LIMITS.PRO_MONTHLY_PRICE_USD}/mes
-                  </Text>
-                  <Text style={[styles.proBannerSubtitle, { color: colors.accentText }]}>
-                    Sellos ilimitados · llevas {usage.used}/{usage.limit} este mes
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.accentText} />
+              <Pressable onPress={() => setPaywallVisible(true)}>
+                <LinearGradient
+                  colors={[colors.accent, darken(colors.accent, 28)]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.proBanner}
+                >
+                  <View style={styles.proBannerBadge}>
+                    <Ionicons name="shield-checkmark" size={26} color="#fff" />
+                  </View>
+                  <View style={styles.proBannerText}>
+                    <Text style={styles.proBannerTitle}>Verity PRO</Text>
+                    <Text style={styles.proBannerSubtitle}>
+                      Sellos ilimitados · sin límite mensual · prioridad al registrar
+                    </Text>
+                    <View style={styles.proBannerUsageRow}>
+                      <View style={styles.proBannerUsagePill}>
+                        <Text style={styles.proBannerUsageText}>
+                          {usage.used}/{usage.limit} gratis este mes
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.proBannerCta}>
+                    <Text style={styles.proBannerPrice}>${FREEMIUM_LIMITS.PRO_MONTHLY_PRICE_USD}</Text>
+                    <Text style={styles.proBannerPricePeriod}>/mes</Text>
+                    <Ionicons name="chevron-forward" size={16} color="#fff" style={{ marginTop: 4 }} />
+                  </View>
+                </LinearGradient>
               </Pressable>
             )}
             {usage && usage.isPro && (
-              <View style={[styles.proBanner, { backgroundColor: colors.accent }]}>
-                <Ionicons name="ribbon" size={22} color={colors.accentText} />
-                <Text style={[styles.proBannerTitle, { color: colors.accentText }]}>
-                  Ya eres Verity PRO — sellos ilimitados
-                </Text>
-              </View>
+              <LinearGradient
+                colors={[colors.accent, darken(colors.accent, 28)]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.proBanner}
+              >
+                <View style={styles.proBannerBadge}>
+                  <Ionicons name="shield-checkmark" size={26} color="#fff" />
+                </View>
+                <View style={styles.proBannerText}>
+                  <Text style={styles.proBannerTitle}>Verity PRO activo</Text>
+                  <Text style={styles.proBannerSubtitle}>Sellos ilimitados · gracias por tu apoyo 🙌</Text>
+                </View>
+              </LinearGradient>
             )}
 
             <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>APARIENCIA</Text>
@@ -404,6 +428,22 @@ function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+/**
+ * Oscurece un color hex un `percent`% — se usa para armar el degradado
+ * del banner de PRO (colors.accent → una versión más oscura del MISMO
+ * color) sin necesitar un segundo token de tema fijo, y sin quedar mal
+ * si el acento de la marca cambia algún día.
+ */
+function darken(hex: string, percent: number): string {
+  const clean = hex.replace('#', '');
+  const num = parseInt(clean.length === 3 ? clean.replace(/(.)/g, '$1$1') : clean, 16);
+  const factor = 1 - percent / 100;
+  const r = Math.max(0, Math.round(((num >> 16) & 0xff) * factor));
+  const g = Math.max(0, Math.round(((num >> 8) & 0xff) * factor));
+  const b = Math.max(0, Math.round((num & 0xff) * factor));
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
 const styles = StyleSheet.create({
   page: { flex: 1 },
   topBar: {
@@ -420,14 +460,43 @@ const styles = StyleSheet.create({
   proBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    borderRadius: 16,
-    padding: 16,
+    gap: 14,
+    borderRadius: 20,
+    padding: 18,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  // Círculo con relieve detrás del ícono (fondo blanco translúcido +
+  // sombra propia) — en vez del ícono plano flotando directo sobre el
+  // degradado, que se sentía "plástico"/sin profundidad.
+  proBannerBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   proBannerText: { flex: 1 },
-  proBannerTitle: { fontSize: 14, fontWeight: '800' },
-  proBannerSubtitle: { fontSize: 12, fontWeight: '600', marginTop: 2, opacity: 0.9 },
+  proBannerTitle: { fontSize: 17, fontWeight: '800', color: '#fff' },
+  proBannerSubtitle: { fontSize: 11.5, fontWeight: '600', marginTop: 3, color: 'rgba(255,255,255,0.9)', lineHeight: 15 },
+  proBannerUsageRow: { flexDirection: 'row', marginTop: 8 },
+  proBannerUsagePill: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  proBannerUsageText: { fontSize: 10.5, fontWeight: '700', color: '#fff' },
+  proBannerCta: { alignItems: 'center' },
+  proBannerPrice: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  proBannerPricePeriod: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
   sectionLabel: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, marginBottom: 10 },
   subtitle: { fontSize: 13, marginBottom: 8 },
   option: {

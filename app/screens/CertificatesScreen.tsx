@@ -60,6 +60,7 @@ export default function CertificatesScreen() {
   // Recorrido guiado (una sola vez, la primera vez que se entra aquí).
   const [showTour, setShowTour] = useState(false);
   const toggleButtonRef = useRef<View>(null);
+  const statsCardRef = useRef<View>(null);
   const backupRowRef = useRef<View>(null);
   const coachResetVersion = useCoachMarkResetVersion();
   useEffect(() => {
@@ -154,7 +155,11 @@ export default function CertificatesScreen() {
         </View>
       </View>
 
-      {certificates.length > 0 && <StatsCard certificates={certificates} />}
+      {certificates.length > 0 && (
+        <View ref={statsCardRef} collapsable={false}>
+          <StatsCard certificates={certificates} />
+        </View>
+      )}
 
       <View style={styles.backupRow} ref={backupRowRef} collapsable={false}>
         <Pressable
@@ -226,6 +231,18 @@ export default function CertificatesScreen() {
             title: 'Lista o grilla, como prefieras',
             text: 'Toca aquí para cambiar entre ver tu historial en lista (con detalle) o en grilla (como una galería) — el nivel de confianza de cada sello se ve igual en ambas.',
           },
+          // Solo si ya hay certificados (StatsCard no se renderiza
+          // vacía) — si no, este paso no tendría nada que medir y la
+          // guía se quedaría trabada esperando un elemento que no existe.
+          ...(certificates.length > 0
+            ? [
+                {
+                  targetRef: statsCardRef,
+                  title: 'Nivel de confianza: Alta, Media, Baja',
+                  text: 'No dice si tu foto o video es real o falso — dice qué tanta información hay sobre cómo se tomó. Toca la insignia de confianza dentro de cualquier certificado para más detalle.',
+                },
+              ]
+            : []),
           {
             targetRef: backupRowRef,
             title: 'No pierdas tu historial',
