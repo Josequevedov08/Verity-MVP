@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verity — Verificación pública</title>
+<style>
+  :root {
+    --bg: #0B0B0F;
+    --surface: #1C1C24;
+    --surface-alt: #26262F;
+    --border: #33333D;
+    --text: #F2F2F5;
+    --text-muted: #9A9AA5;
+    --accent: #4C9AFF;
+    --accent-ink: #0B0B0F;
+    --success: #3DD16F;
+    --danger: #F16A5C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 40px 20px 80px; }
+  header { text-align: center; margin-bottom: 32px; }
+  .seal {
+    width: 64px; height: 64px; border-radius: 32px;
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+  }
+  h1 { font-size: 22px; font-weight: 800; margin: 0 0 8px; }
+  .lede { color: var(--text-muted); font-size: 14px; line-height: 1.6; max-width: 46ch; margin: 0 auto; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+  .section-title { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--accent); font-size: 15px; margin-bottom: 4px; }
+  .section-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+  input[type="text"] {
+    width: 100%;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 13px 14px;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  input[type="text"]:focus { outline: none; border-color: var(--accent); }
+  .file-drop {
+    border: 1.5px dashed var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 4px;
+  }
+  .file-drop:hover { border-color: var(--accent); }
+  .file-drop input { display: none; }
+  .file-drop-label { font-size: 13.5px; color: var(--text-muted); }
+  button {
+    width: 100%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    font-weight: 700;
+    font-size: 14.5px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .result {
+    margin-top: 16px;
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .result.ok { border-color: var(--success); color: var(--success); }
+  .result.bad { border-color: var(--danger); color: var(--danger); }
+  .result .row { color: var(--text); font-size: 13px; margin-top: 6px; }
+  .result .row b { color: var(--text-muted); font-weight: 600; }
+  .result a { color: var(--accent); }
+  .mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 12px; word-break: break-all; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  footer { text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 32px; }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="seal">🛡️</div>
+    <h1>Verificación pública de Verity</h1>
+    <p class="lede">
+      Comprueba si una foto o video fue sellado con Verity — sin instalar la app.
+      Todo se verifica directo contra Polygon Amoy; tu archivo nunca sale de tu navegador.
+    </p>
+  </header>
+
+  <div class="card">
+    <div class="section-title">📁 Por archivo</div>
+    <div class="section-sub">Elige el archivo — su huella digital se calcula en tu propio navegador y solo eso se consulta.</div>
+    <label class="file-drop" id="fileDrop">
+      <input type="file" id="fileInput" accept="image/*,video/*" />
+      <span class="file-drop-label" id="fileDropLabel">Toca para elegir una foto o video</span>
+    </label>
+    <div id="fileResult"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">🔑 Por número de sello</div>
+    <div class="section-sub">Pega un número de sello (0x...) para confirmar que existe de verdad en el registro público.</div>
+    <input type="text" id="txInput" placeholder="0x..." autocomplete="off" autocapitalize="none" />
+    <button id="txButton">Buscar</button>
+    <div id="txResult"></div>
+  </div>
+
+  <footer>
+    Verity · MVP para <a href="https://www.shipaton.com/" target="_blank" rel="noopener">Shipaton 2026</a> ·
+    <a href="https://github.com/Josequevedov08/Verity-MVP" target="_blank" rel="noopener">código en GitHub</a>
+  </footer>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://lxzmegutqorsmnoonkyv.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_vB96zak90W2LTS56ETj-SA_aHyEAEhY';
+  const AMOY_RPC_URL = 'https://polygon-amoy-bor-rpc.publicnode.com';
+  const EXPLORER = (tx) => `https://amoy.polygonscan.com/tx/${tx}`;
+
+  const fileInput = document.getElementById('fileInput');
+  const fileDropLabel = document.getElementById('fileDropLabel');
+  const fileResultEl = document.getElementById('fileResult');
+  const txInput = document.getElementById('txInput');
+  const txButton = document.getElementById('txButton');
+  const txResultEl = document.getElementById('txResult');
+
+  function bufferToHex(buffer) {
+    return Array.from(new Uint8Array(buffer)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function hashFile(file) {
+    const buffer = await file.arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', buffer);
+    return '0x' + bufferToHex(digest);
+  }
+
+  async function lookupPublicIndex(hash) {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/certificates?sha256=eq.${encodeURIComponent(hash)}&select=*`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    );
+    if (!res.ok) throw new Error('No se pudo consultar el índice.');
+    const rows = await res.json();
+    return rows[0] ?? null;
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    fileDropLabel.textContent = file.name;
+    fileResultEl.innerHTML = '<div class="result"><span class="spinner"></span>Calculando huella digital...</div>';
+
+    try {
+      const hash = await hashFile(file);
+      const entry = await lookupPublicIndex(hash);
+
+      if (entry) {
+        fileResultEl.innerHTML = `
+          <div class="result ok">
+            ✅ Este archivo está sellado con Verity.
+            <div class="row"><b>Nivel de confianza:</b> ${entry.trust_level}</div>
+            ${entry.sequence_number ? `<div class="row"><b>Número de sello:</b> ${entry.sequence_number}</div>` : ''}
+            <div class="row"><b>Sellado el:</b> ${new Date(entry.sealed_at).toLocaleString()}</div>
+            <div class="row"><b>Registro:</b> <a href="${EXPLORER(entry.tx_hash)}" target="_blank" rel="noopener">ver en Polygonscan ↗</a></div>
+          </div>`;
+      } else {
+        fileResultEl.innerHTML = `
+          <div class="result bad">
+            ❌ No encontramos este archivo en el índice público.
+            Puede no estar sellado, o haberse sellado antes de que existiera este índice —
+            en ese caso, pide el número de sello a quien lo selló y compruébalo abajo.
+          </div>`;
+      }
+    } catch (error) {
+      fileResultEl.innerHTML = `<div class="result bad">No se pudo verificar: ${error.message}</div>`;
+    }
+  });
+
+  async function lookupOnChain(txHash) {
+    const res = await fetch(AMOY_RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getTransactionByHash', params: [txHash] }),
+    });
+    const json = await res.json();
+    return json.result ?? null;
+  }
+
+  txButton.addEventListener('click', async () => {
+    const seal = txInput.value.trim();
+    if (!/^0x[0-9a-fA-F]{64}$/.test(seal)) {
+      txResultEl.innerHTML = '<div class="result bad">Ese no tiene forma de número de sello válido (0x + 64 caracteres).</div>';
+      return;
+    }
+
+    txResultEl.innerHTML = '<div class="result"><span class="spinner"></span>Consultando Polygon Amoy...</div>';
+    try {
+      const tx = await lookupOnChain(seal);
+      if (tx && tx.input && tx.input !== '0x') {
+        txResultEl.innerHTML = `
+          <div class="result ok">
+            ✅ Este número de sello existe en el registro público.
+            <div class="row"><b>Huella digital anclada:</b></div>
+            <div class="row mono">${tx.input}</div>
+            <div class="row"><a href="${EXPLORER(seal)}" target="_blank" rel="noopener">ver en Polygonscan ↗</a></div>
+          </div>`;
+      } else {
+        txResultEl.innerHTML = '<div class="result bad">❌ No se encontró ninguna transacción con ese número de sello.</div>';
+      }
+    } catch (error) {
+      txResultEl.innerHTML = `<div class="result bad">No se pudo consultar: ${error.message}</div>`;
+    }
+  });
+</script>
+</body>
+</html>

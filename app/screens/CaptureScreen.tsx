@@ -44,6 +44,7 @@ import CoachMark from '../components/CoachMark';
 import PaywallModal from '../components/PaywallModal';
 import { useTheme } from '../theme/ThemeContext';
 import { getSealUsage, canSealThisMonth, type SealUsage } from '../services/revenuecatService';
+import { submitToPublicIndex } from '../services/verificationIndexService';
 import type {
   CaptureMetadata,
   TrustLevel,
@@ -291,6 +292,10 @@ export default function CaptureScreen() {
       };
 
       await saveCertificate(newCertificate);
+      // Fire-and-forget a propósito (ver verificationIndexService.ts): el
+      // sello ya quedó anclado en Polygon pase lo que pase con esto, así
+      // que nunca debe bloquear ni fallar el sellado en sí.
+      submitToPublicIndex(newCertificate);
       return { certificate: newCertificate, duplicate: false };
   }
 

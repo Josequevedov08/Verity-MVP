@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.2.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.3.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -18,11 +18,11 @@ VERITY/
 ├── app/                    # Código de la app móvil (Expo + TypeScript)
 │   ├── screens/             # Pantallas: Sellar, Mis sellos, Verificar, Onboarding
 │   ├── components/          # Componentes reutilizables (tarjetas, modales, sello, paywall...)
-│   ├── services/             # Hash, blockchain, RevenueCat
+│   ├── services/             # Hash, blockchain, RevenueCat, índice público
 │   ├── utils/                 # Historial local, respaldo, recorrido guiado
 │   └── App.tsx
-├── backend/                 # Backend simple (Vercel/Supabase) — pendiente
-├── verification/             # Página pública de verificación (web) — pendiente
+├── backend/                 # Índice público (Supabase) — ver backend/README.md
+├── docs/                      # Página pública de verificación (GitHub Pages)
 ├── assets/                    # Icono y screenshots para Google Play
 ├── documentation/
 │   ├── technical/verity-protocol.ts   # Definición técnica del MVP
@@ -105,6 +105,11 @@ eso se evitaron deliberadamente en este MVP (ver decisión documentada en
   + fondo `#0B0B0F`, el mismo negro base del modo oscuro) para que se
   vea bien recortado en círculo, cuadrado redondeado, etc. según el
   launcher del teléfono.
+- **Índice público de verificación** (`backend/`, Supabase): "Verificar"
+  ahora encuentra un archivo sellado desde OTRO dispositivo por su
+  huella digital, sin necesitar el número de sello a mano — más una
+  página web (`docs/index.html`) para verificar sin instalar la app.
+  Ver "Backend e índice público" más abajo.
 
 ## Freemium y pagos
 
@@ -167,16 +172,29 @@ Mitigaciones implementadas, ambas en "Mis sellos" / Ajustes:
 
 "Verificar" no requiere pegar el número de sello antes de elegir el
 archivo: el flujo es al revés — eliges la foto/video primero, Verity la
-hashea y busca sola en el historial local de este dispositivo. Si no la
-reconoce, no significa que no esté sellada — puede haberse sellado
-desde otro dispositivo, cuyo historial este teléfono no puede ver sin
-un backend — en ese caso se puede escribir el número de sello a mano
-para comprobarlo directamente contra el registro público.
+hashea y busca sola, primero en el historial local de este dispositivo
+y, si no está ahí, en el **índice público** (ver "Backend e índice
+público" abajo) por si se selló desde OTRO dispositivo. Solo si tampoco
+aparece ahí hace falta escribir el número de sello a mano.
 
-Pendiente para una fase futura (no en este MVP, requiere backend): un
-índice público mínimo (`backend/anchor.ts`, ver estructura de carpetas)
-que permita verificar un archivo *sin* necesitar el número de sello a
-mano incluso cuando fue sellado desde OTRO dispositivo.
+## Backend e índice público
+
+`backend/` (Supabase, proyecto `verity-mvp`) guarda un índice público
+**de solo metadatos** — hash, número de sello, tx de anclaje, nivel de
+confianza, tipo de medio — nunca el archivo original. Existe para UNA
+sola cosa: que "Verificar" encuentre un archivo sellado desde OTRO
+dispositivo por su huella digital, sin necesitar el número de sello a
+mano. Si este índice desapareciera, ningún sello dejaría de ser válido
+— la verdad sigue viviendo en Polygon; esto solo hace más fácil
+encontrarla. Ver [`backend/README.md`](backend/README.md) para el
+detalle completo (por qué la escritura pasa por una Edge Function que
+verifica el anclaje real en la cadena antes de aceptar nada, en vez de
+un insert directo).
+
+También existe [`docs/index.html`](docs/index.html): una página
+pública de verificación sin instalar la app (publicable con GitHub
+Pages) — calcula la huella digital en el propio navegador y consulta
+lo mismo que la app.
 
 ## Versionado
 
@@ -198,9 +216,8 @@ mano incluso cuando fue sellado desde OTRO dispositivo.
 - [x] Onboarding de 4 pantallas + recorrido guiado por pestaña
 - [x] Freemium con RevenueCat conectado (límite real + paywall + restaurar compra)
 - [x] Sellar varias fotos/videos a la vez (selección múltiple, solo PRO)
+- [x] Índice público (`backend/`, Supabase) + página web de verificación (`docs/index.html`)
 - [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro)
-- [ ] Página pública de verificación (`verification/[id].html`)
-- [ ] Backend simple (`backend/`) para verificar por archivo sin número de sello
 - [ ] Guardar capturas en la galería del sistema (requiere development build)
 - [ ] Selector de idioma (multi-idioma) — pospuesto a la fase del APK
 - [x] Ícono de la app (real, con la identidad del sello — ver abajo)

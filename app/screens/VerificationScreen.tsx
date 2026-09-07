@@ -5,7 +5,10 @@
  *
  * 1) Por ARCHIVO: eliges una foto (de tu galería o de "Mis sellos") y
  *    Verity la hashea y busca sola si coincide con algo en tu historial
- *    local. Responde "¿ya sellé esto?".
+ *    local — y si no, también contra el índice público (Supabase, ver
+ *    verificationIndexService.ts), por si se selló desde OTRO
+ *    dispositivo. Responde "¿ya sellé esto?" sin necesitar el número de
+ *    sello a mano.
  *
  * 2) Por NÚMERO DE SELLO: escribes un número de sello a mano y tocas
  *    "Buscar". Responde "¿este sello existe?" —
@@ -38,6 +41,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { hashFile } from '../services/hashService';
 import { lookupAnchorByTxHash } from '../services/blockchainService';
+import { lookupInPublicIndex, type PublicIndexEntry } from '../services/verificationIndexService';
 import { getCertificates, findCertificateByHash, findCertificateByTxHash } from '../utils/cryptoUtils';
 import CameraButton from '../components/CameraButton';
 import CertificateCard from '../components/CertificateCard';
@@ -52,6 +56,9 @@ type FileSearchResult =
   | { status: 'idle' }
   | { status: 'checking' }
   | { status: 'found'; certificate: VerityCertificate }
+  /** Encontrado en el índice público (sellado en OTRO dispositivo) — no
+   * hay foto que mostrar, solo los metadatos ya públicos en la cadena. */
+  | { status: 'found-public'; entry: PublicIndexEntry }
   | { status: 'not-found' };
 
 type HashSearchResult =
@@ -98,8 +105,18 @@ export default function VerificationScreen() {
     setFileResult({ status: 'checking' });
     try {
       const { sha256 } = await hashFile(uri);
+
       const localMatch = await findCertificateByHash(sha256);
-      setFileResult(localMatch ? { status: 'found', certificate: localMatch } : { status: 'not-found' });
+      if (localMatch) {
+        setFileResult({ status: 'found', certificate: localMatch });
+        return;
+      }
+
+      // No está en ESTE dispositivo — puede haberse sellado desde otro.
+      // El índice público (ver verificationIndexService.ts) permite
+      // confirmarlo por el hash, sin necesitar el número de sello a mano.
+      const publicMatch = await lookupInPublicIndex(sha256);
+      setFileResult(publicMatch ? { status: 'found-public', entry: publicMatch } : { status: 'not-found' });
     } catch (error) {
       console.error('Error al verificar el archivo:', error);
       setFileResult({ status: 'not-found' });
@@ -253,12 +270,33 @@ export default function VerificationScreen() {
             </Pressable>
           </>
         )}
+        {fileResult.status === 'found-public' && (
+          <>
+            <View style={[styles.resultTintBox, { borderColor: colors.success, backgroundColor: colors.surface }]}>
+              <Text style={[styles.matchText, { color: colors.success }]}>
+                ✅ Esta foto ya está sellada desde otro dispositivo (no tenemos el
+                archivo aquí para mostrártelo, solo confirmamos que existe).
+              </Text>
+              {fileResult.entry.sequenceNumber && (
+                <Text style={[styles.hashLabel, { color: colors.textMuted }]}>
+                  Número de sello: {fileResult.entry.sequenceNumber}
+                </Text>
+              )}
+              <Text style={[styles.hashLabel, { color: colors.textMuted }]}>Nivel de confianza</Text>
+              <Text style={[styles.hashValue, { color: colors.text }]}>{fileResult.entry.trustLevel}</Text>
+            </View>
+            <Pressable onPress={() => setFileResult({ status: 'idle' })}>
+              <Text style={[styles.clearResultLink, { color: colors.textMuted }]}>Limpiar resultado ✕</Text>
+            </Pressable>
+          </>
+        )}
+
         {fileResult.status === 'not-found' && (
           <>
             <View style={[styles.resultTintBox, { borderColor: colors.danger, backgroundColor: colors.surface }]}>
               <Text style={[styles.noMatchText, { color: colors.danger }]}>
-                No encontramos esta foto en tu historial local. Si crees que fue sellada
-                desde otro dispositivo, usa "Por número de sello" más abajo.
+                No encontramos esta foto sellada en este dispositivo ni en el índice
+                público. Si crees que sí existe, prueba "Por número de sello" más abajo.
               </Text>
             </View>
             <Pressable onPress={() => setFileResult({ status: 'idle' })}>
