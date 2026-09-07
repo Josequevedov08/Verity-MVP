@@ -2,7 +2,7 @@
  * revenuecatService.ts
  * ---------------------------------------------------------------------------
  * Integración con RevenueCat para el modelo freemium de Shipaton:
- *   - Gratis: 10 sellos por mes (ver FREEMIUM_LIMITS en verity-protocol.ts)
+ *   - Gratis: 30 sellos por mes (ver FREEMIUM_LIMITS en verity-protocol.ts)
  *   - PRO ($4.99/mes): sellos ilimitados
  *
  * NOTA IMPORTANTE: las API keys reales de RevenueCat (una por plataforma)
@@ -57,7 +57,7 @@ export interface SealUsage {
 /**
  * Da el estado completo de uso del plan gratis/PRO en una sola llamada
  * — se usa tanto para decidir si bloquear el sellado como para mostrar
- * "llevas X de 10 este mes" en la UI (CaptureScreen, StatsCard).
+ * "llevas X de 30 este mes" en la UI (CaptureScreen, StatsCard).
  */
 export async function getSealUsage(): Promise<SealUsage> {
   const isPro = await isProUser();

@@ -4,7 +4,7 @@
  * Pantalla de "hazte PRO", full-screen igual que el resto de modales de
  * la app. Se muestra cuando el usuario llega al límite gratis mensual
  * (ver CaptureScreen.tsx) o cuando toca voluntariamente el indicador de
- * uso ("3/10 sellos gratis este mes").
+ * uso ("3/30 sellos gratis este mes").
  *
  * Ver revenuecatService.ts para el porqué de 'unavailable': hasta que
  * exista un producto de suscripción real en Google Play Console (fase
@@ -110,7 +110,7 @@ export default function PaywallModal({
           </Pressable>
 
           <Text style={[styles.disclaimer, { color: colors.textMuted }]}>
-            Puedes seguir usando el plan gratis (10 sellos/mes) sin problema.
+            Puedes seguir usando el plan gratis ({FREEMIUM_LIMITS.FREE_SEALS_PER_MONTH} sellos/mes) sin problema.
           </Text>
         </View>
       </SafeAreaView>

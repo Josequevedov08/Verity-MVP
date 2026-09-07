@@ -132,7 +132,7 @@ export interface CertificatesBackup {
  * PRO no cambia el protocolo, solo levanta el límite mensual de sellos.
  */
 export const FREEMIUM_LIMITS = {
-  FREE_SEALS_PER_MONTH: 10,
+  FREE_SEALS_PER_MONTH: 30,
   PRO_MONTHLY_PRICE_USD: 4.99,
   PRO_ENTITLEMENT_ID: 'pro',
 } as const;

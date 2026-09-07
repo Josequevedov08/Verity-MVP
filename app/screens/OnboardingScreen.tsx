@@ -37,8 +37,8 @@ const SLIDES: Slide[] = [
     body: 'Y esos 2 segundos son la prueba. Así funciona un notario — y así funciona Verity.',
   },
   {
-    title: '10 sellos gratis cada mes',
-    body: 'Suficiente para probar Verity a fondo. Si necesitas más, Verity PRO ($4.99/mes) los deja ilimitados — pero nunca es obligatorio para verificar nada.',
+    title: '30 sellos gratis cada mes',
+    body: 'Uno al día, todos los días. Si necesitas más, Verity PRO ($4.99/mes) los deja ilimitados — pero nunca es obligatorio para verificar nada.',
   },
 ];
 
