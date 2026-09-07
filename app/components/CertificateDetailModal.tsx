@@ -169,6 +169,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
         <MediaThumbnail
           uri={certificate.thumbnailUri}
           mediaType={certificate.metadata.mediaType}
+          trustLevel={certificate.trustLevel}
           style={[styles.photo, { borderColor: colors.border }]}
           iconSize={22}
         />

@@ -277,18 +277,24 @@ export default function VerificationScreen() {
         </Text>
 
         <View style={styles.inputRow}>
-          <TextInput
-            style={[styles.input, styles.inputFlex, { borderColor: colors.border, color: colors.text }]}
-            placeholder="Número de sello (0x...)"
-            placeholderTextColor={colors.textMuted}
-            value={sealInput}
-            onChangeText={handleSealInputChange}
-            autoCapitalize="none"
-            // Android dibuja su propia línea de subrayado por defecto en
-            // los TextInput, que quedaba visible debajo de nuestro borde
-            // personalizado como una línea negra extra ("se ve horrible").
-            underlineColorAndroid="transparent"
-          />
+          {/* Android dibuja su propia línea de subrayado por defecto debajo
+              de todo TextInput, que sobresalía por debajo de nuestro borde
+              redondeado como una línea negra extra ("se ve horrible").
+              underlineColorAndroid="transparent" no la elimina en todos los
+              dispositivos, así que además la recortamos físicamente:
+              overflow:'hidden' en el contenedor con el mismo borderRadius
+              corta cualquier decoración nativa que sobresalga del borde. */}
+          <View style={[styles.inputWrapper, styles.inputFlex, { borderColor: colors.border }]}>
+            <TextInput
+              style={[styles.input, { color: colors.text }]}
+              placeholder="Número de sello (0x...)"
+              placeholderTextColor={colors.textMuted}
+              value={sealInput}
+              onChangeText={handleSealInputChange}
+              autoCapitalize="none"
+              underlineColorAndroid="transparent"
+            />
+          </View>
           {sealInput.length > 0 && (
             <Pressable
               style={[styles.clearButton, { borderColor: colors.border }]}
@@ -415,11 +421,14 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 15, fontWeight: '700' },
   subtitle: { fontSize: 13, marginBottom: 14 },
   inputRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  input: {
+  inputWrapper: {
     borderWidth: 1,
     borderRadius: 12,
-    padding: 14,
     marginBottom: 12,
+    overflow: 'hidden',
+  },
+  input: {
+    padding: 14,
   },
   inputFlex: { flex: 1 },
   clearButton: {
