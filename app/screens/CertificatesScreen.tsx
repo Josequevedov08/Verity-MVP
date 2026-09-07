@@ -262,6 +262,7 @@ function GridTile({ certificate, onPress }: { certificate: VerityCertificate; on
         uri={certificate.thumbnailUri}
         mediaType={certificate.metadata.mediaType}
         previewUri={certificate.previewImageUri}
+        trustLevel={certificate.trustLevel}
         style={[styles.gridImage, { borderColor: colors.border }]}
         iconSize={22}
       />

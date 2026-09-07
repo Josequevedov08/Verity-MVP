@@ -15,6 +15,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Clipboard from 'expo-clipboard';
 import { useTheme, type ThemePreference } from '../theme/ThemeContext';
 import { getDeviceWalletAddress } from '../services/blockchainService';
+import LegalContentModal, { LEGAL_DOCS, type LegalDocId } from './LegalContentModal';
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
 // Mantener en sync con la versión de package.json / app.json.
@@ -36,6 +37,7 @@ export default function SettingsModal({
   const { colors, preference, setPreference } = useTheme();
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [openDoc, setOpenDoc] = useState<LegalDocId | null>(null);
 
   useEffect(() => {
     if (visible && !walletAddress) {
@@ -111,6 +113,12 @@ export default function SettingsModal({
                 el archivo a ningún lado.
               </Text>
 
+              {/* Las dos filas usan una columna de etiqueta de ancho FIJO
+                  (styles.aboutRowLabel) para que el valor siempre empiece
+                  en la misma X, sin importar si la etiqueta es "Red" o
+                  "Wallet del dispositivo" — antes cada valor se alineaba
+                  a la derecha por separado, así que "0x086e..." y
+                  "Polygon Amoy" no empezaban en la misma columna. */}
               <View style={[styles.aboutRow, { borderTopColor: colors.border }]}>
                 <Text style={[styles.aboutRowLabel, { color: colors.textMuted }]}>Red</Text>
                 <Text style={[styles.aboutRowValue, { color: colors.text }]}>Polygon Amoy (testnet)</Text>
@@ -123,7 +131,7 @@ export default function SettingsModal({
                 <Text style={[styles.aboutRowLabel, { color: colors.textMuted }]}>
                   Wallet del dispositivo
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={styles.aboutRowValueWrap}>
                   <Text style={[styles.aboutRowValue, { color: colors.text, fontFamily: 'monospace' }]}>
                     {walletAddress ? truncateAddress(walletAddress) : '...'}
                   </Text>
@@ -136,12 +144,33 @@ export default function SettingsModal({
               </Pressable>
             </View>
 
+            <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: 24 }]}>
+              LEGAL Y AYUDA
+            </Text>
+            <View style={[styles.aboutCard, { backgroundColor: colors.background, borderColor: colors.border, padding: 4 }]}>
+              {(Object.keys(LEGAL_DOCS) as LegalDocId[]).map((id, index) => (
+                <Pressable
+                  key={id}
+                  style={[
+                    styles.legalRow,
+                    index > 0 && { borderTopWidth: 1, borderTopColor: colors.border },
+                  ]}
+                  onPress={() => setOpenDoc(id)}
+                >
+                  <Text style={[styles.legalRowLabel, { color: colors.text }]}>{LEGAL_DOCS[id].title}</Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </Pressable>
+              ))}
+            </View>
+
             <Pressable style={styles.closeButton} onPress={onClose}>
               <Text style={{ color: colors.accent, fontWeight: '700' }}>Listo</Text>
             </Pressable>
           </ScrollView>
         </Pressable>
       </Pressable>
+
+      <LegalContentModal docId={openDoc} onClose={() => setOpenDoc(null)} />
     </Modal>
   );
 }
@@ -183,13 +212,23 @@ const styles = StyleSheet.create({
   aboutTagline: { fontSize: 12.5, lineHeight: 18 },
   aboutRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
     paddingTop: 12,
     marginTop: 12,
   },
-  aboutRowLabel: { fontSize: 12.5, fontWeight: '600' },
+  // Ancho fijo: así el valor de CUALQUIER fila empieza siempre en la
+  // misma columna, sin importar cuánto mida el texto de la etiqueta.
+  aboutRowLabel: { fontSize: 12.5, fontWeight: '600', width: 128 },
   aboutRowValue: { fontSize: 12.5 },
+  aboutRowValueWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
   closeButton: { alignItems: 'center', paddingVertical: 16, marginTop: 20 },
+  legalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+  },
+  legalRowLabel: { fontSize: 13.5, fontWeight: '600' },
 });

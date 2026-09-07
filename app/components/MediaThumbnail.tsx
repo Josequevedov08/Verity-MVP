@@ -9,17 +9,13 @@
  *   en la esquina superior izquierda para distinguirlo de una foto (una
  *   <Image> no puede decodificar video, así que sin el frame real solo
  *   se podía mostrar un ícono genérico).
- * - Video disponible SIN vista previa (certificados sellados antes de
- *   tener esta función, o si la generación falló): ícono de cámara de
- *   video sobre fondo tintado.
- * - Sin archivo disponible (ej. certificado restaurado desde una copia
- *   de seguridad, que nunca incluye la foto/video): ícono neutro de
- *   "sin vista previa". Se probó usar el escudo grande de nivel de
- *   confianza aquí, a todo color — pero en la grilla, con varias
- *   miniaturas juntas, se leía como un HUD de videojuego y duplicaba la
- *   insignia de confianza que ya muestra CertificatesScreen en la
- *   esquina. El color de confianza vive SOLO en esa insignia chica;
- *   este placeholder se mantiene neutro.
+ * - Cualquier otro caso (video sin vista previa, o sin archivo local en
+ *   absoluto — ej. un certificado restaurado desde una copia de
+ *   seguridad, que nunca incluye la foto/video): SealPlaceholder, la
+ *   "estampilla" con estilo postal coloreada según el nivel de
+ *   confianza. Antes esto era un ícono plano en un cuadro gris que se
+ *   sentía "vacío/roto"; ahora siempre hay algo reconocible que mirar,
+ *   distinto por nivel de confianza y tipo de medio (6 variantes).
  *
  * Se usa en CertificateCard, CertificatesScreen (grilla) y
  * CertificateDetailModal — antes cada uno repetía esta lógica.
@@ -27,12 +23,14 @@
 import React from 'react';
 import { View, Image, StyleSheet, type StyleProp, type ImageStyle, type ViewStyle } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useTheme } from '../theme/ThemeContext';
+import SealPlaceholder from './SealPlaceholder';
+import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 
 export default function MediaThumbnail({
   uri,
   mediaType,
   previewUri,
+  trustLevel,
   style,
   iconSize = 22,
 }: {
@@ -41,12 +39,14 @@ export default function MediaThumbnail({
   /** Frame real extraído del video, si se generó al sellar (solo aplica
    * cuando mediaType === 'video'). */
   previewUri?: string;
+  /** Solo se usa para colorear SealPlaceholder cuando no hay nada más
+   * que mostrar. */
+  trustLevel?: VerityCertificate['trustLevel'];
   /** Acepta el mismo objeto de estilo (width/height/border...) para
    * dimensionar tanto la <Image> como los placeholders de <View>. */
   style?: StyleProp<ImageStyle>;
   iconSize?: number;
 }) {
-  const { colors } = useTheme();
   // Los placeholders son <View>, que no acepta todas las propiedades de
   // ImageStyle (ej. `resizeMode`) -- en la práctica solo se les pasan
   // estilos de layout (width/height/border...), válidos en ambos.
@@ -67,42 +67,12 @@ export default function MediaThumbnail({
     );
   }
 
-  if (uri && mediaType === 'video') {
-    return (
-      <View style={[viewStyle, styles.placeholder, { backgroundColor: colors.surfaceAlt }]}>
-        <Ionicons name="videocam" size={iconSize} color={colors.accent} />
-      </View>
-    );
-  }
-
-  // Sin nada que mostrar: en vez de un ícono plano flotando sobre un
-  // fondo gris (se sentía roto/de baja calidad, "vacío"), el ícono vive
-  // dentro de una insignia circular con un tinte suave del color de
-  // marca — se lee como un estado diseñado a propósito, no como un
-  // hueco. Sigue siendo neutro (no usa colores de confianza, ver nota
-  // arriba).
-  const badgeDiameter = Math.round(iconSize * 2.3);
   return (
-    <View style={[viewStyle, styles.placeholder, { backgroundColor: colors.surfaceAlt }]}>
-      <View
-        style={[
-          styles.placeholderBadge,
-          { width: badgeDiameter, height: badgeDiameter, borderRadius: badgeDiameter / 2, backgroundColor: `${colors.accent}1F` },
-        ]}
-      >
-        <Ionicons
-          name={mediaType === 'video' ? 'videocam-outline' : 'image-outline'}
-          size={iconSize}
-          color={colors.accent}
-        />
-      </View>
-    </View>
+    <SealPlaceholder mediaType={mediaType} trustLevel={trustLevel} style={viewStyle} size={iconSize * 3} />
   );
 }
 
 const styles = StyleSheet.create({
-  placeholder: { alignItems: 'center', justifyContent: 'center' },
-  placeholderBadge: { alignItems: 'center', justifyContent: 'center' },
   videoBadge: {
     position: 'absolute',
     top: 4,

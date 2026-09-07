@@ -41,6 +41,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import MediaThumbnail from './MediaThumbnail';
+import SealPlaceholder from './SealPlaceholder';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -126,10 +127,15 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   // thumbnailUri es el ARCHIVO real (foto o video), no solo una miniatura
   // — para video, se usa directo como fuente de reproducción real (con
   // expo-video), no solo el frame estático (previewImageUri es únicamente
-  // para las miniaturas chicas de lista/grilla). Si no hay archivo local
-  // (ej. certificado restaurado desde backup), tocar la carta no hace
-  // nada — no hay nada que mostrar.
-  const canFlip = !!certificate.thumbnailUri;
+  // para las miniaturas chicas de lista/grilla).
+  //
+  // La carta SIEMPRE se puede voltear, incluso sin archivo local (ej. un
+  // certificado restaurado desde backup) — en ese caso el reverso
+  // muestra la estampilla de nivel de confianza en vez de "no hay nada
+  // que ver". La idea es que importar un historial viejo se sienta
+  // "estos sellos siguen siendo válidos", no "esto se rompió".
+  const hasLocalMedia = !!certificate.thumbnailUri;
+  const canFlip = true;
 
   const [flipped, setFlipped] = useState(false);
   const flip = useRef(new Animated.Value(0)).current; // 0 = frente, 180 = reverso
@@ -236,16 +242,19 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
           </Text>
           {/* Este hint vive en el frente, así que solo importa el caso "sin
               voltear" — cuando está volteada, el frente no es visible. */}
-          {canFlip && (
-            <Text style={[styles.flipHint, { color: colors.accent }]}>
-              {isVideo ? 'Toca la carta para reproducir el video' : 'Toca la carta para ver la foto ↻'}
-            </Text>
-          )}
+          <Text style={[styles.flipHint, { color: colors.accent }]}>
+            {hasLocalMedia
+              ? isVideo
+                ? 'Toca la carta para reproducir el video'
+                : 'Toca la carta para ver la foto ↻'
+              : 'Toca la carta para ver el sello ↻'}
+          </Text>
         </View>
         <MediaThumbnail
           uri={certificate.thumbnailUri}
           mediaType={certificate.metadata.mediaType}
           previewUri={certificate.previewImageUri}
+          trustLevel={certificate.trustLevel}
           style={[styles.photo, { borderColor: colors.border }]}
           iconSize={22}
         />
@@ -297,34 +306,48 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
       </Pressable>
         </Animated.View>
 
-        {/* Reverso de la carta: la foto o el VIDEO real (con reproducción
-            de verdad, no solo el frame) a tamaño completo. Solo existe si
-            hay archivo local que mostrar (canFlip) — si no, la carta ni
-            siquiera responde al toque. pointerEvents normal (no 'none')
-            para video: así los controles nativos del reproductor
+        {/* Reverso de la carta. Con archivo local: la foto, o el VIDEO
+            real (con reproducción de verdad, no solo el frame). Sin
+            archivo local (ej. certificado restaurado desde backup): la
+            estampilla de nivel de confianza + un mensaje corto que
+            tranquiliza — el sello sigue siendo válido, solo no hay
+            imagen guardada en ESTE teléfono. pointerEvents normal (no
+            'none') para video: así los controles nativos del reproductor
             (play/pausa/barra) son tocables; tocar el video fuera de esos
             controles sigue volteando la carta de vuelta, gracias al
             Pressable que envuelve todo. */}
-        {canFlip && (
-          <Animated.View
-            style={[
-              styles.card,
-              styles.cardFace,
-              styles.cardBack,
-              { backgroundColor: colors.background, borderColor: colors.border },
-              { transform: [{ perspective: 1400 }, { rotateY: backRotate }] },
-            ]}
-          >
-            {isVideo ? (
-              <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
-            ) : (
-              <>
-                <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
-                <Text style={styles.cardBackLabel}>CERTIFICADO VERITY — FOTO ORIGINAL</Text>
-              </>
-            )}
-          </Animated.View>
-        )}
+        <Animated.View
+          style={[
+            styles.card,
+            styles.cardFace,
+            styles.cardBack,
+            { backgroundColor: colors.background, borderColor: colors.border },
+            { transform: [{ perspective: 1400 }, { rotateY: backRotate }] },
+          ]}
+        >
+          {isVideo && hasLocalMedia ? (
+            <VideoBackFace uri={certificate.thumbnailUri!} active={flipped} />
+          ) : hasLocalMedia ? (
+            <>
+              <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
+              <Text style={styles.cardBackLabel}>CERTIFICADO VERITY — FOTO ORIGINAL</Text>
+            </>
+          ) : (
+            <View style={styles.cardBackNoMedia}>
+              <SealPlaceholder
+                mediaType={certificate.metadata.mediaType}
+                trustLevel={certificate.trustLevel}
+                size={140}
+                showLabel
+              />
+              <Text style={[styles.cardBackNoMediaText, { color: colors.textMuted }]}>
+                Este {mediaLabel} no está guardado en este teléfono (el certificado se restauró desde una
+                copia de seguridad, que nunca incluye archivos), pero el sello sigue siendo 100% válido —
+                anclado en Polygon Amoy con el número de sello de arriba.
+              </Text>
+            </View>
+          )}
+        </Animated.View>
       </View>
     </Pressable>
   );
@@ -504,6 +527,8 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   cardBackImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  cardBackNoMedia: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
+  cardBackNoMediaText: { fontSize: 12.5, lineHeight: 18, textAlign: 'center' },
   cardBackLabel: {
     position: 'absolute',
     bottom: 12,
