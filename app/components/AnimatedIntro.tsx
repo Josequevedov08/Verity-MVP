@@ -133,7 +133,12 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 28,
-    backgroundColor: '#000',
+    // Mismos colores que el ícono real de la app (assets/icons/app-icon.png)
+    // — antes este cuadro era negro puro con "VRT" en blanco, el mismo
+    // placeholder que tenía el ícono antes de llevarlo al azul de marca;
+    // se quedó desactualizado cuando cambiamos el ícono y nadie lo notó
+    // hasta que el usuario lo señaló probando en el teléfono.
+    backgroundColor: '#0B0B0F',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -143,7 +148,7 @@ const styles = StyleSheet.create({
     elevation: 14,
   },
   vrtText: {
-    color: '#fff',
+    color: '#4C9AFF',
     fontSize: 32,
     fontWeight: '800',
     letterSpacing: 2,
