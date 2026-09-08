@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.18.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.19.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -326,6 +326,25 @@ navegador) y con modo claro/oscuro real (el sello flotante se invierte
 solo según el tema), más un aviso de privacidad explicando qué hace y
 qué no hace la página (no usa cookies ni analítica).
 
+### Gas automático para wallets nuevas (v0.3.19)
+
+La wallet del dispositivo (ver "Respaldo y recuperación" arriba) necesita
+una pequeñísima cantidad de POL de prueba para pagar el gas de cada
+anclaje. Sin nada más, un usuario que instala Verity de cero tendría que
+salir de la app a un faucet externo, copiar su dirección a mano y resolver
+un captcha solo para poder sellar su primera foto — eso rompe la promesa
+de "wallet invisible" que sostiene toda la app.
+
+Ahora, justo antes de anclar, la app le pide en silencio una gotita de POL
+a una Edge Function (`fund-wallet`, ver `backend/README.md`) si detecta
+que el saldo local es bajo. Esa función paga con una wallet propia del
+proyecto (fondeada una sola vez por nosotros, vía el faucet oficial de
+Amoy; su clave privada vive solo en Supabase Vault) y tiene protecciones
+para que nadie pueda vaciarla: cada dirección se fondea una única vez
+para siempre, y hay un límite de pedidos por IP. El usuario nunca ve nada
+de esto — desde su punto de vista, sellar simplemente funciona la primera
+vez.
+
 ## Versionado
 
 - **0.2.x** (parche): arreglos y ajustes chicos dentro de la fase
@@ -347,6 +366,7 @@ qué no hace la página (no usa cookies ni analítica).
 - [x] Freemium con RevenueCat conectado (límite real + paywall + restaurar compra)
 - [x] Sellar varias fotos/videos a la vez (selección múltiple, solo PRO)
 - [x] Índice público (`backend/`, Supabase) + página web de verificación (`docs/index.html`)
+- [x] Gas automático para wallets nuevas (sin salir a un faucet externo)
 - [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro)
 - [ ] Guardar capturas en la galería del sistema (requiere development build)
 - [ ] Selector de idioma (multi-idioma) — pospuesto a la fase del APK

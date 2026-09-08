@@ -52,7 +52,7 @@ const APP_ICON = require('../../assets/icons/app-icon.png');
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.3.18';
+const APP_VERSION = '0.3.19';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },

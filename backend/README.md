@@ -39,6 +39,32 @@ fácil *encontrar* esa verdad sin tener el número de sello a mano.
   JWT de usuario que exigir; la verificación real es la de la cadena, no la
   de una sesión.
 
+## Financiamiento automático de wallets nuevas (gas)
+
+Resuelve otro límite real: sin esto, un usuario que instala la app de cero
+necesitaría salir a un faucet externo (con captcha) para conseguir POL de
+prueba antes de poder sellar su primera foto — rompe la promesa de "wallet
+invisible".
+
+- **Tablas `funded_wallets` y `fund_requests_log`** (`supabase/migrations/0002_create_wallet_funding.sql`):
+  RLS activado, sin política de lectura/escritura pública — solo la Edge
+  Function (service role) las toca. `funded_wallets` asegura que cada
+  dirección se fondea una sola vez para siempre; `fund_requests_log` lleva
+  un límite de 3 pedidos por IP cada 10 minutos.
+- **Secreto `verity_funder_private_key`** en Supabase Vault: la clave
+  privada de la wallet "financiadora" del proyecto (fondeada una sola vez,
+  manualmente, vía el faucet oficial de Amoy). Se lee desde la Edge
+  Function a través de la función `public.get_decrypted_secret(name)`
+  (`SECURITY DEFINER`, solo ejecutable por `service_role`), porque el
+  esquema `vault` no está expuesto directamente por PostgREST.
+- **Edge Function `fund-wallet`** (`supabase/functions/fund-wallet/index.ts`):
+  recibe una dirección, y si (a) nunca fue fondeada antes, (b) no supera el
+  límite por IP, y (c) su saldo on-chain actual es ~0, le manda 0.01 POL
+  desde la wallet financiadora del proyecto.
+- Se llama automáticamente desde `app/services/blockchainService.ts`
+  (`ensureWalletHasGas`) justo antes de anclar, solo si el saldo local es
+  bajo — en silencio, sin ninguna acción del usuario.
+
 ## Cómo se usa desde la app
 
 - `app/services/verificationIndexService.ts`:
@@ -79,3 +105,10 @@ no ocultar esta clave.
 3. Desplegar `supabase/functions/submit-certificate/index.ts` como Edge
    Function con `verify_jwt` desactivado.
 4. Copiar la URL del proyecto y la "publishable key" a `.env`.
+5. Correr `supabase/migrations/0002_create_wallet_funding.sql`.
+6. Generar una wallet nueva (la "financiadora"), guardar su clave privada
+   en Vault con el nombre `verity_funder_private_key`, y fondearla una
+   sola vez, manualmente, con el faucet de https://faucet.polygon.technology/
+   (red "Amoy").
+7. Desplegar `supabase/functions/fund-wallet/index.ts` como Edge Function
+   con `verify_jwt` desactivado.

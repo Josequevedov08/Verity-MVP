@@ -39,6 +39,69 @@ const AMOY_RPC_URL =
   process.env.EXPO_PUBLIC_AMOY_RPC_URL ?? 'https://polygon-amoy-bor-rpc.publicnode.com';
 const AMOY_CHAIN_ID = 80002;
 
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+
+// Umbral por debajo del cual se considera que la wallet "no tiene gas" y
+// hace falta pedir la gotita automática — mismo valor que usa la Edge
+// Function fund-wallet del lado del servidor (ver
+// backend/supabase/functions/fund-wallet/index.ts).
+const MIN_BALANCE_THRESHOLD_WEI = 1_000_000_000_000_000n; // 0.001 POL
+
+// Cuántas veces (y cada cuánto) se revisa si la gotita de gas ya llegó a
+// la blockchain antes de intentar anclar. Amoy suele confirmar en unos
+// pocos segundos, pero se deja margen por si la red está lenta.
+const FUNDING_POLL_ATTEMPTS = 10;
+const FUNDING_POLL_INTERVAL_MS = 3000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Si la wallet del dispositivo no tiene (o casi no tiene) gas, le pide en
+ * silencio una "gotita" de POL de prueba a la Edge Function fund-wallet —
+ * así el usuario nunca tiene que salir de la app a un faucet externo para
+ * poder sellar su primera foto. Es la contraparte cliente de
+ * backend/supabase/functions/fund-wallet/index.ts (ver ese archivo para
+ * las protecciones contra abuso: una wallet solo se fondea una vez, y hay
+ * límite de pedidos por IP).
+ *
+ * No lanza error si algo falla: si no se puede conseguir gas automático,
+ * simplemente se deja que el intento de anclaje siga su curso normal (y
+ * falle con su propio error de "fondos insuficientes" si de verdad no hay
+ * saldo) — nunca debe bloquear el flujo de sellado por su cuenta.
+ */
+async function ensureWalletHasGas(address: string, provider: ethers.JsonRpcProvider): Promise<void> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
+
+  try {
+    const balance = await provider.getBalance(address);
+    if (balance >= MIN_BALANCE_THRESHOLD_WEI) return;
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/fund-wallet`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify({ address }),
+    });
+    if (!res.ok) return;
+
+    const result = (await res.json()) as { ok?: boolean; funded?: boolean };
+    if (!result.ok || !result.funded) return;
+
+    // La transacción de financiamiento ya se envió — se espera a que se
+    // confirme en la cadena antes de intentar anclar, si no la primera
+    // transacción real del usuario fallaría igual por falta de fondos.
+    for (let attempt = 0; attempt < FUNDING_POLL_ATTEMPTS; attempt += 1) {
+      await sleep(FUNDING_POLL_INTERVAL_MS);
+      const updatedBalance = await provider.getBalance(address);
+      if (updatedBalance >= MIN_BALANCE_THRESHOLD_WEI) return;
+    }
+  } catch (error) {
+    console.warn('No se pudo conseguir gas automático (no es crítico, se intentará igual):', error);
+  }
+}
+
 export interface AnchorResult {
   /** Hash de la transacción en Polygon Amoy (sirve como "número de sello"). */
   txHash: string;
@@ -132,6 +195,8 @@ export async function restoreDeviceWalletFromPrivateKey(privateKey: string): Pro
 export async function anchorHashOnChain(sha256Hash: string): Promise<AnchorResult> {
   const provider = new ethers.JsonRpcProvider(AMOY_RPC_URL, AMOY_CHAIN_ID);
   const wallet = (await getOrCreateDeviceWallet()).connect(provider);
+
+  await ensureWalletHasGas(wallet.address, provider);
 
   const hashBytes = sha256Hash.startsWith('0x') ? sha256Hash : `0x${sha256Hash}`;
 
