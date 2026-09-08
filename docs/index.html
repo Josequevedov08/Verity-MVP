@@ -27,10 +27,6 @@
     --accent-ink: #0B0B0F;
     --success: #3DD16F;
     --danger: #F16A5C;
-    /* El sello flotante siempre debe ser lo opuesto al fondo de la
-       página para resaltar — blanco sobre oscuro, negro sobre claro. */
-    --seal-bg: #ffffff;
-    --seal-text: #0B0B0F;
     --chip-bg: rgba(28,28,36,0.75);
   }
 
@@ -49,8 +45,6 @@
       --accent-ink: #FFFFFF;
       --success: #1E8E3E;
       --danger: #C0392B;
-      --seal-bg: #0B0B0F;
-      --seal-text: #ffffff;
       --chip-bg: rgba(255,255,255,0.75);
     }
   }
@@ -68,8 +62,6 @@
     --accent-ink: #FFFFFF;
     --success: #1E8E3E;
     --danger: #C0392B;
-    --seal-bg: #0B0B0F;
-    --seal-text: #ffffff;
     --chip-bg: rgba(255,255,255,0.75);
   }
   * { box-sizing: border-box; }
@@ -373,8 +365,8 @@
   </div>
 
   <svg class="seal-badge" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-    <rect x="4" y="4" width="192" height="192" rx="40" style="fill: var(--seal-bg)"/>
-    <text x="100" y="122" style="fill: var(--seal-text)" font-family="Sora, sans-serif" font-size="64" font-weight="800" text-anchor="middle" letter-spacing="1">VRT</text>
+    <rect x="4" y="4" width="192" height="192" rx="40" style="fill: var(--accent)"/>
+    <text x="100" y="122" style="fill: var(--accent-ink)" font-family="Sora, sans-serif" font-size="64" font-weight="800" text-anchor="middle" letter-spacing="1">VRT</text>
   </svg>
 
   <div class="wrap">
