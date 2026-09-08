@@ -72,79 +72,74 @@ export default function OnboardingScreen({ onDone }: { onDone: () => void }) {
   const slide = SLIDES[index];
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      {/* Hero: captura real de la app (distinta por pantalla, ver arriba),
-          con un degradado que la funde limpio con el fondo oscuro del
-          resto de la pantalla — mismo patrón que
-          PaywallModal.tsx/SettingsModal.tsx (ImageBackground +
-          LinearGradient + insignia flotante partida entre las dos
-          secciones), para que el onboarding tenga el mismo lenguaje
-          visual que el resto de la app en vez de verse plano. */}
-      <ImageBackground source={slide.image} style={styles.hero} resizeMode="cover">
-        <LinearGradient
-          colors={['transparent', '#111111']}
-          start={{ x: 0.5, y: 0.35 }}
-          end={{ x: 0.5, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
+    // La foto ocupa la pantalla COMPLETA (no un recorte arriba) — el
+    // primer intento (hero al 42% + tarjeta sólida abajo, calcado del
+    // patrón de PaywallModal) se veía como una franja chica de foto y el
+    // resto negro liso; no era lo pedido. Acá todo el contenido (botón
+    // Saltar, ícono, título, texto, puntos, botón) flota ENCIMA de la
+    // foto, con un degradado de abajo hacia arriba (sólido en la base,
+    // donde está el texto, transparente arriba para que la foto se vea
+    // completa) — mismo recurso que el banner PRO, pero vertical en vez
+    // de horizontal, como se pidió.
+    <ImageBackground source={slide.image} style={styles.page} resizeMode="cover">
+      <LinearGradient
+        colors={['transparent', 'rgba(10,10,12,0.55)', '#0B0B0F']}
+        locations={[0, 0.55, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+      <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
         <Pressable style={styles.skip} onPress={onDone} hitSlop={8}>
           <Text style={styles.skipText}>Saltar</Text>
         </Pressable>
-      </ImageBackground>
 
-      <View style={styles.iconBadge}>
-        <Ionicons name={slide.icon} size={32} color={ACCENT} />
-      </View>
+        <View style={styles.body}>
+          <View style={styles.iconBadge}>
+            <Ionicons name={slide.icon} size={26} color={ACCENT} />
+          </View>
 
-      <View style={styles.body}>
-        <View style={styles.content}>
           <Text style={styles.title}>{slide.title}</Text>
           <Text style={styles.bodyText}>{slide.body}</Text>
-        </View>
 
-        <View style={styles.dots}>
-          {SLIDES.map((_, i) => (
-            <View key={i} style={[styles.dot, i === index && styles.dotActive]} />
-          ))}
-        </View>
+          <View style={styles.dots}>
+            {SLIDES.map((_, i) => (
+              <View key={i} style={[styles.dot, i === index && styles.dotActive]} />
+            ))}
+          </View>
 
-        <Pressable
-          style={styles.nextButton}
-          onPress={() => (isLast ? onDone() : setIndex(index + 1))}
-        >
-          <Text style={styles.nextButtonText}>{isLast ? 'Empezar a sellar' : 'Siguiente'}</Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+          <Pressable
+            style={styles.nextButton}
+            onPress={() => (isLast ? onDone() : setIndex(index + 1))}
+          >
+            <Text style={styles.nextButtonText}>{isLast ? 'Empezar a sellar' : 'Siguiente'}</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#111111' },
-  hero: { height: '42%', justifyContent: 'flex-start' },
-  skip: { position: 'absolute', top: 48, right: 24 },
+  page: { flex: 1, backgroundColor: '#0B0B0F' },
+  overlay: { flex: 1, justifyContent: 'space-between' },
+  skip: { alignSelf: 'flex-end', margin: 24 },
   skipText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  body: { paddingHorizontal: 24, paddingBottom: 24 },
   iconBadge: {
-    position: 'absolute',
-    top: '42%',
-    marginTop: -32,
-    alignSelf: 'center',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#111111',
-    borderWidth: 3,
-    borderColor: '#111111',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(11,11,15,0.7)',
+    borderWidth: 1,
+    borderColor: `${ACCENT}55`,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 16,
   },
-  body: { flex: 1, paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24 },
-  content: { flex: 1, justifyContent: 'center' },
-  title: { color: '#fff', fontSize: 27, fontWeight: '800', marginBottom: 16 },
-  bodyText: { color: '#cfd3d8', fontSize: 16, lineHeight: 24 },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 24 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#444' },
-  dotActive: { backgroundColor: '#1a73e8' },
+  title: { color: '#fff', fontSize: 27, fontWeight: '800', marginBottom: 12 },
+  bodyText: { color: '#e4e4e8', fontSize: 16, lineHeight: 24 },
+  dots: { flexDirection: 'row', gap: 8, marginTop: 28, marginBottom: 20 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.3)' },
+  dotActive: { backgroundColor: ACCENT },
   nextButton: {
     backgroundColor: '#1a73e8',
     borderRadius: 16,
