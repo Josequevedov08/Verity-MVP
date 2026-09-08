@@ -31,6 +31,7 @@ import {
   Pressable,
   Alert,
   ScrollView,
+  Linking,
 } from 'react-native';
 // SafeAreaView de 'react-native' está deprecado; se usa el de
 // react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
@@ -406,6 +407,18 @@ export default function VerificationScreen() {
           </View>
         )}
       </View>
+
+      {/* Alguien sin la app instalada (ej. a quien le compartiste un
+          certificado) también puede verificar por su cuenta — la misma
+          consulta, en una página web pública (ver docs/index.html). */}
+      <Pressable onPress={() => Linking.openURL('https://josequevedov08.github.io/Verity-MVP/')}>
+        <Text style={[styles.webVerifyLink, { color: colors.textMuted }]}>
+          ¿Quieres que alguien sin la app verifique un sello? Compárteles{' '}
+          <Text style={{ color: colors.accent, fontWeight: '700' }}>
+            josequevedov08.github.io/Verity-MVP
+          </Text>
+        </Text>
+      </Pressable>
       </ScrollView>
 
       <Modal visible={pickerVisible} animationType="slide" onRequestClose={() => setPickerVisible(false)}>
@@ -543,4 +556,5 @@ const styles = StyleSheet.create({
   pickerHash: { fontSize: 12, fontFamily: 'monospace' },
   pickerDate: { fontSize: 12, marginTop: 2 },
   empty: { marginTop: 40, textAlign: 'center' },
+  webVerifyLink: { fontSize: 12, textAlign: 'center', lineHeight: 18, marginTop: 4 },
 });

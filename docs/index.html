@@ -4,136 +4,414 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Verity — Verificación pública</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230B0B0F'/%3E%3Ctext x='50' y='63' font-family='Arial,sans-serif' font-size='32' font-weight='800' fill='white' text-anchor='middle'%3EVRT%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Oscuro por defecto (identidad principal de Verity — ver
+     app/theme/palette.ts). Mismos tokens que la app, solo renombrados
+     a --bg/--surface porque aquí "bg" es la página y "surface" la
+     tarjeta (al revés de los nombres en la app, incluye la nota). */
   :root {
     --bg: #0B0B0F;
     --surface: #1C1C24;
     --surface-alt: #26262F;
     --border: #33333D;
+    --border-soft: #2A2A33;
     --text: #F2F2F5;
     --text-muted: #9A9AA5;
+    --text-faint: #6B6B76;
     --accent: #4C9AFF;
+    --accent-dim: #2C5C9C;
     --accent-ink: #0B0B0F;
     --success: #3DD16F;
     --danger: #F16A5C;
+    /* El sello flotante siempre debe ser lo opuesto al fondo de la
+       página para resaltar — blanco sobre oscuro, negro sobre claro. */
+    --seal-bg: #ffffff;
+    --seal-text: #0B0B0F;
+    --chip-bg: rgba(28,28,36,0.75);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #F4F6F9;
+      --surface: #FFFFFF;
+      --surface-alt: #EEF2F7;
+      --border: #E2E5EA;
+      --border-soft: #E7EAEE;
+      --text: #111114;
+      --text-muted: #63666E;
+      --text-faint: #9AA0A8;
+      --accent: #1A73E8;
+      --accent-dim: #AFCBF3;
+      --accent-ink: #FFFFFF;
+      --success: #1E8E3E;
+      --danger: #C0392B;
+      --seal-bg: #0B0B0F;
+      --seal-text: #ffffff;
+      --chip-bg: rgba(255,255,255,0.75);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #F4F6F9;
+    --surface: #FFFFFF;
+    --surface-alt: #EEF2F7;
+    --border: #E2E5EA;
+    --border-soft: #E7EAEE;
+    --text: #111114;
+    --text-muted: #63666E;
+    --text-faint: #9AA0A8;
+    --accent: #1A73E8;
+    --accent-dim: #AFCBF3;
+    --accent-ink: #FFFFFF;
+    --success: #1E8E3E;
+    --danger: #C0392B;
+    --seal-bg: #0B0B0F;
+    --seal-text: #ffffff;
+    --chip-bg: rgba(255,255,255,0.75);
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Sora", -apple-system, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 40px 20px 80px; }
-  header { text-align: center; margin-bottom: 32px; }
-  .seal {
-    width: 64px; height: 64px; border-radius: 32px;
-    border: 2px solid var(--accent);
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 16px;
-    font-size: 26px;
+  .mono { font-family: "JetBrains Mono", ui-monospace, Consolas, monospace; }
+  h1, h2, h3 { text-wrap: balance; }
+  a { color: var(--accent); }
+
+  /* ---------- Selector de idioma ---------- */
+  .lang-switch {
+    display: flex;
+    background: var(--chip-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
   }
-  h1 { font-size: 22px; font-weight: 800; margin: 0 0 8px; }
-  .lede { color: var(--text-muted); font-size: 14px; line-height: 1.6; max-width: 46ch; margin: 0 auto; }
+  .lang-switch button {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .lang-switch button.active { background: var(--accent); color: var(--accent-ink); }
+
+  .top-controls {
+    position: fixed;
+    top: 16px; right: 16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .theme-toggle {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--chip-bg);
+    backdrop-filter: blur(8px);
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    padding: 72px 24px 108px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(76,154,255,0.16), transparent 60%),
+      var(--bg);
+    text-align: center;
+  }
+  .hero-photo-frame {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 16 / 7;
+    margin: 0 auto 34px;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 30px 60px -30px rgba(76,154,255,0.35), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  }
+  .hero-photo-frame img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    filter: saturate(1.05);
+  }
+  .hero-photo-frame::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(11,11,15,0) 35%, rgba(11,11,15,0.92) 100%);
+  }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .eyebrow::before, .eyebrow::after { content: ""; width: 20px; height: 1px; background: var(--accent-dim); }
+  h1 {
+    font-size: clamp(28px, 5.2vw, 44px);
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    margin: 0 0 14px;
+    line-height: 1.1;
+  }
+  .hero-lede {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.7;
+    max-width: 46ch;
+    margin: 0 auto;
+  }
+
+  /* Insignia flotante entre el hero y el contenido — mismo truco visual
+     que el paywall de la app (insignia partida entre dos secciones). */
+  .seal-badge {
+    display: block;
+    width: 92px; height: 92px;
+    margin: -46px auto 40px;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 12px 24px rgba(0,0,0,0.5));
+  }
+
+  /* ---------- Body ---------- */
+  .wrap { max-width: 620px; margin: 0 auto; padding: 0 20px 90px; }
+
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 22px;
-    margin-bottom: 20px;
+    border-radius: 22px;
+    padding: 26px 24px;
+    margin-bottom: 22px;
+    position: relative;
   }
-  .section-title { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--accent); font-size: 15px; margin-bottom: 4px; }
-  .section-sub { color: var(--text-muted); font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+  .section-title {
+    display: flex; align-items: center; gap: 9px;
+    font-weight: 700; font-size: 16.5px; margin: 0 0 8px; letter-spacing: -0.005em;
+  }
+  .section-title svg { flex-shrink: 0; color: var(--accent); }
+  .section-sub { color: var(--text-muted); font-size: 13.5px; margin-bottom: 20px; line-height: 1.55; }
+
   input[type="text"] {
     width: 100%;
     background: var(--surface-alt);
     border: 1px solid var(--border);
     color: var(--text);
-    border-radius: 12px;
-    padding: 13px 14px;
+    border-radius: 13px;
+    padding: 14px 15px;
     font-size: 14px;
+    font-family: "JetBrains Mono", monospace;
     margin-bottom: 12px;
+    transition: border-color 0.15s;
   }
+  input[type="text"]::placeholder { color: var(--text-faint); font-family: "Sora", sans-serif; }
   input[type="text"]:focus { outline: none; border-color: var(--accent); }
+
   .file-drop {
+    display: block;
     border: 1.5px dashed var(--border);
-    border-radius: 14px;
-    padding: 24px;
+    border-radius: 16px;
+    padding: 30px 20px;
     text-align: center;
     cursor: pointer;
-    margin-bottom: 4px;
+    transition: border-color 0.15s, background 0.15s;
   }
-  .file-drop:hover { border-color: var(--accent); }
+  .file-drop:hover, .file-drop.drag { border-color: var(--accent); background: rgba(76,154,255,0.05); }
   .file-drop input { display: none; }
+  .file-drop-icon { font-size: 22px; margin-bottom: 8px; opacity: 0.85; }
   .file-drop-label { font-size: 13.5px; color: var(--text-muted); }
-  button {
+  .file-drop-hint { font-size: 11.5px; color: var(--text-faint); margin-top: 4px; }
+
+  button.primary {
     width: 100%;
     background: var(--accent);
     color: var(--accent-ink);
     border: none;
     border-radius: 14px;
-    padding: 14px;
+    padding: 15px;
     font-weight: 700;
     font-size: 14.5px;
+    font-family: "Sora", sans-serif;
     cursor: pointer;
-    margin-top: 4px;
+    transition: transform 0.1s, opacity 0.15s;
   }
-  button:disabled { opacity: 0.6; cursor: default; }
+  button.primary:hover { opacity: 0.92; }
+  button.primary:active { transform: scale(0.99); }
+  button.primary:disabled { opacity: 0.55; cursor: default; }
+
   .result {
-    margin-top: 16px;
-    border-radius: 12px;
-    padding: 14px;
+    margin-top: 18px;
+    border-radius: 14px;
+    padding: 16px 17px;
     border: 1px solid var(--border);
     font-size: 13.5px;
     line-height: 1.6;
+    background: var(--surface-alt);
+    animation: rise 0.25s ease-out;
   }
-  .result.ok { border-color: var(--success); color: var(--success); }
-  .result.bad { border-color: var(--danger); color: var(--danger); }
-  .result .row { color: var(--text); font-size: 13px; margin-top: 6px; }
-  .result .row b { color: var(--text-muted); font-weight: 600; }
-  .result a { color: var(--accent); }
-  .mono { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 12px; word-break: break-all; }
-  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .result-head { display: flex; align-items: center; gap: 9px; font-weight: 700; margin-bottom: 10px; }
+  .result.ok { border-color: rgba(61,209,111,0.4); }
+  .result.ok .result-head { color: var(--success); }
+  .result.bad { border-color: rgba(241,106,92,0.35); }
+  .result.bad .result-head { color: var(--danger); }
+  .result-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .row:first-of-type { border-top: none; padding-top: 0; }
+  .row b { color: var(--text-muted); font-weight: 500; flex-shrink: 0; }
+  .row span { color: var(--text); text-align: right; }
+  .row a { text-decoration: none; font-weight: 600; }
+  .result-plain { color: var(--text-muted); margin: 0; }
+  .hash-chip {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11.5px;
+    word-break: break-all;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-top: 8px;
+    color: var(--text);
+  }
+
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0;
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
-  footer { text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 32px; }
-  footer a { color: var(--accent); text-decoration: none; }
+
+  footer {
+    text-align: center; color: var(--text-faint); font-size: 12px;
+    padding-top: 8px;
+  }
+  footer a { color: var(--text-muted); }
+  footer .dot { margin: 0 8px; opacity: 0.5; }
+  .link-btn {
+    background: none; border: none; padding: 0;
+    color: var(--text-muted); text-decoration: underline;
+    font-size: 12px; font-family: "Sora", sans-serif; cursor: pointer;
+  }
+
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0; z-index: 20;
+    background: rgba(0,0,0,0.6);
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 30px 26px;
+    max-width: 480px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal-card h3 { margin: 0 0 14px; font-size: 17px; }
+  .modal-card p { color: var(--text-muted); font-size: 13px; line-height: 1.65; margin: 0 0 12px; }
+  .modal-card p:last-child { margin-bottom: 0; }
+  .modal-close {
+    position: absolute; top: 14px; right: 14px;
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface-alt);
+    color: var(--text-muted); cursor: pointer;
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="seal">🛡️</div>
-    <h1>Verificación pública de Verity</h1>
-    <p class="lede">
-      Comprueba si una foto o video fue sellado con Verity — sin instalar la app.
-      Todo se verifica directo contra Polygon Amoy; tu archivo nunca sale de tu navegador.
-    </p>
-  </header>
 
-  <div class="card">
-    <div class="section-title">📁 Por archivo</div>
-    <div class="section-sub">Elige el archivo — su huella digital se calcula en tu propio navegador y solo eso se consulta.</div>
-    <label class="file-drop" id="fileDrop">
-      <input type="file" id="fileInput" accept="image/*,video/*" />
-      <span class="file-drop-label" id="fileDropLabel">Toca para elegir una foto o video</span>
-    </label>
-    <div id="fileResult"></div>
+  <div class="top-controls">
+    <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema" title="Claro / Oscuro">
+      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
+    <div class="lang-switch">
+      <button id="langEs" data-lang="es">ES</button>
+      <button id="langEn" data-lang="en">EN</button>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="section-title">🔑 Por número de sello</div>
-    <div class="section-sub">Pega un número de sello (0x...) para confirmar que existe de verdad en el registro público.</div>
-    <input type="text" id="txInput" placeholder="0x..." autocomplete="off" autocapitalize="none" />
-    <button id="txButton">Buscar</button>
-    <div id="txResult"></div>
+  <div class="hero">
+    <div class="hero-photo-frame"><img src="hero.jpg" alt="" /></div>
+    <p class="eyebrow" data-i18n="eyebrow"></p>
+    <h1 data-i18n="title"></h1>
+    <p class="hero-lede" data-i18n="lede"></p>
   </div>
 
-  <footer>
-    Verity · MVP para <a href="https://www.shipaton.com/" target="_blank" rel="noopener">Shipaton 2026</a> ·
-    <a href="https://github.com/Josequevedov08/Verity-MVP" target="_blank" rel="noopener">código en GitHub</a>
-  </footer>
-</div>
+  <svg class="seal-badge" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="4" width="192" height="192" rx="40" style="fill: var(--seal-bg)"/>
+    <text x="100" y="122" style="fill: var(--seal-text)" font-family="Sora, sans-serif" font-size="64" font-weight="800" text-anchor="middle" letter-spacing="1">VRT</text>
+  </svg>
+
+  <div class="wrap">
+
+    <div class="card">
+      <h2 class="section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span data-i18n="byFileTitle"></span>
+      </h2>
+      <p class="section-sub" data-i18n="byFileSub"></p>
+      <label class="file-drop" id="fileDrop">
+        <input type="file" id="fileInput" accept="image/*,video/*" />
+        <div class="file-drop-icon">↑</div>
+        <div class="file-drop-label" id="fileDropLabel" data-i18n="dropLabel"></div>
+        <div class="file-drop-hint" data-i18n="dropHint"></div>
+      </label>
+      <div id="fileResult"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M11 11.5L21 1.5M15 5.5l3 3M18 2.5l3 3"/></svg>
+        <span data-i18n="byTxTitle"></span>
+      </h2>
+      <p class="section-sub" data-i18n="byTxSub"></p>
+      <input type="text" id="txInput" placeholder="0x..." autocomplete="off" autocapitalize="none" />
+      <button class="primary" id="txButton" data-i18n="searchButton"></button>
+      <div id="txResult"></div>
+    </div>
+
+    <footer>
+      Verity · <span data-i18n="footerMvp"></span> <a href="https://www.shipaton.com/" target="_blank" rel="noopener">Shipaton 2026</a>
+      <span class="dot">·</span>
+      <a href="https://github.com/Josequevedov08/Verity-MVP" target="_blank" rel="noopener" data-i18n="footerCode"></a>
+      <span class="dot">·</span>
+      <button class="link-btn" id="privacyOpen" data-i18n="privacyLink"></button>
+    </footer>
+
+  </div>
+
+  <div class="modal-backdrop" id="privacyBackdrop">
+    <div class="modal-card">
+      <button class="modal-close" id="privacyClose" aria-label="Cerrar">✕</button>
+      <h3 data-i18n="privacyTitle"></h3>
+      <p data-i18n="privacyP1"></p>
+      <p data-i18n="privacyP2"></p>
+      <p data-i18n="privacyP3"></p>
+      <p data-i18n="privacyP4"></p>
+    </div>
+  </div>
 
 <script>
   const SUPABASE_URL = 'https://lxzmegutqorsmnoonkyv.supabase.co';
@@ -141,6 +419,157 @@
   const AMOY_RPC_URL = 'https://polygon-amoy-bor-rpc.publicnode.com';
   const EXPLORER = (tx) => `https://amoy.polygonscan.com/tx/${tx}`;
 
+  // ---------------- i18n ----------------
+  const STRINGS = {
+    es: {
+      eyebrow: 'Registro público · Polygon Amoy',
+      title: 'Verificación pública de Verity',
+      lede: 'Comprueba si una foto o video fue sellado con Verity, sin instalar la app. La huella digital se calcula en tu propio navegador — el archivo nunca sale de ahí.',
+      byFileTitle: 'Por archivo',
+      byFileSub: 'Elige el archivo — su huella digital (SHA-256) se calcula en tu navegador y solo eso se consulta.',
+      dropLabel: 'Toca para elegir, o arrastra aquí',
+      dropHint: 'Foto o video',
+      byTxTitle: 'Por número de sello',
+      byTxSub: 'Pega un número de sello (0x...) que te haya compartido alguien, para confirmar que existe de verdad.',
+      searchButton: 'Buscar en el registro',
+      footerMvp: 'MVP para',
+      footerCode: 'código en GitHub',
+      privacyLink: 'Privacidad',
+      privacyTitle: 'Privacidad y cómo funciona esta página',
+      privacyP1: 'Esta página no usa cookies ni analítica, no pide cuentas ni datos personales. Guarda únicamente tu idioma y tema (claro/oscuro) en el almacenamiento local de tu propio navegador — nunca en un servidor.',
+      privacyP2: 'Tu foto o video NUNCA se sube a ningún lado: su huella digital (SHA-256) se calcula dentro de tu navegador, y solo esa huella (un dato irreversible, no la foto) se consulta contra el índice público de Verity.',
+      privacyP3: 'Esta página se aloja en GitHub Pages, que aplica su propia política de privacidad a nivel de servidor (registros técnicos estándar como cualquier sitio web).',
+      privacyP4: 'Un resultado "no encontrado" no prueba que algo sea falso — puede no haberse sellado, o haberse sellado antes de que existiera este índice. Esta herramienta ayuda a verificar, no reemplaza una certificación legal.',
+      calculating: 'Calculando huella digital...',
+      querying: 'Consultando Polygon Amoy...',
+      fileFoundTitle: 'Este archivo está sellado con Verity',
+      trustLevel: 'Nivel de confianza',
+      sealNumber: 'Número de sello',
+      sealedOn: 'Sellado el',
+      registry: 'Registro',
+      fileNotFoundTitle: 'No encontrado en el índice público',
+      fileNotFoundBody: 'Puede no estar sellado, o haberse sellado antes de que existiera este índice. Si tienes su número de sello, compruébalo abajo.',
+      verifyErrorTitle: 'No se pudo verificar',
+      invalidSealTitle: 'Número de sello inválido',
+      invalidSealBody: 'Debe tener forma 0x + 64 caracteres.',
+      txFoundTitle: 'Este sello existe en el registro público',
+      anchoredHash: 'Huella anclada',
+      txNotFoundTitle: 'No encontrado',
+      txNotFoundBody: 'No existe ninguna transacción con ese número de sello.',
+      queryErrorTitle: 'No se pudo consultar',
+      trustValues: { ALTO: 'ALTO', MEDIO: 'MEDIO', BAJO: 'BAJO' },
+    },
+    en: {
+      eyebrow: 'Public registry · Polygon Amoy',
+      title: 'Verity Public Verification',
+      lede: 'Check whether a photo or video was sealed with Verity, without installing the app. The fingerprint is computed in your own browser — the file never leaves it.',
+      byFileTitle: 'By file',
+      byFileSub: 'Choose the file — its fingerprint (SHA-256) is computed in your browser, and that’s all that gets checked.',
+      dropLabel: 'Tap to choose, or drag here',
+      dropHint: 'Photo or video',
+      byTxTitle: 'By seal number',
+      byTxSub: 'Paste a seal number (0x...) someone shared with you, to confirm it really exists.',
+      searchButton: 'Search the registry',
+      footerMvp: 'MVP for',
+      footerCode: 'code on GitHub',
+      privacyLink: 'Privacy',
+      privacyTitle: 'Privacy & how this page works',
+      privacyP1: "This page uses no cookies and no analytics, and asks for no accounts or personal data. It only stores your language and theme (light/dark) in your own browser's local storage — never on a server.",
+      privacyP2: 'Your photo or video is NEVER uploaded anywhere: its fingerprint (SHA-256) is computed inside your own browser, and only that fingerprint (a one-way value, not the photo itself) is checked against the Verity public index.',
+      privacyP3: "This page is hosted on GitHub Pages, which applies its own server-level privacy policy (standard technical logs, like any website).",
+      privacyP4: 'A "not found" result does not prove something is fake — it may simply not be sealed, or it may have been sealed before this index existed. This tool assists verification; it does not replace a legal certification.',
+      calculating: 'Computing fingerprint...',
+      querying: 'Querying Polygon Amoy...',
+      fileFoundTitle: 'This file is sealed with Verity',
+      trustLevel: 'Trust level',
+      sealNumber: 'Seal number',
+      sealedOn: 'Sealed on',
+      registry: 'Registry',
+      fileNotFoundTitle: 'Not found in the public index',
+      fileNotFoundBody: 'It may not be sealed, or it was sealed before this index existed. If you have its seal number, check it below.',
+      verifyErrorTitle: "Couldn't verify",
+      invalidSealTitle: 'Invalid seal number',
+      invalidSealBody: 'Must have the shape 0x + 64 characters.',
+      txFoundTitle: 'This seal exists in the public registry',
+      anchoredHash: 'Anchored fingerprint',
+      txNotFoundTitle: 'Not found',
+      txNotFoundBody: 'No transaction exists with that seal number.',
+      queryErrorTitle: "Couldn't query",
+      trustValues: { ALTO: 'HIGH', MEDIO: 'MEDIUM', BAJO: 'LOW' },
+    },
+  };
+
+  // Envoltorio defensivo: en contextos que bloquean almacenamiento (ej.
+  // una vista previa servida como data: URL, o un navegador con "bloquear
+  // datos de sitios" activado) localStorage puede lanzar en vez de
+  // simplemente no existir — sin esto, un solo acceso fallido tumbaba
+  // TODO el script (y con él, hasta los textos estáticos de la página).
+  const safeStorage = {
+    get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+    set(key, value) { try { localStorage.setItem(key, value); } catch {} },
+  };
+
+  let lang = safeStorage.get('verity_lang') || (navigator.language.startsWith('es') ? 'es' : 'en');
+  const t = (key) => STRINGS[lang][key];
+
+  // ---------------- Tema (claro/oscuro) ----------------
+  // Igual que la app (ver ThemeContext.tsx): sin preferencia guardada,
+  // sigue el sistema; con una elección explícita, esa gana siempre.
+  const SUN_PATH = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  const MOON_PATH = '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>';
+  const themeIcon = document.getElementById('themeIcon');
+
+  function effectiveTheme() {
+    const stored = safeStorage.get('verity_page_theme');
+    if (stored) return stored;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  function applyTheme() {
+    const stored = safeStorage.get('verity_page_theme');
+    if (stored) document.documentElement.setAttribute('data-theme', stored);
+    else document.documentElement.removeAttribute('data-theme');
+    // El ícono muestra hacia qué modo cambiarías al tocarlo (sol si
+    // estás en oscuro, luna si estás en claro) — mismo lenguaje que un
+    // interruptor de luz, no "qué modo es este".
+    themeIcon.innerHTML = effectiveTheme() === 'dark' ? SUN_PATH : MOON_PATH;
+  }
+
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+    safeStorage.set('verity_page_theme', next);
+    applyTheme();
+  });
+
+  applyTheme();
+
+  // El último resultado se guarda tal cual (no el HTML ya armado) para
+  // poder volver a dibujarlo en el otro idioma sin repetir la consulta.
+  let lastFileState = { kind: 'idle' };
+  let lastTxState = { kind: 'idle' };
+
+  function applyStaticText() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.getElementById('langEs').classList.toggle('active', lang === 'es');
+    document.getElementById('langEn').classList.toggle('active', lang === 'en');
+    renderFileResult();
+    renderTxResult();
+  }
+
+  function setLang(next) {
+    lang = next;
+    safeStorage.set('verity_lang', lang);
+    applyStaticText();
+  }
+
+  document.getElementById('langEs').addEventListener('click', () => setLang('es'));
+  document.getElementById('langEn').addEventListener('click', () => setLang('en'));
+
+  // ---------------- Lógica de verificación ----------------
+  const fileDrop = document.getElementById('fileDrop');
   const fileInput = document.getElementById('fileInput');
   const fileDropLabel = document.getElementById('fileDropLabel');
   const fileResultEl = document.getElementById('fileResult');
@@ -163,41 +592,99 @@
       `${SUPABASE_URL}/rest/v1/certificates?sha256=eq.${encodeURIComponent(hash)}&select=*`,
       { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
     );
-    if (!res.ok) throw new Error('No se pudo consultar el índice.');
+    if (!res.ok) throw new Error('index request failed');
     const rows = await res.json();
     return rows[0] ?? null;
   }
+
+  function renderFileResult() {
+    const s = lastFileState;
+    if (s.kind === 'idle') { fileResultEl.innerHTML = ''; return; }
+    if (s.kind === 'loading') {
+      fileResultEl.innerHTML = `<div class="result"><span class="spinner"></span> &nbsp;${t('calculating')}</div>`;
+      return;
+    }
+    if (s.kind === 'found') {
+      const e = s.entry;
+      fileResultEl.innerHTML = `
+        <div class="result ok">
+          <div class="result-head"><span class="result-dot"></span> ${t('fileFoundTitle')}</div>
+          <div class="row"><b>${t('trustLevel')}</b><span>${t('trustValues')[e.trust_level] ?? e.trust_level}</span></div>
+          ${e.sequence_number ? `<div class="row"><b>${t('sealNumber')}</b><span class="mono">${e.sequence_number}</span></div>` : ''}
+          <div class="row"><b>${t('sealedOn')}</b><span>${new Date(e.sealed_at).toLocaleString()}</span></div>
+          <div class="row"><b>${t('registry')}</b><span><a href="${EXPLORER(e.tx_hash)}" target="_blank" rel="noopener">Polygonscan ↗</a></span></div>
+        </div>`;
+      return;
+    }
+    if (s.kind === 'not-found') {
+      fileResultEl.innerHTML = `
+        <div class="result bad">
+          <div class="result-head"><span class="result-dot"></span> ${t('fileNotFoundTitle')}</div>
+          <p class="result-plain">${t('fileNotFoundBody')}</p>
+        </div>`;
+      return;
+    }
+    if (s.kind === 'error') {
+      fileResultEl.innerHTML = `<div class="result bad"><div class="result-head"><span class="result-dot"></span> ${t('verifyErrorTitle')}</div><p class="result-plain">${s.message}</p></div>`;
+    }
+  }
+
+  function renderTxResult() {
+    const s = lastTxState;
+    if (s.kind === 'idle') { txResultEl.innerHTML = ''; return; }
+    if (s.kind === 'loading') {
+      txResultEl.innerHTML = `<div class="result"><span class="spinner"></span> &nbsp;${t('querying')}</div>`;
+      return;
+    }
+    if (s.kind === 'invalid') {
+      txResultEl.innerHTML = `<div class="result bad"><div class="result-head"><span class="result-dot"></span> ${t('invalidSealTitle')}</div><p class="result-plain">${t('invalidSealBody')}</p></div>`;
+      return;
+    }
+    if (s.kind === 'found') {
+      txResultEl.innerHTML = `
+        <div class="result ok">
+          <div class="result-head"><span class="result-dot"></span> ${t('txFoundTitle')}</div>
+          <div class="row"><b>${t('anchoredHash')}</b></div>
+          <div class="hash-chip">${s.input}</div>
+          <div class="row" style="margin-top:8px"><b>${t('registry')}</b><span><a href="${EXPLORER(s.txHash)}" target="_blank" rel="noopener">Polygonscan ↗</a></span></div>
+        </div>`;
+      return;
+    }
+    if (s.kind === 'not-found') {
+      txResultEl.innerHTML = `<div class="result bad"><div class="result-head"><span class="result-dot"></span> ${t('txNotFoundTitle')}</div><p class="result-plain">${t('txNotFoundBody')}</p></div>`;
+      return;
+    }
+    if (s.kind === 'error') {
+      txResultEl.innerHTML = `<div class="result bad"><div class="result-head"><span class="result-dot"></span> ${t('queryErrorTitle')}</div><p class="result-plain">${s.message}</p></div>`;
+    }
+  }
+
+  ['dragover', 'dragleave', 'drop'].forEach((evt) => {
+    fileDrop.addEventListener(evt, (e) => {
+      e.preventDefault();
+      fileDrop.classList.toggle('drag', evt === 'dragover');
+      if (evt === 'drop' && e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change'));
+      }
+    });
+  });
 
   fileInput.addEventListener('change', async () => {
     const file = fileInput.files[0];
     if (!file) return;
     fileDropLabel.textContent = file.name;
-    fileResultEl.innerHTML = '<div class="result"><span class="spinner"></span>Calculando huella digital...</div>';
+    lastFileState = { kind: 'loading' };
+    renderFileResult();
 
     try {
       const hash = await hashFile(file);
       const entry = await lookupPublicIndex(hash);
-
-      if (entry) {
-        fileResultEl.innerHTML = `
-          <div class="result ok">
-            ✅ Este archivo está sellado con Verity.
-            <div class="row"><b>Nivel de confianza:</b> ${entry.trust_level}</div>
-            ${entry.sequence_number ? `<div class="row"><b>Número de sello:</b> ${entry.sequence_number}</div>` : ''}
-            <div class="row"><b>Sellado el:</b> ${new Date(entry.sealed_at).toLocaleString()}</div>
-            <div class="row"><b>Registro:</b> <a href="${EXPLORER(entry.tx_hash)}" target="_blank" rel="noopener">ver en Polygonscan ↗</a></div>
-          </div>`;
-      } else {
-        fileResultEl.innerHTML = `
-          <div class="result bad">
-            ❌ No encontramos este archivo en el índice público.
-            Puede no estar sellado, o haberse sellado antes de que existiera este índice —
-            en ese caso, pide el número de sello a quien lo selló y compruébalo abajo.
-          </div>`;
-      }
+      lastFileState = entry ? { kind: 'found', entry } : { kind: 'not-found' };
     } catch (error) {
-      fileResultEl.innerHTML = `<div class="result bad">No se pudo verificar: ${error.message}</div>`;
+      lastFileState = { kind: 'error', message: error.message };
     }
+    renderFileResult();
   });
 
   async function lookupOnChain(txHash) {
@@ -213,27 +700,35 @@
   txButton.addEventListener('click', async () => {
     const seal = txInput.value.trim();
     if (!/^0x[0-9a-fA-F]{64}$/.test(seal)) {
-      txResultEl.innerHTML = '<div class="result bad">Ese no tiene forma de número de sello válido (0x + 64 caracteres).</div>';
+      lastTxState = { kind: 'invalid' };
+      renderTxResult();
       return;
     }
 
-    txResultEl.innerHTML = '<div class="result"><span class="spinner"></span>Consultando Polygon Amoy...</div>';
+    lastTxState = { kind: 'loading' };
+    renderTxResult();
     try {
       const tx = await lookupOnChain(seal);
-      if (tx && tx.input && tx.input !== '0x') {
-        txResultEl.innerHTML = `
-          <div class="result ok">
-            ✅ Este número de sello existe en el registro público.
-            <div class="row"><b>Huella digital anclada:</b></div>
-            <div class="row mono">${tx.input}</div>
-            <div class="row"><a href="${EXPLORER(seal)}" target="_blank" rel="noopener">ver en Polygonscan ↗</a></div>
-          </div>`;
-      } else {
-        txResultEl.innerHTML = '<div class="result bad">❌ No se encontró ninguna transacción con ese número de sello.</div>';
-      }
+      lastTxState = tx && tx.input && tx.input !== '0x'
+        ? { kind: 'found', input: tx.input, txHash: seal }
+        : { kind: 'not-found' };
     } catch (error) {
-      txResultEl.innerHTML = `<div class="result bad">No se pudo consultar: ${error.message}</div>`;
+      lastTxState = { kind: 'error', message: error.message };
     }
+    renderTxResult();
+  });
+
+  applyStaticText();
+
+  // ---------------- Privacidad (modal simple) ----------------
+  const privacyBackdrop = document.getElementById('privacyBackdrop');
+  document.getElementById('privacyOpen').addEventListener('click', () => privacyBackdrop.classList.add('open'));
+  document.getElementById('privacyClose').addEventListener('click', () => privacyBackdrop.classList.remove('open'));
+  privacyBackdrop.addEventListener('click', (e) => {
+    if (e.target === privacyBackdrop) privacyBackdrop.classList.remove('open');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') privacyBackdrop.classList.remove('open');
   });
 </script>
 </body>

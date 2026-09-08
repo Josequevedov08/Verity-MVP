@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.3.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.4.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -192,9 +192,13 @@ verifica el anclaje real en la cadena antes de aceptar nada, en vez de
 un insert directo).
 
 También existe [`docs/index.html`](docs/index.html): una página
-pública de verificación sin instalar la app (publicable con GitHub
-Pages) — calcula la huella digital en el propio navegador y consulta
-lo mismo que la app.
+pública de verificación sin instalar la app, publicada en
+[josequevedov08.github.io/Verity-MVP](https://josequevedov08.github.io/Verity-MVP/)
+vía GitHub Pages — calcula la huella digital en el propio navegador y
+consulta lo mismo que la app. Bilingüe (ES/EN, detecta el idioma del
+navegador) y con modo claro/oscuro real (el sello flotante se invierte
+solo según el tema), más un aviso de privacidad explicando qué hace y
+qué no hace la página (no usa cookies ni analítica).
 
 ## Versionado
 
