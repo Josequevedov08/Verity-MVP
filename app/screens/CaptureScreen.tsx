@@ -32,7 +32,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as VideoThumbnails from 'expo-video-thumbnails';
-import * as MediaLibrary from 'expo-media-library';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
+// OJO: expo-media-library NO se importa arriba con las demás — un
+// import estático se evalúa (y su módulo nativo se busca) apenas se
+// carga este archivo, y en Expo Go eso revienta la app ENTERA con
+// "Cannot find native module 'ExpoMediaLibraryNext'" incluso sin
+// llegar a usarlo (confirmado en pruebas reales). Se importa dinámico,
+// dentro de saveToSystemGallery, y SOLO si no estamos en Expo Go.
 import { Directory, File, Paths } from 'expo-file-system';
 import { randomUUID } from 'expo-crypto';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -252,7 +258,14 @@ export default function CaptureScreen() {
    * acá — esto es un beneficio adicional, no un requisito para sellar.
    */
   async function saveToSystemGallery(uri: string): Promise<void> {
+    // En Expo Go, expo-media-library no tiene su módulo nativo disponible
+    // — ni siquiera importarlo funciona ahí. Se sale antes de intentarlo
+    // siquiera, para poder seguir probando todo lo demás por Expo Go sin
+    // que esto tumbe la app entera.
+    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return;
+
     try {
+      const MediaLibrary = await import('expo-media-library');
       const { status } = await MediaLibrary.requestPermissionsAsync(true);
       if (status !== 'granted') return;
       await MediaLibrary.saveToLibraryAsync(uri);

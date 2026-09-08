@@ -1,6 +1,6 @@
 {
   "name": "verity-mvp",
-  "version": "0.3.24",
+  "version": "0.3.25",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -17,6 +17,7 @@
     "ethers": "^6.13.2",
     "expo": "~57.0.0",
     "expo-clipboard": "~57.0.1",
+    "expo-constants": "~57.0.17",
     "expo-crypto": "~57.0.2",
     "expo-document-picker": "~57.0.1",
     "expo-file-system": "~57.0.6",
