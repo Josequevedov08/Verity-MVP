@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.12.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.13.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -109,6 +109,37 @@ eso se evitaron deliberadamente en este MVP (ver decisión documentada en
   huella digital, sin necesitar el número de sello a mano — más una
   página web (`docs/index.html`) para verificar sin instalar la app.
   Ver "Backend e índice público" más abajo.
+
+## Capturas de pantalla
+
+Probadas en dispositivo Android real (Expo Go), modo claro y oscuro.
+El botón circular gris flotante que aparece en algunas capturas
+**no es parte de la app** — es el propio botón de Expo Go para abrir
+su menú de desarrollador durante las pruebas; no existe en un build
+real.
+
+<table>
+<tr>
+<td width="33%"><img src="assets/screenshots/01-sellar-oscuro.jpeg" width="100%" alt="Sellar, modo oscuro" /><br/><sub><b>Sellar</b> — modo oscuro</sub></td>
+<td width="33%"><img src="assets/screenshots/02-sellar-claro.jpeg" width="100%" alt="Sellar, modo claro" /><br/><sub><b>Sellar</b> — modo claro</sub></td>
+<td width="33%"><img src="assets/screenshots/03-certificado-detalle.jpeg" width="100%" alt="Detalle de certificado" /><br/><sub>Detalle de certificado, con nivel de confianza y evidencia de origen</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="assets/screenshots/04-mis-sellos-grilla.jpeg" width="100%" alt="Mis sellos, grilla" /><br/><sub><b>Mis sellos</b> — grilla, con el sello (SealMedallion) para certificados sin archivo local</sub></td>
+<td width="33%"><img src="assets/screenshots/05-mis-sellos-lista.jpeg" width="100%" alt="Mis sellos, lista" /><br/><sub><b>Mis sellos</b> — lista, con estadísticas por nivel de confianza</sub></td>
+<td width="33%"><img src="assets/screenshots/06-verificar-oscuro.jpeg" width="100%" alt="Verificar, modo oscuro" /><br/><sub><b>Verificar</b> — modo oscuro, con el enlace a la web pública</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="assets/screenshots/07-verificar-claro.jpeg" width="100%" alt="Verificar, resultado" /><br/><sub><b>Verificar</b> — modo claro, resultado por número de sello</sub></td>
+<td width="33%"><img src="assets/screenshots/08-paywall-pro.jpeg" width="100%" alt="Paywall PRO" /><br/><sub>Paywall de <b>Verity PRO</b></sub></td>
+<td width="33%"><img src="assets/screenshots/09-ajustes-apariencia.jpeg" width="100%" alt="Ajustes" /><br/><sub><b>Ajustes</b> — apariencia y "Acerca de Verity"</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="assets/screenshots/10-ajustes-wallet-legal.jpeg" width="100%" alt="Ajustes, wallet y legal" /><br/><sub><b>Ajustes</b> — respaldo de wallet, sincronizar índice público, legal</sub></td>
+<td width="33%"><img src="assets/screenshots/11-faq.jpeg" width="100%" alt="Preguntas frecuentes" /><br/><sub>Preguntas frecuentes — sección legal real, no texto de relleno</sub></td>
+<td width="33%"><img src="assets/screenshots/12-web-verificacion-publica.png" width="100%" alt="Página web de verificación pública" /><br/><sub><b>Página web pública</b> — <a href="https://josequevedov08.github.io/Verity-MVP/">josequevedov08.github.io/Verity-MVP</a></sub></td>
+</tr>
+</table>
 
 ## Freemium y pagos
 

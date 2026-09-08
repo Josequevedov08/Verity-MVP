@@ -49,28 +49,42 @@ export default function SettingsButton({ inline }: { inline?: boolean }) {
 
   return (
     <>
-      <Pressable
-        style={[
-          styles.button,
-          { backgroundColor: colors.surfaceAlt },
-          !inline && styles.floating,
-        ]}
-        onPress={() => setVisible(true)}
-        hitSlop={8}
-      >
-        <Ionicons name="settings-outline" size={20} color={colors.textMuted} />
+      {/* Envoltorio del tamaño EXACTO del botón (40x40), a propósito
+          separado del Pressable: la insignia se posiciona "absolute"
+          relativa a ESTE View, nunca directo dentro del Pressable —
+          en pruebas reales (ver captura del usuario) posicionarla como
+          hijo del Pressable la dejaba flotando lejos de la esquina en
+          vez de pegada, probablemente porque Pressable no garantiza
+          ser el "contenedor de posicionamiento" que un View normal sí
+          es. Con un View explícito de tamaño fijo como ancla, el
+          top/right de la insignia son relativos a algo predecible. */}
+      <View style={[styles.wrap, !inline && styles.floating]}>
+        <Pressable
+          style={[styles.button, { backgroundColor: colors.surfaceAlt }]}
+          onPress={() => setVisible(true)}
+          hitSlop={8}
+        >
+          <Ionicons name="settings-outline" size={20} color={colors.textMuted} />
+        </Pressable>
         {isPro && (
           <View style={[styles.proBadge, { backgroundColor: colors.accent, borderColor: colors.surface }]}>
-            <Text style={[styles.proBadgeText, { color: colors.accentText }]}>PRO</Text>
+            <Text
+              style={[styles.proBadgeText, { color: colors.accentText }]}
+              allowFontScaling={false}
+            >
+              PRO
+            </Text>
           </View>
         )}
-      </Pressable>
+      </View>
       <SettingsModal visible={visible} onClose={handleClose} />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: { width: 40, height: 40 },
+  floating: { position: 'absolute', top: 0, right: 0 },
   button: {
     width: 40,
     height: 40,
@@ -78,15 +92,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  floating: { position: 'absolute', top: 0, right: 0 },
   proBadge: {
     position: 'absolute',
-    top: -4,
-    right: -6,
-    paddingHorizontal: 5,
-    paddingVertical: 1.5,
+    top: -5,
+    right: -8,
+    minWidth: 26,
+    height: 15,
+    paddingHorizontal: 4,
     borderRadius: 8,
     borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  proBadgeText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.4 },
+  proBadgeText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.4, lineHeight: 9 },
 });
