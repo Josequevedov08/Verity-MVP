@@ -584,7 +584,7 @@ export default function CaptureScreen() {
           Crea una huella digital única de tu foto o video y regístrala en un
           registro público, sin subir el archivo a ningún lado.
         </Text>
-        <SettingsButton />
+        <SettingsButton onSettingsClosed={refreshUsage} />
       </View>
 
       {/* El estado completo del plan (gratis/PRO, X de 30 este mes) vive

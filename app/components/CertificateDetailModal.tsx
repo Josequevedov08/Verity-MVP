@@ -37,6 +37,9 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
+// SafeAreaView de 'react-native' está deprecado; se usa el de
+// react-native-safe-area-context (requiere <SafeAreaProvider> en App.tsx).
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEventListener } from 'expo';
 import * as Clipboard from 'expo-clipboard';
@@ -80,14 +83,14 @@ export default function CertificateDetailModal({
       onRequestClose={onClose}
       onShow={() => setCurrentIndex(initialIndex)}
     >
-      <View style={[styles.page, { backgroundColor: colors.surface }]}>
+      <SafeAreaView style={[styles.page, { backgroundColor: colors.surface }]} edges={['top', 'bottom']}>
         <View style={styles.topBar}>
           {list && (
             <Text style={[styles.counter, { color: colors.textMuted }]}>
               {currentIndex + 1} de {list.length} · desliza para ver más
             </Text>
           )}
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton} hitSlop={12}>
             <Text style={[styles.closeText, { color: colors.accent }]}>Cerrar ✕</Text>
           </Pressable>
         </View>
@@ -117,7 +120,7 @@ export default function CertificateDetailModal({
             </ScrollView>
           )
         )}
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }

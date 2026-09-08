@@ -7,10 +7,29 @@
  * en Ajustes (fuente única de verdad), a propósito no se repite aquí.
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import type { VerityCertificate } from '../../documentation/technical/verity-protocol';
+
+/**
+ * Mismo texto que handleTrustInfo() en CertificateDetailModal.tsx (el
+ * ícono (i) que ya existe junto a la insignia de confianza de CADA
+ * certificado) — se repite aquí a propósito, no se comparte código: el
+ * usuario pidió explícitamente un segundo acceso a esta explicación
+ * junto al título "NIVEL DE CONFIANZA" de este resumen, además del que
+ * ya existe por certificado, "para doble seguridad y que la gente lea".
+ */
+function showTrustLevelInfo() {
+  Alert.alert(
+    '¿Qué significa el nivel de confianza?',
+    'No dice si tu foto o video es real o falso — dice qué tanta información tenemos sobre CÓMO se tomó.\n\n' +
+      '• Alta: se tomó con la cámara de Verity, con ubicación y hora confirmadas.\n' +
+      '• Media: viene de tu galería, pero trae información de fecha (o es un video).\n' +
+      '• Baja: no hay información extra disponible (común en fotos de galería sin esos datos, por ejemplo si te las mandaron por WhatsApp).\n\n' +
+      'En los 3 casos el sello es igual de válido — la diferencia es solo cuánta evidencia extra tenemos sobre el origen.'
+  );
+}
 
 /**
  * Abrevia números grandes (198567 → "198.5k") para que la fila de 3
@@ -45,7 +64,10 @@ export default function StatsCard({ certificates }: { certificates: VerityCertif
 
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-      <Text style={[styles.breakdownTitle, { color: colors.textMuted }]}>NIVEL DE CONFIANZA</Text>
+      <Pressable style={styles.breakdownTitleRow} onPress={showTrustLevelInfo} hitSlop={8}>
+        <Text style={[styles.breakdownTitle, { color: colors.textMuted }]}>NIVEL DE CONFIANZA</Text>
+        <Ionicons name="information-circle-outline" size={13} color={colors.textMuted} />
+      </Pressable>
       <View style={styles.breakdownRow}>
         <StatChip icon="shield-checkmark" color={colors.success} value={alto} label="Alta" />
         <StatChip icon="shield-half" color={colors.warning} value={medio} label="Media" />
@@ -91,7 +113,8 @@ const styles = StyleSheet.create({
   totalNumber: { fontSize: 30, fontWeight: '800', flexShrink: 1 },
   totalLabel: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
   divider: { height: 1, marginVertical: 12 },
-  breakdownTitle: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.6, marginBottom: 10 },
+  breakdownTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10, alignSelf: 'flex-start' },
+  breakdownTitle: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.6 },
   // flexWrap + cada chip con flexBasis/flexShrink: si con números
   // abreviados TODAVÍA no cupieran los 3 en una fila (pantallas muy
   // angostas), se acomodan en 2 líneas en vez de desbordar o superponerse.

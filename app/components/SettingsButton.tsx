@@ -27,7 +27,22 @@ import { useTheme } from '../theme/ThemeContext';
 import { getSealUsage } from '../services/revenuecatService';
 import SettingsModal from './SettingsModal';
 
-export default function SettingsButton({ inline }: { inline?: boolean }) {
+export default function SettingsButton({
+  inline,
+  onSettingsClosed,
+}: {
+  inline?: boolean;
+  /** Se llama al cerrar Ajustes, ADEMÁS del refresco interno de la
+   * insignia PRO de este mismo botón — sin esto, una pantalla que
+   * también depende de `isPro` (ej. CaptureScreen: gatea la selección
+   * múltiple de galería) se queda con un valor viejo hasta que cambias
+   * de pestaña, porque Ajustes es un modal por ENCIMA de la pantalla
+   * actual, no una pantalla de navegación distinta — useFocusEffect
+   * nunca se dispara al cerrarlo, solo al cambiar de pestaña de verdad.
+   * Bug real encontrado probando "activar Modo prueba y sellar varias
+   * sin salir de Sellar". */
+  onSettingsClosed?: () => void;
+}) {
   const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
   const [isPro, setIsPro] = useState(false);
@@ -45,6 +60,7 @@ export default function SettingsButton({ inline }: { inline?: boolean }) {
   function handleClose() {
     setVisible(false);
     getSealUsage().then((u) => setIsPro(u.isPro));
+    onSettingsClosed?.();
   }
 
   return (

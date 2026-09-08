@@ -113,7 +113,19 @@ export default function AnimatedIntro({ onFinish }: { onFinish: () => void }) {
         </View>
 
         <View style={styles.wordmarkWrap}>
-          <CascadeText text="VERITY" play={playCascade} onComplete={handleCascadeComplete} />
+          {/* CascadeText usa '#1A1A1F' (casi negro) por defecto — tenía
+              sentido cuando el fondo del splash era claro (se decidió así
+              explícitamente), pero se volvió invisible al pasar el fondo
+              de esta pantalla a '#0B0B0F' (casi negro también) para
+              arreglar el salto claro→oscuro. Bug real, no cosmético: el
+              wordmark completo desaparecía. Color claro explícito para
+              que quede visible sobre el fondo oscuro actual. */}
+          <CascadeText
+            text="VERITY"
+            color="#F2F2F5"
+            play={playCascade}
+            onComplete={handleCascadeComplete}
+          />
         </View>
       </Animated.View>
     </View>

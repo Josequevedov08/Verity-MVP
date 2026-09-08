@@ -25,12 +25,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const ACCENT = '#4C9AFF'; // mismo azul de marca que el ícono de la app y el splash.
 
-// Capturas REALES de la app misma (assets/images/onboarding/, copiadas de
-// assets/screenshots/) — se descartó generar imágenes nuevas con IA para
-// esto: varios intentos (Canva, luego prompts detallados) salieron
-// abstractos/genéricos o con conceptos que no comunicaban el mensaje
-// correcto. Usar la app de verdad es literal, cero riesgo de que se vea
-// mal, y es honesto (es exactamente lo que el usuario va a usar).
+// Fotos reales (assets/images/onboarding/, provistas por el usuario en
+// reference/Img/) — se descartó por completo generar imágenes con IA para
+// esto: varios intentos (Canva con queries abstractas, luego prompts
+// fotográficos detallados) salieron genéricos o con conceptos que no
+// comunicaban el mensaje correcto. Un intento intermedio usó capturas de
+// pantalla de la propia app como fondo, pero se veía mal (texto de UI
+// sobre texto de UI, ilegible) — se descartó también.
 interface Slide {
   title: string;
   body: string;
@@ -43,25 +44,25 @@ const SLIDES: Slide[] = [
     title: 'Una foto se puede editar después',
     body: 'Un filtro, una recompresión, hasta reenviarla por WhatsApp — cualquier cambio, y ya no es exactamente la misma foto.',
     icon: 'color-wand-outline',
-    image: require('../../assets/images/onboarding/slide-1-edicion.jpeg'),
+    image: require('../../assets/images/onboarding/slide-1-edicion.jpg'),
   },
   {
     title: 'Un sello de Verity, no',
     body: 'Por eso tomamos la foto aquí dentro, no desde tu galería: así probamos que existía en este momento exacto, sin ediciones.',
     icon: 'camera-outline',
-    image: require('../../assets/images/onboarding/slide-2-camara.jpeg'),
+    image: require('../../assets/images/onboarding/slide-2-camara.jpg'),
   },
   {
     title: 'Toma 2 segundos más',
     body: 'Y esos 2 segundos son la prueba. Así funciona un notario — y así funciona Verity.',
     icon: 'time-outline',
-    image: require('../../assets/images/onboarding/slide-3-tiempo.jpeg'),
+    image: require('../../assets/images/onboarding/slide-3-tiempo.jpg'),
   },
   {
     title: '30 sellos gratis cada mes',
     body: 'Uno al día, todos los días. Si necesitas más, Verity PRO ($4.99/mes) los deja ilimitados — pero nunca es obligatorio para verificar nada.',
     icon: 'ribbon-outline',
-    image: require('../../assets/images/onboarding/slide-4-gratis.jpeg'),
+    image: require('../../assets/images/onboarding/slide-4-gratis.jpg'),
   },
 ];
 
