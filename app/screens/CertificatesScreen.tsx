@@ -229,7 +229,7 @@ export default function CertificatesScreen() {
           {
             targetRef: toggleButtonRef,
             title: 'Lista o grilla, como prefieras',
-            text: 'Toca aquí para cambiar entre ver tu historial en lista (con detalle) o en grilla (como una galería) — el nivel de confianza de cada sello se ve igual en ambas.',
+            text: 'Toca aquí para cambiar entre ver tu historial en lista (con detalle) o en grilla (como una galería). El nivel de confianza de cada sello se ve igual en ambas.',
           },
           // Solo si ya hay certificados (StatsCard no se renderiza
           // vacía) — si no, este paso no tendría nada que medir y la
@@ -239,7 +239,7 @@ export default function CertificatesScreen() {
                 {
                   targetRef: statsCardRef,
                   title: 'Nivel de confianza: Alta, Media, Baja',
-                  text: 'No dice si tu foto o video es real o falso — dice qué tanta información hay sobre cómo se tomó. Toca la insignia de confianza dentro de cualquier certificado para más detalle.',
+                  text: 'No dice si tu foto o video es real o falso: dice qué tanta información hay sobre cómo se tomó. Toca la insignia de confianza dentro de cualquier certificado para más detalle.',
                 },
               ]
             : []),

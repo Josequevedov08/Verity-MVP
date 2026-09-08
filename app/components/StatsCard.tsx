@@ -23,11 +23,11 @@ import type { VerityCertificate } from '../../documentation/technical/verity-pro
 function showTrustLevelInfo() {
   Alert.alert(
     '¿Qué significa el nivel de confianza?',
-    'No dice si tu foto o video es real o falso — dice qué tanta información tenemos sobre CÓMO se tomó.\n\n' +
+    'No dice si tu foto o video es real o falso: dice qué tanta información tenemos sobre CÓMO se tomó.\n\n' +
       '• Alta: se tomó con la cámara de Verity, con ubicación y hora confirmadas.\n' +
       '• Media: viene de tu galería, pero trae información de fecha (o es un video).\n' +
       '• Baja: no hay información extra disponible (común en fotos de galería sin esos datos, por ejemplo si te las mandaron por WhatsApp).\n\n' +
-      'En los 3 casos el sello es igual de válido — la diferencia es solo cuánta evidencia extra tenemos sobre el origen.'
+      'En los 3 casos el sello es igual de válido. La diferencia es solo cuánta evidencia extra tenemos sobre el origen.'
   );
 }
 

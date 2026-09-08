@@ -42,7 +42,7 @@ interface Slide {
 const SLIDES: Slide[] = [
   {
     title: 'Una foto se puede editar después',
-    body: 'Un filtro, una recompresión, hasta reenviarla por WhatsApp — cualquier cambio, y ya no es exactamente la misma foto.',
+    body: 'Un filtro, una recompresión, hasta reenviarla por WhatsApp: cualquier cambio, y ya no es exactamente la misma foto.',
     icon: 'color-wand-outline',
     image: require('../../assets/images/onboarding/slide-1-edicion.jpg'),
   },
@@ -54,13 +54,13 @@ const SLIDES: Slide[] = [
   },
   {
     title: 'Toma 2 segundos más',
-    body: 'Y esos 2 segundos son la prueba. Así funciona un notario — y así funciona Verity.',
+    body: 'Y esos 2 segundos son la prueba. Así funciona un notario, y así funciona Verity.',
     icon: 'time-outline',
     image: require('../../assets/images/onboarding/slide-3-tiempo.jpg'),
   },
   {
     title: '30 sellos gratis cada mes',
-    body: 'Uno al día, todos los días. Si necesitas más, Verity PRO ($4.99/mes) los deja ilimitados — pero nunca es obligatorio para verificar nada.',
+    body: 'Uno al día, todos los días. Si necesitas más, Verity PRO ($4.99/mes) los deja ilimitados, pero nunca es obligatorio para verificar nada.',
     icon: 'ribbon-outline',
     image: require('../../assets/images/onboarding/slide-4-gratis.jpg'),
   },

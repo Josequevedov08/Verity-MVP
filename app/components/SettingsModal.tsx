@@ -53,7 +53,7 @@ const APP_ICON = require('../../assets/icons/app-icon.png');
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.3.29';
+const APP_VERSION = '0.3.30';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -172,7 +172,7 @@ export default function SettingsModal({
   async function handleBackupWallet() {
     Alert.alert(
       'Respaldar tu wallet',
-      'Se va a generar un archivo con la clave de tu wallet. Guárdalo en un lugar seguro y NUNCA lo compartas — quien lo tenga puede sellar como si fuera este teléfono. Es la única forma de recuperar tu identidad si pierdes el teléfono o borras los datos de la app.',
+      'Se va a generar un archivo con la clave de tu wallet. Guárdalo en un lugar seguro y NUNCA lo compartas: quien lo tenga puede sellar como si fuera este teléfono. Es la única forma de recuperar tu identidad si pierdes el teléfono o borras los datos de la app.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -580,7 +580,7 @@ export default function SettingsModal({
         onPurchased={() => {
           setPaywallVisible(false);
           getSealUsage().then(setUsage);
-          Alert.alert('¡Listo!', 'Ya eres PRO — sellos ilimitados.');
+          Alert.alert('¡Listo!', 'Ya eres PRO: sellos ilimitados.');
         }}
       />
     </Modal>

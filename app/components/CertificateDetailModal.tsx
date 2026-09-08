@@ -264,8 +264,8 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
    */
   async function handleShare() {
     const message =
-      `Este/a ${mediaLabel} fue sellado/a con Verity. Número de sello: ${certificate.anchor.txHash} ` +
-      `— compruébalo en ${certificate.anchor.explorerUrl}`;
+      `Este/a ${mediaLabel} fue sellado/a con Verity. Número de sello: ${certificate.anchor.txHash}. ` +
+      `Compruébalo en ${certificate.anchor.explorerUrl}`;
 
     await Clipboard.setStringAsync(message);
 
@@ -283,7 +283,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
 
     Alert.alert(
       'Mensaje de verificación copiado',
-      'Pégalo donde quieras compartirlo — incluye el número de sello y el enlace para comprobarlo.'
+      'Pégalo donde quieras compartirlo. Incluye el número de sello y el enlace para comprobarlo.'
     );
   }
 
@@ -303,18 +303,18 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   function handleTrustInfo() {
     Alert.alert(
       '¿Qué significa el nivel de confianza?',
-      'No dice si tu foto o video es real o falso — dice qué tanta información tenemos sobre CÓMO se tomó.\n\n' +
+      'No dice si tu foto o video es real o falso: dice qué tanta información tenemos sobre CÓMO se tomó.\n\n' +
         '• Alta: se tomó con la cámara de Verity, con ubicación y hora confirmadas.\n' +
         '• Media: viene de tu galería, pero trae información de fecha (o es un video).\n' +
         '• Baja: no hay información extra disponible (común en fotos de galería sin esos datos, por ejemplo si te las mandaron por WhatsApp).\n\n' +
-        'En los 3 casos el sello es igual de válido — la diferencia es solo cuánta evidencia extra tenemos sobre el origen.'
+        'En los 3 casos el sello es igual de válido. La diferencia es solo cuánta evidencia extra tenemos sobre el origen.'
     );
   }
 
   function handleRefInfo() {
     Alert.alert(
       '¿Qué es este número?',
-      'Es el número de orden en que sellaste este archivo en tu teléfono (ej. tu sello #1, #2, #3...) — te sirve para nombrar u ordenar tus propios archivos. No es el número de sello para verificar: para eso usa el "Número de sello completo" de más abajo.'
+      'Es el número de orden en que sellaste este archivo en tu teléfono (ej. tu sello #1, #2, #3...). Te sirve para nombrar u ordenar tus propios archivos. No es el número de sello para verificar: para eso usa el "Número de sello completo" de más abajo.'
     );
   }
 
@@ -459,7 +459,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                   onPressOut={resumeAutoReturn}
                 >
                   <Image source={{ uri: certificate.thumbnailUri }} style={styles.cardBackImage} resizeMode="cover" />
-                  <Text style={styles.cardBackLabel}>CERTIFICADO VERITY — FOTO ORIGINAL</Text>
+                  <Text style={styles.cardBackLabel}>CERTIFICADO VERITY · FOTO ORIGINAL</Text>
                 </Pressable>
                 <Pressable style={styles.backToCardButton} onPress={handleCardTap} hitSlop={8}>
                   <Ionicons name="arrow-back" size={16} color="#fff" />
@@ -471,7 +471,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                 <SealMedallion trustLevel={certificate.trustLevel} size={190} />
                 <Text style={[styles.cardBackNoMediaText, { color: colors.textMuted }]}>
                   Este {mediaLabel} no está guardado en este teléfono (el certificado se restauró desde una
-                  copia de seguridad, que nunca incluye archivos), pero el sello sigue siendo 100% válido —
+                  copia de seguridad, que nunca incluye archivos), pero el sello sigue siendo 100% válido,
                   anclado en Polygon Amoy con el número de sello de arriba.
                 </Text>
                 <Pressable

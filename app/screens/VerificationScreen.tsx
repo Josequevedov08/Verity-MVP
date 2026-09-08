@@ -228,7 +228,7 @@ export default function VerificationScreen() {
         </View>
         <Text style={[styles.notaryText, { color: colors.textMuted }]}>
           Todo lo que se verifica aquí queda comprobado directamente contra
-          el registro público de Polygon — nadie puede alterarlo después.
+          el registro público de Polygon. Nadie puede alterarlo después.
         </Text>
       </View>
 
@@ -467,7 +467,7 @@ export default function VerificationScreen() {
           {
             targetRef: sealInputRef,
             title: 'Comprueba cualquier sello',
-            text: 'Pega aquí un número de sello (0x...) que te haya compartido alguien — Verity lo busca directo en el registro público para confirmar si es real, sin necesitar el archivo.',
+            text: 'Pega aquí un número de sello (0x...) que te haya compartido alguien. Verity lo busca directo en el registro público para confirmar si es real, sin necesitar el archivo.',
           },
         ]}
         onFinish={() => {

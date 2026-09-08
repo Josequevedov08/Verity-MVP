@@ -101,7 +101,7 @@ function describeSealError(error: unknown): string {
   const code = (error as { code?: string } | null)?.code;
   const rawMessage = error instanceof Error ? error.message : String(error);
   if (code === 'INSUFFICIENT_FUNDS' || /insufficient funds/i.test(rawMessage)) {
-    return 'Tu sello está casi listo — dale unos segundos más e inténtalo de nuevo.';
+    return 'Tu sello está casi listo, dale unos segundos más e inténtalo de nuevo.';
   }
 
   return 'No pudimos completar el sello. Revisa tu conexión e inténtalo de nuevo.';
@@ -772,7 +772,7 @@ export default function CaptureScreen() {
               {isDuplicate && (
                 <View style={[styles.duplicateBox, { borderColor: colors.warning, backgroundColor: colors.background }]}>
                   <Text style={[styles.duplicateText, { color: colors.warning }]}>
-                    Ya habías sellado este archivo antes — aquí está tu certificado. No se
+                    Ya habías sellado este archivo antes. Aquí está tu certificado: no se
                     generó un sello nuevo ni se gastó gas de nuevo.
                   </Text>
                 </View>
@@ -809,7 +809,7 @@ export default function CaptureScreen() {
           {
             targetRef: primaryButtonRef,
             title: 'Sella tu primera foto o video',
-            text: 'Toca aquí para tomar una foto con la cámara de Verity — Verity calcula su huella digital y la registra en un registro público, sin subir el archivo a ningún lado.',
+            text: 'Toca aquí para tomar una foto con la cámara de Verity. Calcula su huella digital y la registra en un registro público, sin subir el archivo a ningún lado.',
           },
           {
             targetRef: secondaryRowRef,
@@ -835,7 +835,7 @@ export default function CaptureScreen() {
         onPurchased={() => {
           setPaywallVisible(false);
           refreshUsage();
-          Alert.alert('¡Listo!', 'Ya eres PRO — sellos ilimitados. Toca "Tomar foto" de nuevo para continuar.');
+          Alert.alert('¡Listo!', 'Ya eres PRO: sellos ilimitados. Toca "Tomar foto" de nuevo para continuar.');
         }}
       />
     </>
