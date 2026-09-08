@@ -344,7 +344,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                 <Text style={[styles.title, { color: colors.text }]}>CERTIFICADO VERITY</Text>
                 <Pressable onPress={handleRefInfo} hitSlop={6} style={styles.refRow}>
                   <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-                    Sello {formatSequenceRef(certificate)} · Polygon Amoy
+                    Nº de orden {formatSequenceRef(certificate)} · Polygon Amoy
                   </Text>
                   <Ionicons name="information-circle-outline" size={13} color={colors.textMuted} />
                 </Pressable>

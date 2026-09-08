@@ -280,7 +280,7 @@ export default function VerificationScreen() {
               </Text>
               {fileResult.entry.sequenceNumber && (
                 <Text style={[styles.hashLabel, { color: colors.textMuted }]}>
-                  Número de sello: {fileResult.entry.sequenceNumber}
+                  Nº de orden: {fileResult.entry.sequenceNumber}
                 </Text>
               )}
               <Text style={[styles.hashLabel, { color: colors.textMuted }]}>Nivel de confianza</Text>

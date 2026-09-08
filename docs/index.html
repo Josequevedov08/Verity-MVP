@@ -460,7 +460,7 @@
       querying: 'Consultando Polygon Amoy...',
       fileFoundTitle: 'Este archivo está sellado con Verity',
       trustLevel: 'Nivel de confianza',
-      sealNumber: 'Número de sello',
+      orderNumber: 'Nº de orden',
       sealedOn: 'Sellado el',
       registry: 'Registro',
       fileNotFoundTitle: 'No encontrado en el índice público',
@@ -498,7 +498,7 @@
       querying: 'Querying Polygon Amoy...',
       fileFoundTitle: 'This file is sealed with Verity',
       trustLevel: 'Trust level',
-      sealNumber: 'Seal number',
+      orderNumber: 'Order No.',
       sealedOn: 'Sealed on',
       registry: 'Registry',
       fileNotFoundTitle: 'Not found in the public index',
@@ -626,7 +626,7 @@
         <div class="result ok">
           <div class="result-head"><span class="result-dot"></span> ${t('fileFoundTitle')}</div>
           <div class="row"><b>${t('trustLevel')}</b><span>${t('trustValues')[e.trust_level] ?? e.trust_level}</span></div>
-          ${e.sequence_number ? `<div class="row"><b>${t('sealNumber')}</b><span class="mono">${e.sequence_number}</span></div>` : ''}
+          ${e.sequence_number ? `<div class="row"><b>${t('orderNumber')}</b><span class="mono">${e.sequence_number}</span></div>` : ''}
           <div class="row"><b>${t('sealedOn')}</b><span>${new Date(e.sealed_at).toLocaleString()}</span></div>
           <div class="row"><b>${t('registry')}</b><span><a href="${EXPLORER(e.tx_hash)}" target="_blank" rel="noopener">Polygonscan ↗</a></span></div>
         </div>`;
