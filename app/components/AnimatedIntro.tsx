@@ -153,12 +153,15 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 28,
-    // Mismos colores que el ícono real de la app (assets/icons/app-icon.png)
-    // — antes este cuadro era negro puro con "VRT" en blanco, el mismo
-    // placeholder que tenía el ícono antes de llevarlo al azul de marca;
-    // se quedó desactualizado cuando cambiamos el ícono y nadie lo notó
-    // hasta que el usuario lo señaló probando en el teléfono.
-    backgroundColor: '#0B0B0F',
+    // Antes era '#0B0B0F' (igual que el ícono real de la app) — tenía
+    // sentido cuando el fondo de ESTA pantalla era claro, pero desde que
+    // page.backgroundColor pasó a ser el mismo #0B0B0F (ver arriba), un
+    // cuadro negro sobre fondo negro se pierde por completo: sin
+    // contraste, solo se distinguía por una sombra que tampoco se nota
+    // sobre negro. Blanco acá (distinto del ícono real del launcher,
+    // que sí es negro — ahí el contraste lo da el wallpaper del
+    // teléfono, no esta pantalla) para que el cuadro se vea de verdad.
+    backgroundColor: '#F2F2F5',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
