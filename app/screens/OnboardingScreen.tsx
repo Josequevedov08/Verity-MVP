@@ -25,17 +25,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const ACCENT = '#4C9AFF'; // mismo azul de marca que el ícono de la app y el splash.
 
-// Misma foto real que ya usa el banner PRO/paywall (PaywallModal.tsx,
-// SettingsModal.tsx) — se decidió deliberadamente NO generar imágenes
-// nuevas con IA para esto: dos intentos con generación abstracta salieron
-// genéricos y feos (ver historial), así que se reutiliza una foto real ya
-// aprobada en el resto de la app en vez de arriesgar algo nuevo.
-const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
-
+// Capturas REALES de la app misma (assets/images/onboarding/, copiadas de
+// assets/screenshots/) — se descartó generar imágenes nuevas con IA para
+// esto: varios intentos (Canva, luego prompts detallados) salieron
+// abstractos/genéricos o con conceptos que no comunicaban el mensaje
+// correcto. Usar la app de verdad es literal, cero riesgo de que se vea
+// mal, y es honesto (es exactamente lo que el usuario va a usar).
 interface Slide {
   title: string;
   body: string;
   icon: keyof typeof Ionicons.glyphMap;
+  image: ReturnType<typeof require>;
 }
 
 const SLIDES: Slide[] = [
@@ -43,21 +43,25 @@ const SLIDES: Slide[] = [
     title: 'Una foto se puede editar después',
     body: 'Un filtro, una recompresión, hasta reenviarla por WhatsApp — cualquier cambio, y ya no es exactamente la misma foto.',
     icon: 'color-wand-outline',
+    image: require('../../assets/images/onboarding/slide-1-edicion.jpeg'),
   },
   {
     title: 'Un sello de Verity, no',
     body: 'Por eso tomamos la foto aquí dentro, no desde tu galería: así probamos que existía en este momento exacto, sin ediciones.',
     icon: 'camera-outline',
+    image: require('../../assets/images/onboarding/slide-2-camara.jpeg'),
   },
   {
     title: 'Toma 2 segundos más',
     body: 'Y esos 2 segundos son la prueba. Así funciona un notario — y así funciona Verity.',
     icon: 'time-outline',
+    image: require('../../assets/images/onboarding/slide-3-tiempo.jpeg'),
   },
   {
     title: '30 sellos gratis cada mes',
     body: 'Uno al día, todos los días. Si necesitas más, Verity PRO ($4.99/mes) los deja ilimitados — pero nunca es obligatorio para verificar nada.',
     icon: 'ribbon-outline',
+    image: require('../../assets/images/onboarding/slide-4-gratis.jpeg'),
   },
 ];
 
@@ -68,13 +72,14 @@ export default function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      {/* Hero: la misma foto real del banner PRO/paywall, con un degradado
-          que la funde limpio con el fondo oscuro del resto de la pantalla
-          — mismo patrón que PaywallModal.tsx/SettingsModal.tsx
-          (ImageBackground + LinearGradient + insignia flotante partida
-          entre las dos secciones), para que el onboarding tenga el mismo
-          lenguaje visual que el resto de la app en vez de verse plano. */}
-      <ImageBackground source={HERO_IMAGE} style={styles.hero} resizeMode="cover">
+      {/* Hero: captura real de la app (distinta por pantalla, ver arriba),
+          con un degradado que la funde limpio con el fondo oscuro del
+          resto de la pantalla — mismo patrón que
+          PaywallModal.tsx/SettingsModal.tsx (ImageBackground +
+          LinearGradient + insignia flotante partida entre las dos
+          secciones), para que el onboarding tenga el mismo lenguaje
+          visual que el resto de la app en vez de verse plano. */}
+      <ImageBackground source={slide.image} style={styles.hero} resizeMode="cover">
         <LinearGradient
           colors={['transparent', '#111111']}
           start={{ x: 0.5, y: 0.35 }}
