@@ -33,17 +33,17 @@ export interface PublicIndexEntry {
 }
 
 /**
- * Envía los metadatos públicos de un certificado recién sellado al índice.
- * Deliberadamente "fire and forget": nunca debe bloquear ni romper el
- * sellado si falla (sin internet hacia Supabase, índice caído, etc.) — el
- * certificado ya quedó anclado en Polygon de todas formas, que es lo que
- * de verdad importa. Esto es solo una comodidad de búsqueda encima.
+ * Envía los metadatos públicos de UN certificado al índice. Llamada desde
+ * el sellado normal, es deliberadamente "fire and forget" (nunca debe
+ * bloquear ni romper el sellado si falla) — pero SÍ devuelve si funcionó,
+ * porque también la usa syncAllToPublicIndex(), que necesita saberlo para
+ * poder mostrar un resumen real ("18 de 20 sincronizados").
  */
-export async function submitToPublicIndex(certificate: VerityCertificate): Promise<void> {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
+export async function submitToPublicIndex(certificate: VerityCertificate): Promise<boolean> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return false;
 
   try {
-    await fetch(`${SUPABASE_URL}/functions/v1/submit-certificate`, {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/submit-certificate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -63,9 +63,36 @@ export async function submitToPublicIndex(certificate: VerityCertificate): Promi
         sealedAt: certificate.anchor.anchoredAt,
       }),
     });
+    return res.ok;
   } catch (error) {
     console.warn('No se pudo registrar el certificado en el índice público (no es crítico):', error);
+    return false;
   }
+}
+
+export interface SyncSummary {
+  total: number;
+  synced: number;
+}
+
+/**
+ * Registra en el índice público TODOS los certificados que ya existen en
+ * el historial local, uno por uno. Existe porque el envío automático al
+ * sellar (submitToPublicIndex, arriba) solo se agregó en 0.3.3 — todo lo
+ * sellado ANTES de esa versión quedó huérfano del índice para siempre, sin
+ * esto: el archivo no cambió, pero "por archivo" en la web pública nunca
+ * lo iba a encontrar. Se usa desde Ajustes ("Sincronizar con el índice
+ * público"). No hace falta esperar entre llamadas (a diferencia del
+ * sellado en lote): esto no ancla nada nuevo en la blockchain, solo
+ * escribe filas en Supabase.
+ */
+export async function syncAllToPublicIndex(certificates: VerityCertificate[]): Promise<SyncSummary> {
+  let synced = 0;
+  for (const certificate of certificates) {
+    const ok = await submitToPublicIndex(certificate);
+    if (ok) synced += 1;
+  }
+  return { total: certificates.length, synced };
 }
 
 /**

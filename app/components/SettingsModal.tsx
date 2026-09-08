@@ -15,7 +15,7 @@
  * para hacer scroll y visualmente consistente con el resto de la app.
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, Image, ImageBackground, ScrollView, Alert, Switch } from 'react-native';
+import { View, Text, Modal, Pressable, StyleSheet, Image, ImageBackground, ScrollView, Alert, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 // Import directo al submódulo (ver SettingsButton.tsx para el porqué:
@@ -33,6 +33,8 @@ import {
   restoreDeviceWalletFromPrivateKey,
 } from '../services/blockchainService';
 import { resetAllCoachMarks } from '../utils/coachMarkUtils';
+import { getCertificates } from '../utils/cryptoUtils';
+import { syncAllToPublicIndex } from '../services/verificationIndexService';
 import {
   getSealUsage,
   restorePurchases,
@@ -49,7 +51,7 @@ const APP_ICON = require('../../assets/icons/app-icon.png');
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.3.4';
+const APP_VERSION = '0.3.5';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -77,6 +79,7 @@ export default function SettingsModal({
   // Modo prueba (solo __DEV__) — ver revenuecatService.ts. Nunca existe
   // en un build de producción real.
   const [devProOverride, setDevProOverrideState] = useState(false);
+  const [syncingIndex, setSyncingIndex] = useState(false);
 
   async function handleToggleDevPro(next: boolean) {
     setDevProOverrideState(next);
@@ -232,6 +235,34 @@ export default function SettingsModal({
         },
       ]
     );
+  }
+
+  /**
+   * Registra en el índice público TODO el historial local de este
+   * dispositivo, de una sola vez. Existe porque el envío automático al
+   * sellar (ver CaptureScreen.tsx) solo se agregó en la versión 0.3.3 —
+   * cualquier cosa sellada ANTES quedó huérfana del índice para siempre
+   * sin esto: el archivo no cambió, pero "por archivo" en la página
+   * pública de verificación nunca lo iba a encontrar (solo "por número de
+   * sello" funcionaba, porque ese consulta la blockchain directo).
+   */
+  async function handleSyncPublicIndex() {
+    setSyncingIndex(true);
+    try {
+      const certificates = await getCertificates();
+      const summary = await syncAllToPublicIndex(certificates);
+      Alert.alert(
+        'Listo',
+        summary.total === 0
+          ? 'Todavía no tienes ningún sello que sincronizar.'
+          : `${summary.synced} de ${summary.total} certificados quedaron en el índice público.`
+      );
+    } catch (error) {
+      console.error('Error al sincronizar el índice público:', error);
+      Alert.alert('Error', 'No se pudo completar la sincronización. Intenta de nuevo.');
+    } finally {
+      setSyncingIndex(false);
+    }
   }
 
   return (
@@ -459,6 +490,29 @@ export default function SettingsModal({
               >
                 <Text style={[styles.legalRowLabel, { color: colors.text }]}>Restaurar desde respaldo</Text>
                 <Ionicons name="cloud-upload-outline" size={18} color={colors.textMuted} />
+              </Pressable>
+            </View>
+
+            <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: 24 }]}>
+              VERIFICACIÓN PÚBLICA
+            </Text>
+            <Text style={[styles.walletHint, { color: colors.textMuted }]}>
+              El envío automático al índice público (para que "por archivo"
+              funcione en{' '}
+              <Text style={{ fontWeight: '700' }}>josequevedov08.github.io/Verity-MVP</Text>
+              {' '}sin instalar la app) empezó en la versión 0.3.3 — si sellaste
+              algo antes de eso, tócalo para que aparezca también.
+            </Text>
+            <View style={[styles.aboutCard, { backgroundColor: colors.background, borderColor: colors.border, padding: 4 }]}>
+              <Pressable style={styles.legalRow} onPress={handleSyncPublicIndex} disabled={syncingIndex}>
+                <Text style={[styles.legalRowLabel, { color: colors.text }]}>
+                  {syncingIndex ? 'Sincronizando...' : 'Sincronizar con el índice público'}
+                </Text>
+                {syncingIndex ? (
+                  <ActivityIndicator size="small" color={colors.accent} />
+                ) : (
+                  <Ionicons name="sync-outline" size={18} color={colors.textMuted} />
+                )}
               </Pressable>
             </View>
 
