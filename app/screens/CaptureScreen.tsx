@@ -63,6 +63,38 @@ type CaptureStep = 'idle' | 'hashing' | 'anchoring' | 'done' | 'error';
  * límite de producto. */
 const MAX_BATCH_SIZE = 50;
 
+/**
+ * Traduce un error de sellado a un mensaje pensado para el usuario. Antes
+ * TODO error que no fuera "archivo demasiado pesado" caía en un genérico
+ * "revisa tu conexión" — engañoso cuando la causa real era que la wallet
+ * del dispositivo se quedó sin gas (ver blockchainService.ts →
+ * ensureWalletHasGas) y el usuario sí tenía internet, como pasó probando
+ * la primera APK: ese mensaje lo hizo sospechar de su wifi/datos cuando
+ * el problema era otro por completo.
+ */
+function describeSealError(error: unknown): string {
+  // Los errores que lanzamos nosotros mismos (ej. archivo demasiado
+  // pesado) ya vienen en un texto pensado para el usuario -- se muestran
+  // tal cual en vez de reemplazarlos.
+  if (error instanceof Error && error.message.includes('demasiado pesado')) {
+    return error.message;
+  }
+
+  // ethers.js identifica los fondos insuficientes con code
+  // 'INSUFFICIENT_FUNDS', o el mensaje del nodo suele mencionar "insufficient
+  // funds" — se cubren ambas formas por si acaso. Con el financiamiento
+  // automático (ensureWalletHasGas) esto debería auto-resolverse solo con
+  // reintentar en unos segundos, así que el mensaje invita a eso en vez de
+  // culpar a la conexión del usuario.
+  const code = (error as { code?: string } | null)?.code;
+  const rawMessage = error instanceof Error ? error.message : String(error);
+  if (code === 'INSUFFICIENT_FUNDS' || /insufficient funds/i.test(rawMessage)) {
+    return 'Tu sello está casi listo — dale unos segundos más e inténtalo de nuevo.';
+  }
+
+  return 'No pudimos completar el sello. Revisa tu conexión e inténtalo de nuevo.';
+}
+
 interface BatchState {
   total: number;
   processed: number;
@@ -329,14 +361,7 @@ export default function CaptureScreen() {
       setStep('done');
     } catch (error) {
       console.error('Error al sellar el archivo:', error);
-      // Los errores que lanzamos nosotros mismos (ej. archivo demasiado
-      // pesado) ya vienen en un texto pensado para el usuario -- se
-      // muestran tal cual en vez del mensaje genérico de conexión.
-      const message =
-        error instanceof Error && error.message.includes('demasiado pesado')
-          ? error.message
-          : 'No pudimos completar el sello. Revisa tu conexión e inténtalo de nuevo.';
-      setErrorMessage(message);
+      setErrorMessage(describeSealError(error));
       setStep('error');
     }
   }

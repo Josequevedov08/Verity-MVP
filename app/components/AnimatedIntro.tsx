@@ -125,7 +125,15 @@ export { PAUSE_MS };
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#F2F2F5',
+    // Antes era '#F2F2F5' (gris claro) — un resto de cuando el ícono era
+    // negro puro sobre fondo claro. Cuando el ícono pasó a este mismo
+    // #0B0B0F oscuro (ver styles.container abajo), este fondo se quedó
+    // desactualizado: se veía un cuadro oscuro flotando sobre una pantalla
+    // clara, y justo después arranca el onboarding en modo oscuro — un
+    // salto de claro a oscuro notorio que el usuario señaló probando en el
+    // teléfono. Ahora todo el splash es de un solo tono, consistente con
+    // el resto de la app.
+    backgroundColor: '#0B0B0F',
     alignItems: 'center',
     justifyContent: 'center',
   },
