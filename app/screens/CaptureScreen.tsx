@@ -501,23 +501,6 @@ export default function CaptureScreen() {
     setBatch(null);
   }
 
-  // Reduce la fricción de uso: al abrir la app (después del onboarding),
-  // se dispara la cámara automáticamente en vez de esperar a que el
-  // usuario toque "Tomar foto" — la pantalla de Sellar es la pestaña
-  // inicial, así que esto hace que abrir Verity se sienta tan directo
-  // como abrir la cámara nativa. Si el usuario cancela o rechaza el
-  // permiso, cae de vuelta en la pantalla normal con los dos botones.
-  // El ref evita que se repita al cambiar de pestaña y volver (React
-  // Navigation mantiene esta pantalla montada), solo ocurre una vez por
-  // apertura de la app.
-  const autoLaunchedRef = useRef(false);
-  useEffect(() => {
-    if (autoLaunchedRef.current) return;
-    autoLaunchedRef.current = true;
-    handleCameraCapture('photo');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <>
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
