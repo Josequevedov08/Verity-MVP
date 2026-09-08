@@ -13,7 +13,8 @@
  * El archivo original NUNCA se sube a ningún servidor — ver hashService.ts.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -97,9 +98,17 @@ export default function CaptureScreen() {
     return u;
   }
 
-  useEffect(() => {
-    refreshUsage();
-  }, []);
+  // Antes era un useEffect de una sola vez al montar — como esta
+  // pantalla se queda montada al cambiar de pestaña (es la inicial),
+  // activar/restaurar PRO desde Ajustes (otra pantalla) nunca se
+  // reflejaba acá hasta reiniciar la app entera. useFocusEffect lo
+  // vuelve a consultar cada vez que se regresa a esta pestaña.
+  useFocusEffect(
+    useCallback(() => {
+      refreshUsage();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  );
 
   /** Se llama al INICIO de cualquier acción que vaya a sellar algo. Si
    * ya se llegó al límite gratis del mes, muestra el paywall en vez de
