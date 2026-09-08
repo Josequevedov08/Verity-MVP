@@ -2,7 +2,7 @@
   "expo": {
     "name": "Verity",
     "slug": "verity-mvp",
-    "version": "0.3.20",
+    "version": "0.3.21",
     "orientation": "portrait",
     "icon": "./assets/icons/app-icon.png",
     "userInterfaceStyle": "automatic",
@@ -37,6 +37,14 @@
       "expo-sharing",
       "expo-font",
       "expo-video",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Verity necesita este permiso para guardar en tu galería las fotos y videos que sellas con la cámara.",
+          "savePhotosPermission": "Verity necesita este permiso para guardar en tu galería las fotos y videos que sellas con la cámara.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
       [
         "expo-splash-screen",
         {

@@ -4,8 +4,11 @@
  * Pantalla principal de "Sellar". Flujo (sin jerga técnica para el usuario):
  *
  *   1. Elegir foto (cámara de la app o galería)
- *   2. Si viene de la cámara, se guarda también en la galería del
- *      dispositivo (así queda disponible después para probarla en "Verificar")
+ *   2. Si viene de la cámara, se copia a una carpeta PROPIA y permanente
+ *      de Verity (ver saveCapturePermanently) Y ADEMÁS a la galería del
+ *      sistema (ver saveToSystemGallery) — así queda disponible después
+ *      para probarla en "Verificar", tanto desde "Mis sellos" como desde
+ *      la galería normal del teléfono.
  *   3. Calcular su "huella digital" en el propio teléfono (hashService)
  *   4. Registrarla en el "registro público" (blockchainService → Polygon Amoy)
  *   5. Mostrar el certificado con su nivel de confianza
@@ -29,6 +32,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as VideoThumbnails from 'expo-video-thumbnails';
+import * as MediaLibrary from 'expo-media-library';
 import { Directory, File, Paths } from 'expo-file-system';
 import { randomUUID } from 'expo-crypto';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -194,14 +198,10 @@ export default function CaptureScreen() {
   /**
    * Copia una foto tomada con la cámara de la app a una carpeta propia y
    * permanente de Verity (fuera de la caché temporal que usa la cámara).
-   *
-   * Nota: se evaluó guardarla directamente en la galería del sistema con
-   * expo-media-library, pero su API actual (SDK 57) requiere un
-   * "development build" nativo propio — no funciona dentro de Expo Go,
-   * que es como se prueba este MVP. Por eso se usa almacenamiento propio
-   * de la app (funciona en Expo Go sin builds nativas) + la pestaña
-   * "Verificar" ofrece elegir directamente de "Mis sellos" para cerrar
-   * el ciclo sin depender de la galería del sistema.
+   * Esta es la copia que Verity usa internamente (miniaturas, "Mis
+   * sellos", elegir de "Mis sellos" en Verificar) — independiente de si
+   * la copia en la galería del sistema (ver saveToSystemGallery, abajo)
+   * se pudo guardar o no.
    */
   async function saveCapturePermanently(uri: string, fileName: string): Promise<string> {
     try {
@@ -228,6 +228,36 @@ export default function CaptureScreen() {
     } catch (error) {
       console.warn('No se pudo guardar la copia permanente del archivo:', error);
       return uri;
+    }
+  }
+
+  /**
+   * Guarda una copia de la captura en la galería del sistema del
+   * teléfono (la app de Fotos de Android), además de la carpeta privada
+   * de Verity (saveCapturePermanently). Antes esto no era posible:
+   * expo-media-library necesita un "development build" nativo propio, y
+   * hasta que no existió el pipeline de EAS Build este MVP solo se
+   * probaba en Expo Go. Sin esto, una foto/video sellado con la cámara
+   * de Verity nunca podía aparecer en "Verificar → Elegir de mi
+   * galería" — no porque la verificación fallara, sino porque el
+   * archivo nunca llegaba a existir ahí para empezar.
+   *
+   * Se pide explícitamente el permiso "write-only" (solo agregar, ver
+   * `true` en requestPermissionsAsync) — Verity no necesita ver ni leer
+   * el resto de tu galería para esto, solo sumar un archivo.
+   *
+   * Fire-and-forget a propósito, igual que submitToPublicIndex: el
+   * hash ya se calculó ANTES de esto (paso 1 de sealAsset, sobre el
+   * archivo original), así que el sello ya es válido pase lo que pase
+   * acá — esto es un beneficio adicional, no un requisito para sellar.
+   */
+  async function saveToSystemGallery(uri: string): Promise<void> {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync(true);
+      if (status !== 'granted') return;
+      await MediaLibrary.saveToLibraryAsync(uri);
+    } catch (error) {
+      console.warn('No se pudo guardar la copia en la galería del sistema (no es crítico):', error);
     }
   }
 
@@ -337,6 +367,16 @@ export default function CaptureScreen() {
       // sello ya quedó anclado en Polygon pase lo que pase con esto, así
       // que nunca debe bloquear ni fallar el sellado en sí.
       submitToPublicIndex(newCertificate);
+
+      // Si viene de la cámara, también se guarda en la galería del
+      // sistema (además de la carpeta privada de Verity) — ver
+      // saveToSystemGallery. Se hashea ANTES de esto (paso 1, arriba),
+      // así que da igual lo que pase acá para la validez del sello; es
+      // fire-and-forget por la misma razón que submitToPublicIndex.
+      if (source === 'camera') {
+        saveToSystemGallery(asset.uri);
+      }
+
       return { certificate: newCertificate, duplicate: false };
   }
 

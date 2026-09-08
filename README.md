@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.20.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.21.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -45,15 +45,18 @@ Antes de sellar de verdad necesitas:
 1. Copiar `.env.example` a `.env` (el RPC de Polygon Amoy por defecto ya
    funciona sin más cambios; solo completa `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`
    cuando tengas cuenta de RevenueCat — ver "Freemium y pagos" abajo).
-2. Fondear la wallet del dispositivo con POL de prueba la primera vez
-   (gratis, vía [faucet oficial de Polygon](https://faucet.polygon.technology/),
-   red "Amoy") — la dirección se ve en Ajustes → "Wallet del dispositivo".
+2. Nada más — la wallet del dispositivo consigue su propio POL de
+   prueba sola, en silencio, la primera vez que hace falta (ver "Gas
+   automático para wallets nuevas" más abajo). Ya no hace falta ir a
+   ningún faucet a mano.
 
-⚠️ Importante: solo se probó en **Expo Go**. Algunos módulos nativos más
-nuevos (ej. `expo-media-library` para guardar en la galería del sistema)
-no funcionan dentro de Expo Go y requieren un "development build" — por
-eso se evitaron deliberadamente en este MVP (ver decisión documentada en
-`app/screens/CaptureScreen.tsx`).
+⚠️ Importante: probado tanto en **Expo Go** como en un build real de
+EAS (APK instalable). Un módulo nativo (`expo-media-library`, para
+guardar las capturas en la galería del sistema — ver "Qué SÍ incluye
+este MVP") solo funciona confiablemente en un build real; en Expo Go
+puede no pedir el permiso correcto, así que esa copia adicional puede
+fallar en silencio ahí sin afectar el sellado en sí (la copia interna
+de Verity, que es la que usa la app, siempre funciona en ambos).
 
 ## Qué SÍ incluye este MVP
 
@@ -110,6 +113,14 @@ eso se evitaron deliberadamente en este MVP (ver decisión documentada en
   huella digital, sin necesitar el número de sello a mano — más una
   página web (`docs/index.html`) para verificar sin instalar la app.
   Ver "Backend e índice público" más abajo.
+- **Guardado real en la galería del sistema** (`expo-media-library`):
+  una foto o video sellado con la cámara de Verity ahora también se
+  guarda en la galería normal del teléfono, no solo en la carpeta
+  privada de la app. Sin esto, "Verificar → Elegir de mi galería"
+  nunca podía encontrar algo sellado con la cámara — el archivo
+  simplemente no existía ahí. Solo se pide permiso de "agregar", no de
+  leer el resto de la galería. Requiere un build real (no funciona
+  confiablemente en Expo Go).
 
 ## Capturas de pantalla
 
@@ -176,9 +187,6 @@ También se evaluó y se descartó por ahora:
   build) y — más importante — debilitaría la garantía de nivel ALTO,
   porque ya no habría certeza de que el archivo no fue editado entre el
   momento de la captura real y el momento en que Verity lo detecta.
-- **Guardar automáticamente en la galería del sistema**
-  (`expo-media-library`): requiere development build, no funciona en
-  Expo Go — pospuesto a la fase de armar el APK.
 
 ## Respaldo y recuperación (qué pasa si pierdes el teléfono)
 
@@ -368,7 +376,7 @@ vez.
 - [x] Índice público (`backend/`, Supabase) + página web de verificación (`docs/index.html`)
 - [x] Gas automático para wallets nuevas (sin salir a un faucet externo)
 - [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro)
-- [ ] Guardar capturas en la galería del sistema (requiere development build)
+- [x] Guardar capturas en la galería del sistema (`expo-media-library`)
 - [ ] Selector de idioma (multi-idioma) — pospuesto a la fase del APK
 - [x] Ícono de la app (real, con la identidad del sello — ver abajo)
 - [ ] Screenshots para la ficha de Play Store/Devpost (`assets/`)

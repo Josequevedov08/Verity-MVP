@@ -1,6 +1,6 @@
 {
   "name": "verity-mvp",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -25,6 +25,7 @@
     "expo-image-picker": "~57.0.16",
     "expo-linear-gradient": "~57.0.1",
     "expo-location": "~57.0.16",
+    "expo-media-library": "~57.0.4",
     "expo-secure-store": "~57.0.3",
     "expo-sharing": "~57.0.18",
     "expo-splash-screen": "~57.0.8",
