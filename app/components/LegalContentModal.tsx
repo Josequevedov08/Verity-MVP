@@ -148,6 +148,10 @@ export const LEGAL_DOCS: Record<LegalDocId, LegalDoc> = {
         heading: '¿Verity funciona con fotos Y videos?',
         body: 'Sí, ambos se pueden sellar y verificar igual. Para video se extrae además un frame como vista previa, y puedes reproducirlo tocando la carta del certificado.',
       },
+      {
+        heading: 'Si dos personas dicen que el mismo sello es suyo, ¿a quién le cree Verity?',
+        body: 'Verity prueba qué archivo existía y en qué momento exacto, y qué wallet lo selló — no prueba quién es la persona real detrás de esa wallet (no hay cuentas ni cédula, es anónima por diseño). Es como un notario que certifica que algo pasó en un momento dado, pero no verifica la identidad de quien firma. Si eso se pusiera en duda, hace falta evidencia adicional fuera de la app (quién tenía el teléfono, testigos, un perito). El README del proyecto en GitHub tiene una sección con varios casos reales explicados uno por uno ("Casos reales: qué prueba Verity, qué no, y de qué no es responsable").',
+      },
     ],
   },
 };

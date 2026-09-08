@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.17.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.18.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -230,6 +230,78 @@ fue el hash real del archivo — sigue siendo válido dentro de la app
 (historial local, número de sello), pero no cruza esa frontera. Los
 certificados sellados desde la 0.3.6 en adelante sí son 100%
 verificables externamente.
+
+## Casos reales: qué prueba Verity, qué no, y de qué no es responsable
+
+Pregunta real del usuario que motivó esta sección: *"si hubiera un
+caso ante un juez y 3 personas dicen que un mismo sello es suyo, ¿a
+quién le cree? ¿cómo se determina de quién es la foto real?"* — la
+respuesta corta es que Verity prueba una cosa muy específica (que un
+archivo exacto existía, sellado por una wallet exacta, en un momento
+exacto) y **no** prueba otra que la gente tiende a asumir que sí
+prueba (quién es la persona real detrás de esa wallet). Mejor
+explicarlo con casos concretos que con un párrafo legal abstracto:
+
+**Caso 1 — Disputa de autoría ("ese sello es mío", dicen 3 personas)**
+- *Verity SÍ aporta:* qué wallet ancló ese hash y cuándo. Quien pueda
+  restaurar la clave privada de esa wallet (ver "Respaldo de la
+  wallet" abajo) y firmar un reto nuevo que un perito verifique contra
+  esa misma dirección, demuestra que la controla — igual que probar
+  que una billetera cripto es tuya.
+- *Verity NO resuelve:* que esa wallet sea de una persona real
+  específica. Es anónima por diseño (sin login) — Verity no vincula
+  "esta wallet" con "este nombre y cédula". Un juez necesitaría
+  evidencia adicional (testigos, peritaje del dispositivo, quién tenía
+  el teléfono) para dar ese salto.
+- *Responsabilidad:* Verity certifica un hecho técnico, no arbitra
+  quién dice la verdad. No es un servicio de identidad ni reemplaza un
+  peritaje.
+
+**Caso 2 — Reclamo de seguro (foto de un daño para probar la fecha)**
+- *Verity SÍ aporta:* fecha y hora exactas de cuándo se selló, y el
+  nivel de confianza (Alta si se tomó con la cámara de la app, con GPS
+  y hora del dispositivo verificados).
+- *Verity NO prueba:* la causa del daño ni el relato de los hechos —
+  solo que ESA foto exacta existía en ese momento, no falla cómo pasó
+  lo que muestra.
+- *Responsabilidad:* la aseguradora decide si acepta la evidencia
+  como parte de su proceso — Verity no arbitra reclamos.
+
+**Caso 3 — Subir una foto vieja de la galería (Confianza Baja)**
+- *Verity SÍ aporta:* prueba que el archivo se registró en el momento
+  en que lo sellaste — no antes.
+- *Verity NO prueba:* cuándo se TOMÓ la foto originalmente. Si subes
+  una foto de hace 3 años desde tu galería, Verity certifica el
+  momento del SELLADO, no el de la captura real — por eso queda en
+  confianza más baja, no porque se sospeche que es falsa.
+
+**Caso 4 — Pérdida o robo del teléfono**
+- *Verity SÍ aporta:* la wallet vive protegida en el Keystore/Keychain
+  del sistema operativo, no en un archivo suelto fácil de copiar.
+- *Verity NO puede evitar:* que alguien con acceso físico y
+  desbloqueado al teléfono abra la app y selle algo "como si fuera" el
+  dueño original — igual que pasa con cualquier billetera cripto o app
+  bancaria sin bloqueo propio.
+- *Responsabilidad:* proteger el teléfono (bloqueo de pantalla,
+  respaldo de la wallet) es responsabilidad de quien lo usa, no algo
+  que Verity pueda garantizar desde el software.
+
+**Caso 5 — Contenido generado por IA, sellado apenas se crea**
+- *Verity SÍ aporta:* prueba que ESE archivo (con ESE hash exacto)
+  existía desde el momento del sellado, y que nadie lo alteró después.
+- *Verity NO detecta:* si el contenido en sí es real o generado por
+  IA. El nivel de confianza mide el ORIGEN (metadatos de captura), no
+  analiza los píxeles para detectar manipulación o generación
+  sintética. Si alguien crea una imagen falsa y la sella al instante,
+  Verity certificaría honestamente que "este archivo (que resulta ser
+  una imagen generada por IA) existía desde tal fecha" — no que sea
+  real. Esto es intencional: la detección de contenido generado por IA
+  quedó fuera de alcance de este MVP (ver "Qué NO incluye" arriba).
+
+**En una frase:** Verity es un notario de *integridad y momento en el
+tiempo* de un archivo — no un detector de mentiras, ni un verificador
+de identidad, ni un árbitro de disputas. Certifica *qué* existía y
+*cuándo*, no *quién* lo hizo ni *si* lo que muestra es cierto.
 
 ## Backend e índice público
 
