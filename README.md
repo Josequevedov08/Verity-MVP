@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.5.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.6.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -98,13 +98,12 @@ eso se evitaron deliberadamente en este MVP (ver decisión documentada en
   Oscuro y Sistema, seleccionable desde Ajustes en cualquiera de las 3
   pantallas. Sección legal real en Ajustes: Política de privacidad,
   Términos de uso, FAQ y "Modo de uso" — no texto de relleno genérico.
-- **Ícono real de la app**: la misma geometría del sello circular
-  (`SealMedallion.tsx`) simplificada para leerse bien de chico —
-  monograma "VRT" sin el texto curvo, ilegible a tamaño de lanzador.
-  Incluye ícono adaptativo de Android (`adaptive-icon-foreground.png`
-  + fondo `#0B0B0F`, el mismo negro base del modo oscuro) para que se
-  vea bien recortado en círculo, cuadrado redondeado, etc. según el
-  launcher del teléfono.
+- **Ícono real de la app**: monograma "VRT" simple (blanco sobre el
+  negro base del modo oscuro, `#0B0B0F`) — el mismo logo que usa la
+  página pública de verificación, para que la marca sea consistente
+  en todos lados. Incluye ícono adaptativo de Android
+  (`adaptive-icon-foreground.png`) para que se vea bien recortado en
+  círculo, cuadrado redondeado, etc. según el launcher del teléfono.
 - **Índice público de verificación** (`backend/`, Supabase): "Verificar"
   ahora encuentra un archivo sellado desde OTRO dispositivo por su
   huella digital, sin necesitar el número de sello a mano — más una
@@ -176,6 +175,29 @@ hashea y busca sola, primero en el historial local de este dispositivo
 y, si no está ahí, en el **índice público** (ver "Backend e índice
 público" abajo) por si se selló desde OTRO dispositivo. Solo si tampoco
 aparece ahí hace falta escribir el número de sello a mano.
+
+## ⚠️ Corrección importante: el hash SHA-256 (v0.3.6)
+
+Hasta la v0.3.5, `hashService.ts` calculaba el hash sobre el **texto
+base64** del archivo (`Crypto.digestStringAsync` opera sobre strings),
+no sobre sus bytes reales — un bug real, no una decisión de diseño.
+El valor resultante era consistente *dentro* de Verity (por eso
+duplicados y "por número de sello" seguían funcionando), pero **no
+era un SHA-256 estándar del archivo**: ninguna herramienta externa
+(la página pública de verificación, `sha256sum`, etc.) podía
+reconocerlo, sin importar qué copia exacta del archivo se usara.
+
+Corregido en 0.3.6: ahora se leen los bytes crudos
+(`file.arrayBuffer()`) y se hashean con `Crypto.digest()` (la API de
+expo-crypto que opera sobre bytes, equivalente a
+`crypto.subtle.digest()` del navegador) — el mismo resultado que
+cualquier herramienta estándar calcularía. **Cualquier certificado
+sellado antes de la 0.3.6 no se puede verificar "por archivo"** (ni
+en la web ni por ninguna herramienta externa) porque su hash nunca
+fue el hash real del archivo — sigue siendo válido dentro de la app
+(historial local, número de sello), pero no cruza esa frontera. Los
+certificados sellados desde la 0.3.6 en adelante sí son 100%
+verificables externamente.
 
 ## Backend e índice público
 

@@ -30,12 +30,11 @@ export interface HashResult {
 
 /**
  * Límite de tamaño para hashear un archivo. Este método lee el archivo
- * COMPLETO en memoria como base64 (ver nota abajo) — funciona bien para
- * fotos (unos pocos MB) y videos cortos, pero un video largo/pesado
- * podría agotar la memoria de la app y hacerla fallar en vez de mostrar
- * un error claro. 80MB es un límite conservador para el MVP; una
- * versión futura debería hashear por streaming/chunks para no tener
- * este techo.
+ * COMPLETO en memoria (ver nota abajo) — funciona bien para fotos (unos
+ * pocos MB) y videos cortos, pero un video largo/pesado podría agotar la
+ * memoria de la app y hacerla fallar en vez de mostrar un error claro.
+ * 80MB es un límite conservador para el MVP; una versión futura debería
+ * hashear por streaming/chunks para no tener este techo.
  */
 const MAX_HASHABLE_BYTES = 80 * 1024 * 1024;
 
@@ -43,11 +42,21 @@ const MAX_HASHABLE_BYTES = 80 * 1024 * 1024;
  * Calcula el SHA-256 de un archivo local a partir de su URI (la que entrega
  * expo-image-picker o expo-camera, ej: "file:///.../photo.jpg").
  *
- * IMPORTANTE: expo-crypto no puede hashear un archivo grande directamente
- * desde disco por streaming, así que lo leemos como base64 en memoria y
- * lo hasheamos. Para fotos de celular (unos pocos MB) esto es rápido y
- * suficiente para el MVP. Si en el futuro se soportan videos largos, esto
- * debería migrarse a un hash por streaming/chunks.
+ * CORREGIDO — bug real encontrado en pruebas: la versión anterior leía el
+ * archivo como texto base64 y le calculaba el hash a ESE TEXTO
+ * (`Crypto.digestStringAsync` opera sobre strings, no sobre bytes) en vez
+ * de calcular el hash de los BYTES reales del archivo. El resultado era
+ * un valor interno consistente para Verity (por eso "duplicados" y "por
+ * número de sello" seguían funcionando), pero que NO correspondía al
+ * SHA-256 real y estándar del archivo — así que ninguna herramienta
+ * externa (incluida la página pública de verificación, que sí calcula el
+ * SHA-256 real con la Web Crypto API del navegador) podía reconocerlo,
+ * sin importar qué copia del archivo se usara. Ahora se leen los bytes
+ * crudos (`file.arrayBuffer()`) y se hashean con `Crypto.digest()` — la
+ * versión de expo-crypto que opera sobre bytes, equivalente a
+ * `crypto.subtle.digest()` en el navegador — dando el mismo resultado que
+ * cualquier herramienta estándar (`sha256sum`, la página web, etc.)
+ * calcularía sobre el mismo archivo.
  *
  * Nota: usa la API de expo-file-system@57 (clase `File`), que reemplazó a
  * las funciones sueltas `getInfoAsync`/`readAsStringAsync` de versiones
@@ -68,21 +77,23 @@ export async function hashFile(fileUri: string): Promise<HashResult> {
     );
   }
 
-  // Leemos el contenido como base64. Esto SOLO ocurre en memoria local,
-  // nunca se envía a ningún servidor.
-  const base64Content = await file.base64();
-
-  const sha256 = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    base64Content,
-    { encoding: Crypto.CryptoEncoding.HEX }
-  );
+  // Bytes crudos del archivo, en memoria local — nunca se envían a
+  // ningún servidor.
+  const buffer = await file.arrayBuffer();
+  const digestBuffer = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, buffer);
+  const sha256 = bufferToHex(digestBuffer);
 
   return {
     sha256,
     fileSizeBytes: file.size ?? 0,
     hashedAt: new Date().toISOString(),
   };
+}
+
+function bufferToHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**

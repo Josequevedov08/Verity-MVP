@@ -225,6 +225,19 @@
   input[type="text"]::placeholder { color: var(--text-faint); font-family: "Sora", sans-serif; }
   input[type="text"]:focus { outline: none; border-color: var(--accent); }
 
+  .input-row { position: relative; }
+  .input-row input[type="text"] { padding-right: 40px; }
+  .clear-btn {
+    position: absolute; top: 50%; right: 10px; transform: translateY(-50%);
+    margin-top: -6px;
+    width: 26px; height: 26px;
+    border-radius: 50%; border: none;
+    background: var(--border); color: var(--text-muted);
+    font-size: 12px; line-height: 1;
+    cursor: pointer;
+  }
+  .clear-btn[hidden] { display: none; }
+
   .file-drop {
     display: block;
     border: 1.5px dashed var(--border);
@@ -387,7 +400,10 @@
         <span data-i18n="byTxTitle"></span>
       </h2>
       <p class="section-sub" data-i18n="byTxSub"></p>
-      <input type="text" id="txInput" placeholder="0x..." autocomplete="off" autocapitalize="none" />
+      <div class="input-row">
+        <input type="text" id="txInput" placeholder="0x..." autocomplete="off" autocapitalize="none" />
+        <button class="clear-btn" id="txClear" aria-label="Limpiar" hidden>✕</button>
+      </div>
       <button class="primary" id="txButton" data-i18n="searchButton"></button>
       <div id="txResult"></div>
     </div>
@@ -697,7 +713,7 @@
     return json.result ?? null;
   }
 
-  txButton.addEventListener('click', async () => {
+  async function runSealSearch() {
     const seal = txInput.value.trim();
     if (!/^0x[0-9a-fA-F]{64}$/.test(seal)) {
       lastTxState = { kind: 'invalid' };
@@ -716,6 +732,41 @@
       lastTxState = { kind: 'error', message: error.message };
     }
     renderTxResult();
+  }
+
+  txButton.addEventListener('click', runSealSearch);
+
+  // El botón "✕" y la búsqueda en vivo, igual que en la app
+  // (VerificationScreen.tsx): cualquier cambio en el texto limpia el
+  // resultado anterior de inmediato (nunca queda pegado sin relación
+  // con lo que hay en el campo), y si queda escrito un número de sello
+  // completo y válido (0x + 64 caracteres — lo normal al pegar uno) se
+  // busca solo, sin tener que tocar "Buscar en el registro".
+  const txClear = document.getElementById('txClear');
+  let txDebounce = null;
+
+  function updateTxClearVisibility() {
+    txClear.hidden = txInput.value.length === 0;
+  }
+
+  txInput.addEventListener('input', () => {
+    updateTxClearVisibility();
+    lastTxState = { kind: 'idle' };
+    renderTxResult();
+
+    if (txDebounce) clearTimeout(txDebounce);
+    const trimmed = txInput.value.trim();
+    if (/^0x[0-9a-fA-F]{64}$/.test(trimmed)) {
+      txDebounce = setTimeout(runSealSearch, 400);
+    }
+  });
+
+  txClear.addEventListener('click', () => {
+    txInput.value = '';
+    updateTxClearVisibility();
+    lastTxState = { kind: 'idle' };
+    renderTxResult();
+    txInput.focus();
   });
 
   applyStaticText();
