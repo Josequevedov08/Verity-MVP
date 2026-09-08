@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.13.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.14.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -98,10 +98,11 @@ eso se evitaron deliberadamente en este MVP (ver decisión documentada en
   Oscuro y Sistema, seleccionable desde Ajustes en cualquiera de las 3
   pantallas. Sección legal real en Ajustes: Política de privacidad,
   Términos de uso, FAQ y "Modo de uso" — no texto de relleno genérico.
-- **Ícono real de la app**: monograma "VRT" simple (blanco sobre el
-  negro base del modo oscuro, `#0B0B0F`) — el mismo logo que usa la
-  página pública de verificación, para que la marca sea consistente
-  en todos lados. Incluye ícono adaptativo de Android
+- **Ícono real de la app**: monograma "VRT" en el azul de acento de la
+  app (`#4C9AFF`) sobre el negro base del modo oscuro (`#0B0B0F`) —
+  antes era blanco sobre negro, sin ningún color de marca; ahora el
+  mismo azul que se ve en botones, links e insignias en toda la app
+  también está en el ícono. Incluye ícono adaptativo de Android
   (`adaptive-icon-foreground.png`) para que se vea bien recortado en
   círculo, cuadrado redondeado, etc. según el launcher del teléfono.
 - **Índice público de verificación** (`backend/`, Supabase): "Verificar"
