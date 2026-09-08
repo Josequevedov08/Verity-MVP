@@ -52,6 +52,14 @@ export async function countSealsThisMonth(): Promise<number> {
   const all = await getCertificates();
   const now = new Date();
   return all.filter((c) => {
+    // Un certificado importado de una copia de seguridad (ver
+    // importBackup, abajo) se selló de verdad en OTRO teléfono, tal vez
+    // hace meses — no debe contar contra el cupo gratis de ESTE mes en
+    // ESTE dispositivo, aunque su fecha de anclaje original caiga
+    // dentro del mes actual. Bug real encontrado en pruebas: sin este
+    // filtro, restaurar un respaldo con sellos viejos inflaba el
+    // contador de uso (ej. "14/30" habiendo sellado solo 3 acá).
+    if (c.importedAt) return false;
     const date = new Date(c.anchor.anchoredAt);
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   }).length;
@@ -113,9 +121,12 @@ export async function importBackup(backup: CertificatesBackup): Promise<number> 
   const existingIds = new Set(existing.map((c) => c.id));
   const existingHashes = new Set(existing.map((c) => c.sha256));
 
-  const newOnes = backup.certificates.filter(
-    (c) => !existingIds.has(c.id) && !existingHashes.has(c.sha256)
-  );
+  const newOnes = backup.certificates
+    .filter((c) => !existingIds.has(c.id) && !existingHashes.has(c.sha256))
+    // Se marca como importado AHORA (no se conserva un importedAt viejo
+    // si el propio backup ya traía uno de una restauración anterior) —
+    // ver el campo importedAt en verity-protocol.ts para el porqué.
+    .map((c) => ({ ...c, importedAt: new Date().toISOString() }));
 
   if (newOnes.length === 0) return 0;
 

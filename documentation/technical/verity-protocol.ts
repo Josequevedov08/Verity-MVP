@@ -112,6 +112,20 @@ export interface VerityCertificate {
    * este campo.
    */
   sequenceNumber?: number;
+  /**
+   * Presente SOLO si este certificado llegó a este teléfono importando
+   * una copia de seguridad (ver cryptoUtils.ts: importBackup), con la
+   * fecha en que se importó. Ausente si se selló de verdad en este
+   * dispositivo. Existe para que el conteo mensual del plan gratis
+   * (countSealsThisMonth) no cuente como "sellado este mes" algo que
+   * en realidad se selló en OTRO teléfono hace tiempo y solo se
+   * restauró acá — bug real encontrado en pruebas: importar un
+   * respaldo con sellos viejos de otro teléfono inflaba el contador
+   * de uso del mes (ej. "14/30" habiendo sellado solo 3 en este
+   * dispositivo), acercando al usuario al paywall sin haber gastado su
+   * cupo de verdad.
+   */
+  importedAt?: string;
 }
 
 /**
