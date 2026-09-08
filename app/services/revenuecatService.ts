@@ -38,22 +38,40 @@ export async function initRevenueCat(): Promise<void> {
 const DEV_PRO_OVERRIDE_KEY = 'verity_dev_pro_override';
 
 /**
- * SOLO PRUEBAS — nunca funciona fuera de `__DEV__` (Expo Go / desarrollo).
- * Simula tener PRO activo sin pasar por una compra real, para poder
- * probar en el propio teléfono lo que ve un usuario PRO (lote múltiple,
- * etc.) mientras todavía no existe un producto de suscripción real en
- * Play Console (ver nota arriba). En un build de producción esta
- * función no hace nada — no hay forma de "activar PRO gratis" en la
- * app real, solo en desarrollo. Se controla desde Ajustes → sección
- * "Modo prueba" (solo visible en __DEV__).
+ * Además de `__DEV__` (Expo Go), el modo prueba también se permite si
+ * esta variable de entorno viene en `true` — pensada EXCLUSIVAMENTE
+ * para el build `preview` de EAS (ver eas.json y
+ * documentation/technical/apk-build-plan.md): un .apk real, fuera de
+ * Expo Go, donde igual hace falta poder simular PRO para probar/grabar
+ * el demo mientras no existe un producto de suscripción real en Play
+ * Console. Esta variable se configura SOLO en el entorno "preview" de
+ * EAS (`eas env:set` / `eas env:push`) — nunca en "production", así
+ * que el build que algún día se suba de verdad a la tienda sigue sin
+ * tener forma de activar PRO gratis, igual que antes.
+ */
+const PREVIEW_BUILD_ALLOWS_DEV_PRO = process.env.EXPO_PUBLIC_ALLOW_DEV_PRO_OVERRIDE === 'true';
+
+/** true solo en Expo Go (__DEV__) o en el build preview con la bandera
+ * de arriba activada — nunca en un build de producción real. */
+export const isDevProOverrideAllowed = __DEV__ || PREVIEW_BUILD_ALLOWS_DEV_PRO;
+
+/**
+ * SOLO PRUEBAS — ver isDevProOverrideAllowed arriba para dónde
+ * funciona de verdad. Simula tener PRO activo sin pasar por una
+ * compra real, para poder probar en el propio teléfono lo que ve un
+ * usuario PRO (lote múltiple, etc.) mientras todavía no existe un
+ * producto de suscripción real en Play Console (ver nota arriba). En
+ * un build de producción esta función no hace nada — no hay forma de
+ * "activar PRO gratis" en la app real. Se controla desde Ajustes →
+ * sección "Modo prueba".
  */
 export async function setDevProOverride(enabled: boolean): Promise<void> {
-  if (!__DEV__) return;
+  if (!isDevProOverrideAllowed) return;
   await AsyncStorage.setItem(DEV_PRO_OVERRIDE_KEY, enabled ? '1' : '0');
 }
 
 export async function getDevProOverride(): Promise<boolean> {
-  if (!__DEV__) return false;
+  if (!isDevProOverrideAllowed) return false;
   return (await AsyncStorage.getItem(DEV_PRO_OVERRIDE_KEY)) === '1';
 }
 

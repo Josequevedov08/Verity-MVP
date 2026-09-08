@@ -40,6 +40,7 @@ import {
   restorePurchases,
   getDevProOverride,
   setDevProOverride,
+  isDevProOverrideAllowed,
   type SealUsage,
 } from '../services/revenuecatService';
 import LegalContentModal, { LEGAL_DOCS, type LegalDocId } from './LegalContentModal';
@@ -51,7 +52,7 @@ const APP_ICON = require('../../assets/icons/app-icon.png');
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.3.16';
+const APP_VERSION = '0.3.17';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -76,8 +77,8 @@ export default function SettingsModal({
   const [usage, setUsage] = useState<SealUsage | null>(null);
   const [paywallVisible, setPaywallVisible] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  // Modo prueba (solo __DEV__) — ver revenuecatService.ts. Nunca existe
-  // en un build de producción real.
+  // Modo prueba (Expo Go o build "preview") — ver isDevProOverrideAllowed
+  // en revenuecatService.ts. Nunca existe en un build de producción real.
   const [devProOverride, setDevProOverrideState] = useState(false);
   const [syncingIndex, setSyncingIndex] = useState(false);
 
@@ -346,14 +347,17 @@ export default function SettingsModal({
               </Pressable>
             )}
 
-            {/* Solo existe en __DEV__ (Expo Go / desarrollo) — en un
-                build de producción real este bloque ni siquiera se
-                incluye en el bundle, así que no hay forma de activar
-                PRO gratis en la app publicada. Sirve para probar en el
-                propio teléfono lo que ve un usuario PRO (lote múltiple,
-                etc.) mientras no existe un producto de suscripción real
-                dado de alta en Play Console. */}
-            {__DEV__ && (
+            {/* Visible en Expo Go (__DEV__) y en el build "preview" de
+                EAS (ver isDevProOverrideAllowed en revenuecatService.ts
+                — controlado por una variable de entorno que SOLO se
+                configura en el entorno "preview", nunca en
+                "production"). En el build real que algún día se suba a
+                la tienda, isDevProOverrideAllowed siempre da false, así
+                que no hay forma de activar PRO gratis en la app
+                publicada. Sirve para probar/grabar lo que ve un usuario
+                PRO (lote múltiple, etc.) mientras no existe un producto
+                de suscripción real dado de alta en Play Console. */}
+            {isDevProOverrideAllowed && (
               <View style={[styles.devBox, { borderColor: colors.warning, backgroundColor: colors.background }]}>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.devBoxTitle, { color: colors.warning }]}>Modo prueba (solo desarrollo)</Text>

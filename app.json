@@ -2,7 +2,7 @@
   "expo": {
     "name": "Verity",
     "slug": "verity-mvp",
-    "version": "0.3.16",
+    "version": "0.3.17",
     "orientation": "portrait",
     "icon": "./assets/icons/app-icon.png",
     "userInterfaceStyle": "automatic",
@@ -13,9 +13,11 @@
         "backgroundColor": "#0B0B0F"
       },
       "permissions": [
-        "CAMERA",
-        "ACCESS_FINE_LOCATION",
-        "READ_MEDIA_IMAGES"
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ]
     },
     "plugins": [
@@ -35,6 +37,11 @@
       "expo-sharing",
       "expo-font",
       "expo-video"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2a2d4f7b-6b22-439d-a673-79422667aa5a"
+      }
+    }
   }
 }
