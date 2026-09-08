@@ -18,3 +18,13 @@ export async function hasSeenOnboarding(): Promise<boolean> {
 export async function markOnboardingSeen(): Promise<void> {
   await AsyncStorage.setItem(ONBOARDING_SEEN_KEY, 'true');
 }
+
+/**
+ * Borra la marca de "ya visto" — solo para el botón de pruebas en Ajustes
+ * (ver isDevProOverrideAllowed en SettingsModal.tsx), así se puede volver
+ * a ver el onboarding/splash cuantas veces haga falta sin desinstalar la
+ * app ni borrar todo el almacenamiento de Expo Go.
+ */
+export async function resetOnboardingSeen(): Promise<void> {
+  await AsyncStorage.removeItem(ONBOARDING_SEEN_KEY);
+}

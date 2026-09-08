@@ -15,7 +15,7 @@
  * para hacer scroll y visualmente consistente con el resto de la app.
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, Image, ImageBackground, ScrollView, Alert, Switch, ActivityIndicator } from 'react-native';
+import { View, Text, Modal, Pressable, StyleSheet, Image, ImageBackground, ScrollView, Alert, Switch, ActivityIndicator, DevSettings } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 // Import directo al submódulo (ver SettingsButton.tsx para el porqué:
@@ -33,6 +33,7 @@ import {
   restoreDeviceWalletFromPrivateKey,
 } from '../services/blockchainService';
 import { resetAllCoachMarks } from '../utils/coachMarkUtils';
+import { resetOnboardingSeen } from '../utils/onboardingUtils';
 import { getCertificates } from '../utils/cryptoUtils';
 import { syncAllToPublicIndex } from '../services/verificationIndexService';
 import {
@@ -52,7 +53,7 @@ const APP_ICON = require('../../assets/icons/app-icon.png');
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.3.28';
+const APP_VERSION = '0.3.29';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -123,6 +124,21 @@ export default function SettingsModal({
   async function handleReplayTour() {
     await resetAllCoachMarks();
     onClose();
+  }
+
+  /**
+   * A diferencia del recorrido guiado (arriba), el splash + onboarding
+   * viven en un estado de App.tsx que este modal no puede tocar
+   * directo (no hay contexto compartido para eso) — así que reiniciar
+   * SOLO la marca de "ya visto" en AsyncStorage no alcanza mientras la
+   * app siga corriendo con el mismo estado en memoria. DevSettings.reload()
+   * fuerza una recarga completa del JS (como presionar "r" en la
+   * terminal), que sí vuelve a montar App.tsx desde cero y respeta la
+   * marca ya borrada.
+   */
+  async function handleReplayOnboarding() {
+    await resetOnboardingSeen();
+    DevSettings.reload();
   }
 
   useEffect(() => {
@@ -372,6 +388,14 @@ export default function SettingsModal({
                   thumbColor="#fff"
                 />
               </View>
+            )}
+            {isDevProOverrideAllowed && (
+              <Pressable style={styles.replayTourButton} onPress={handleReplayOnboarding}>
+                <Ionicons name="refresh-outline" size={16} color={colors.warning} />
+                <Text style={[styles.replayTourText, { color: colors.warning }]}>
+                  Ver splash + onboarding de nuevo (recarga la app)
+                </Text>
+              </Pressable>
             )}
 
             <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>APARIENCIA</Text>
