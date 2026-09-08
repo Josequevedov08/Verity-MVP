@@ -39,7 +39,9 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 // "Cannot find native module 'ExpoMediaLibraryNext'" incluso sin
 // llegar a usarlo (confirmado en pruebas reales). Se importa dinámico,
 // dentro de saveToSystemGallery, y SOLO si no estamos en Expo Go.
-import { Directory, File, Paths } from 'expo-file-system';
+// API "legacy" de expo-file-system, no la nueva (Directory/File/Paths) —
+// ver saveCapturePermanently más abajo para el porqué.
+import * as LegacyFileSystem from 'expo-file-system/legacy';
 import { randomUUID } from 'expo-crypto';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -211,26 +213,30 @@ export default function CaptureScreen() {
    */
   async function saveCapturePermanently(uri: string, fileName: string): Promise<string> {
     try {
-      const capturesDir = new Directory(Paths.document, 'verity-captures');
-      if (!capturesDir.exists) {
-        capturesDir.create({ intermediates: true });
+      const capturesDirUri = `${LegacyFileSystem.documentDirectory}verity-captures/`;
+      const dirInfo = await LegacyFileSystem.getInfoAsync(capturesDirUri);
+      if (!dirInfo.exists) {
+        await LegacyFileSystem.makeDirectoryAsync(capturesDirUri, { intermediates: true });
       }
 
-      const destination = new File(capturesDir, fileName);
-      // Antes se usaba source.copy(destination) (File.copy() de la API
-      // nueva de expo-file-system), pero falla con "Missing READ
-      // permission" para algunas URIs content:// que devuelve la cámara
-      // nativa al grabar video (ej. en MIUI) — la app SÍ puede leer esa
-      // URI (el hasheo y la generación del frame de video funcionan bien
-      // con ella), solo File.copy() específicamente la rechaza. fetch()
-      // sí puede leerla sin problema (mismo truco ya usado para leer el
-      // backup elegido con DocumentPicker), así que se lee el contenido
-      // completo y se escribe a mano en vez de depender de copy().
-      const response = await fetch(uri);
-      const buffer = await response.arrayBuffer();
-      if (!destination.exists) destination.create({ intermediates: true });
-      destination.write(new Uint8Array(buffer));
-      return destination.uri;
+      const destinationUri = `${capturesDirUri}${fileName}`;
+      // Se usa la API "legacy" de expo-file-system a propósito, NO la
+      // nueva (Directory/File/Paths): esta última generó certificados
+      // con la carta sin foto (miniatura vacía/gris) en pruebas reales —
+      // la copia SÍ se escribía sin errores (nada en consola), pero el
+      // `.uri` que devuelve su clase File no siempre resultaba
+      // utilizable por <Image>. La API legacy es la que React Native ha
+      // probado durante años exactamente para este patrón (leer un URI
+      // de imagen a base64 y escribirlo a un path del documentDirectory
+      // como string), así que es la apuesta más segura.
+      //
+      // readAsStringAsync además lee bien URIs content:// problemáticas
+      // (ej. video grabado en MIUI, que rechazaba el copy() de la API
+      // nueva con "Missing READ permission") — mismo motivo por el que
+      // antes se usaba fetch() en vez de copy(), ahora aplicado acá.
+      const base64 = await LegacyFileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+      await LegacyFileSystem.writeAsStringAsync(destinationUri, base64, { encoding: 'base64' });
+      return destinationUri;
     } catch (error) {
       console.warn('No se pudo guardar la copia permanente del archivo:', error);
       return uri;
