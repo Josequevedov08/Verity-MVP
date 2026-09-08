@@ -71,7 +71,7 @@ export default function CertificatesScreen() {
     try {
       const backup = await buildBackup();
       if (backup.certificates.length === 0) {
-        Alert.alert('Nada que exportar', 'Todavía no has sellado ninguna foto.');
+        Alert.alert('Nada que exportar', 'Todavía no has sellado ninguna foto ni video.');
         return;
       }
 
@@ -190,7 +190,7 @@ export default function CertificatesScreen() {
           )}
           ListEmptyComponent={
             <Text style={[styles.empty, { color: colors.textMuted }]}>
-              Todavía no has sellado ninguna foto.
+              Todavía no has sellado ninguna foto ni video.
             </Text>
           }
           contentContainerStyle={{ paddingBottom: 40 }}
@@ -207,7 +207,7 @@ export default function CertificatesScreen() {
           )}
           ListEmptyComponent={
             <Text style={[styles.empty, { color: colors.textMuted }]}>
-              Todavía no has sellado ninguna foto.
+              Todavía no has sellado ninguna foto ni video.
             </Text>
           }
           contentContainerStyle={{ paddingBottom: 40 }}

@@ -437,7 +437,7 @@ export default function CaptureScreen() {
 
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permiso necesario', 'Verity necesita acceso a la cámara para sellar fotos.');
+      Alert.alert('Permiso necesario', 'Verity necesita acceso a la cámara para sellar fotos y videos.');
       return;
     }
 
@@ -467,7 +467,7 @@ export default function CaptureScreen() {
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permiso necesario', 'Verity necesita acceso a tus fotos para sellarlas.');
+      Alert.alert('Permiso necesario', 'Verity necesita acceso a tus fotos y videos para sellarlos.');
       return;
     }
 
@@ -694,7 +694,7 @@ export default function CaptureScreen() {
                 style={[styles.sealAnotherButton, { borderColor: colors.accent }]}
                 onPress={handleSealAnother}
               >
-                <Text style={[styles.sealAnotherText, { color: colors.accent }]}>Sellar otra foto</Text>
+                <Text style={[styles.sealAnotherText, { color: colors.accent }]}>Sellar otro archivo</Text>
               </Pressable>
               <CertificateDetailModal
                 certificate={certificate}

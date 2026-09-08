@@ -51,7 +51,7 @@ const APP_ICON = require('../../assets/icons/app-icon.png');
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
-const APP_VERSION = '0.3.10';
+const APP_VERSION = '0.3.11';
 
 const OPTIONS: { value: ThemePreference; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'light', label: 'Claro', icon: 'sunny-outline' },
@@ -334,7 +334,7 @@ export default function SettingsModal({
                 </View>
                 <View style={styles.proBannerText}>
                   <Text style={styles.proBannerTitle}>Verity PRO activo</Text>
-                  <Text style={styles.proBannerSubtitle}>Sellos ilimitados · gracias por tu apoyo 🙌</Text>
+                  <Text style={styles.proBannerSubtitle}>Sellos ilimitados · gracias por tu apoyo</Text>
                 </View>
               </ImageBackground>
             )}
@@ -356,7 +356,7 @@ export default function SettingsModal({
             {__DEV__ && (
               <View style={[styles.devBox, { borderColor: colors.warning, backgroundColor: colors.background }]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.devBoxTitle, { color: colors.warning }]}>🧪 Modo prueba (solo desarrollo)</Text>
+                  <Text style={[styles.devBoxTitle, { color: colors.warning }]}>Modo prueba (solo desarrollo)</Text>
                   <Text style={[styles.devBoxText, { color: colors.textMuted }]}>
                     Simula tener PRO en este teléfono, sin pagar de verdad. No existe en la app publicada.
                   </Text>
@@ -419,9 +419,9 @@ export default function SettingsModal({
                 </View>
               </View>
               <Text style={[styles.aboutTagline, { color: colors.textMuted }]}>
-                Notario digital para tus fotos: huella digital SHA-256 calculada
-                en tu teléfono y registrada en un registro público, sin subir
-                el archivo a ningún lado.
+                Notario digital para tus fotos y videos: huella digital SHA-256
+                calculada en tu teléfono y registrada en un registro público,
+                sin subir el archivo a ningún lado.
               </Text>
 
               {/* Las dos filas usan una columna de etiqueta de ancho FIJO

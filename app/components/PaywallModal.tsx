@@ -64,7 +64,7 @@ export default function PaywallModal({
       } else if (outcome.status === 'unavailable') {
         Alert.alert(
           'Todavía no disponible',
-          'La suscripción real se activa cuando publiquemos Verity en Play Store — por ahora esto es un adelanto de cómo se verá. Gracias por tu paciencia 🙏',
+          'La suscripción real se activa cuando publiquemos Verity en Play Store — por ahora esto es un adelanto de cómo se verá. Gracias por tu paciencia.',
         );
       }
       // 'cancelled': el usuario cerró el diálogo de compra, no hace falta avisar nada.

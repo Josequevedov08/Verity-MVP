@@ -127,7 +127,7 @@ export default function VerificationScreen() {
   async function handlePickFromGallery() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permiso necesario', 'Verity necesita acceso a tus fotos para verificarlas.');
+      Alert.alert('Permiso necesario', 'Verity necesita acceso a tus fotos y videos para verificarlos.');
       return;
     }
 
@@ -239,7 +239,7 @@ export default function VerificationScreen() {
           <Text style={[styles.sectionTitle, { color: colors.accent }]}>Por archivo</Text>
         </View>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          Elige una foto y Verity revisa sola si ya la sellaste.
+          Elige una foto o video y Verity revisa sola si ya lo sellaste.
         </Text>
 
         <View style={styles.actions} ref={byFileRef} collapsable={false}>
@@ -263,7 +263,7 @@ export default function VerificationScreen() {
               onPress={() => setFileDetailVisible(true)}
             >
               <Text style={[styles.matchText, { color: colors.success }]}>
-                ✅ Esta foto ya está sellada. Toca para ver el certificado completo.
+                Este archivo ya está sellado. Toca para ver el certificado completo.
               </Text>
             </Pressable>
             <Pressable onPress={() => setFileResult({ status: 'idle' })}>
@@ -275,7 +275,7 @@ export default function VerificationScreen() {
           <>
             <View style={[styles.resultTintBox, { borderColor: colors.success, backgroundColor: colors.surface }]}>
               <Text style={[styles.matchText, { color: colors.success }]}>
-                ✅ Esta foto ya está sellada desde otro dispositivo (no tenemos el
+                Este archivo ya está sellado desde otro dispositivo (no tenemos el
                 archivo aquí para mostrártelo, solo confirmamos que existe).
               </Text>
               {fileResult.entry.sequenceNumber && (
@@ -296,7 +296,7 @@ export default function VerificationScreen() {
           <>
             <View style={[styles.resultTintBox, { borderColor: colors.danger, backgroundColor: colors.surface }]}>
               <Text style={[styles.noMatchText, { color: colors.danger }]}>
-                No encontramos esta foto sellada en este dispositivo ni en el índice
+                No encontramos este archivo sellado en este dispositivo ni en el índice
                 público. Si crees que sí existe, prueba "Por número de sello" más abajo.
               </Text>
             </View>
@@ -389,8 +389,8 @@ export default function VerificationScreen() {
         {hashResult.status === 'found-on-chain' && (
           <View style={[styles.resultTintBox, { borderColor: colors.success, backgroundColor: colors.surface }]}>
             <Text style={[styles.matchText, { color: colors.success }]}>
-              ✅ Este número de sello existe en el registro público (no es de este
-              dispositivo, así que no tenemos la foto para mostrarte).
+              Este número de sello existe en el registro público (no es de este
+              dispositivo, así que no tenemos el archivo para mostrarte).
             </Text>
             <Text style={[styles.hashLabel, { color: colors.textMuted }]}>Huella digital anclada</Text>
             <Text style={[styles.hashValue, { color: colors.text }]} selectable>
@@ -402,7 +402,7 @@ export default function VerificationScreen() {
         {hashResult.status === 'not-found' && (
           <View style={[styles.resultTintBox, { borderColor: colors.danger, backgroundColor: colors.surface }]}>
             <Text style={[styles.noMatchText, { color: colors.danger }]}>
-              ❌ No se encontró ninguna transacción con ese número de sello.
+              No se encontró ninguna transacción con ese número de sello.
             </Text>
           </View>
         )}
@@ -447,7 +447,7 @@ export default function VerificationScreen() {
             )}
             ListEmptyComponent={
               <Text style={[styles.empty, { color: colors.textMuted }]}>
-                Todavía no has sellado ninguna foto.
+                Todavía no has sellado ninguna foto ni video.
               </Text>
             }
           />
@@ -461,7 +461,7 @@ export default function VerificationScreen() {
         steps={[
           {
             targetRef: byFileRef,
-            title: '¿Ya sellaste esta foto?',
+            title: '¿Ya sellaste esto?',
             text: 'Elige una foto o video (de tu galería o de "Mis sellos") y Verity revisa sola si coincide con algo que ya sellaste en este teléfono.',
           },
           {
