@@ -78,9 +78,13 @@ export async function hashFile(fileUri: string): Promise<HashResult> {
   }
 
   // Bytes crudos del archivo, en memoria local — nunca se envían a
-  // ningún servidor.
+  // ningún servidor. Crypto.digest() espera una vista TypedArray
+  // (Uint8Array), no el ArrayBuffer crudo directo — pasarle el
+  // ArrayBuffer tal cual falla en Android ("no ArrayBuffer attached")
+  // porque el puente nativo no puede "adjuntarse" a un ArrayBuffer sin
+  // una vista encima.
   const buffer = await file.arrayBuffer();
-  const digestBuffer = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, buffer);
+  const digestBuffer = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, new Uint8Array(buffer));
   const sha256 = bufferToHex(digestBuffer);
 
   return {
