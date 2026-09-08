@@ -248,6 +248,7 @@ qué no hace la página (no usa cookies ni analítica).
 - [ ] Selector de idioma (multi-idioma) — pospuesto a la fase del APK
 - [x] Ícono de la app (real, con la identidad del sello — ver abajo)
 - [ ] Screenshots para la ficha de Play Store/Devpost (`assets/`)
-- [ ] Materiales de Devpost (`documentation/shipaton-submission/`)
-- [ ] Registro en Shipaton, guion y grabación del video demo
+- [ ] Materiales de Devpost (borrador del "Story" listo, falta llenar screenshots/video/RevenueCat ID)
+- [x] Registro en Shipaton 2026 (Devpost)
+- [ ] Guion y grabación del video demo
 - [ ] Cuenta de Google Play Console y build de producción (v1.0.0)
