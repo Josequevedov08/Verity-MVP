@@ -165,6 +165,13 @@ export default function CaptureScreen() {
   // se está procesando o mostrando el resumen de un lote; toma el
   // lugar de la UI normal de `step` mientras tanto.
   const [batch, setBatch] = useState<BatchState | null>(null);
+  // Archivos agregados a la cola MIENTRAS un lote ya está corriendo (ver
+  // handleAddToBatchQueue) — se van sumando al mismo lote en curso en
+  // vez de arrancar una corrida nueva en paralelo, que arriesgaría un
+  // choque de nonce en la wallet del dispositivo. Vive en un ref (no en
+  // estado) porque processBatch lo lee dentro de un bucle async que ya
+  // está corriendo, no en un re-render.
+  const batchQueueRef = useRef<ImagePicker.ImagePickerAsset[]>([]);
 
   async function refreshUsage(): Promise<SealUsage> {
     const u = await getSealUsage();
@@ -567,6 +574,20 @@ export default function CaptureScreen() {
    * mirando cada uno.
    */
   async function processBatch(assets: ImagePicker.ImagePickerAsset[]) {
+    // Si ya hay un lote corriendo, esto NO arranca una corrida nueva en
+    // paralelo (choque de nonce en la wallet) — se suma a la cola de
+    // ESE lote (ver batchQueueRef) y el total visible crece de
+    // inmediato, para que se vea que de verdad se agregó. El bucle de
+    // abajo, que ya está corriendo, la recoge sola al llegar al final
+    // de lo que tenía. Pedido real del usuario: poder seguir agregando
+    // archivos mientras el lote sigue sellando, en vez de tener que
+    // esperar a que termine del todo.
+    if (batch && !batch.done) {
+      batchQueueRef.current.push(...assets);
+      setBatch((prev) => (prev ? { ...prev, total: prev.total + assets.length } : prev));
+      return;
+    }
+
     setErrorMessage(null);
     setCertificate(null);
     setIsDuplicate(false);
@@ -578,8 +599,13 @@ export default function CaptureScreen() {
     let sealedCount = 0;
     let duplicateCount = 0;
     let failedCount = 0;
+    let processedCount = 0;
+    // Cola de trabajo real de esta corrida — empieza con lo que se pidió
+    // sellar, y puede crecer en vivo (ver arriba) mientras el bucle
+    // sigue corriendo, sin reiniciar nada de lo ya sellado.
+    const queue = [...assets];
     setBatch({
-      total: assets.length,
+      total: queue.length,
       processed: 0,
       sealedCount: 0,
       duplicateCount: 0,
@@ -589,12 +615,12 @@ export default function CaptureScreen() {
       limitReachedMidBatch: false,
     });
 
-    for (let i = 0; i < assets.length; i++) {
-      const asset = assets[i];
+    for (let i = 0; i < queue.length; i++) {
+      const asset = queue[i];
       const label =
         asset.type === 'video'
-          ? `Sellando video ${i + 1} de ${assets.length}...`
-          : `Sellando foto ${i + 1} de ${assets.length}...`;
+          ? `Sellando video ${i + 1} de ${queue.length}...`
+          : `Sellando foto ${i + 1} de ${queue.length}...`;
       setBatch((prev) => (prev ? { ...prev, currentLabel: label } : prev));
 
       // El lote es una función PRO (ilimitado), pero esto queda como
@@ -606,6 +632,7 @@ export default function CaptureScreen() {
         refreshUsage();
         setPaywallVisible(true);
         notifyBatchComplete('Llegaste a tu límite gratis a mitad del lote. Toca para ver el resumen.');
+        batchQueueRef.current = []; // lo que quedaba en la cola no se va a sellar; no dejarlo "fantasma".
         return;
       }
 
@@ -628,13 +655,50 @@ export default function CaptureScreen() {
         failedCount += 1;
         setBatch((prev) => (prev ? { ...prev, processed: prev.processed + 1, failedCount: prev.failedCount + 1 } : prev));
       }
+      processedCount += 1;
+
+      // ¿Llegaron más archivos a la cola mientras se sellaba este? Se
+      // agregan al FINAL de la corrida actual (queue.length crece, el
+      // `for` de arriba sigue sin reiniciarse) — así un lote nuevo
+      // agregado a mitad de camino no interrumpe ni reordena lo que ya
+      // estaba en curso.
+      if (i === queue.length - 1 && batchQueueRef.current.length > 0) {
+        queue.push(...batchQueueRef.current);
+        batchQueueRef.current = [];
+      }
     }
 
     refreshUsage();
     setBatch((prev) => (prev ? { ...prev, done: true } : prev));
     notifyBatchComplete(
-      describeBatchSummary({ total: assets.length, sealedCount, duplicateCount, failedCount })
+      describeBatchSummary({ total: processedCount, sealedCount, duplicateCount, failedCount })
     );
+  }
+
+  /**
+   * Agrega más archivos a un lote QUE YA ESTÁ CORRIENDO — a diferencia
+   * de handleGalleryPick (que decide entre sellar 1 o arrancar un lote
+   * nuevo), esto siempre pasa por processBatch, incluso para un solo
+   * archivo elegido, porque el propio processBatch ya sabe encolarlo en
+   * vez de arrancar una corrida en paralelo (ver arriba).
+   */
+  async function handleAddToBatchQueue() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso necesario', 'Verity necesita acceso a tus fotos y videos para sellarlos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
+      quality: 1,
+      exif: true,
+      allowsMultipleSelection: true,
+      selectionLimit: MAX_BATCH_SIZE,
+    });
+    if (result.canceled || !result.assets.length) return;
+
+    await processBatch(result.assets);
   }
 
   /** Extrae la extensión de un archivo a partir de su URI (sin el punto), o null si no se puede determinar. */
@@ -830,6 +894,10 @@ export default function CaptureScreen() {
               <Text style={[styles.batchProgressLabel, { color: colors.textMuted }]}>
                 {batch.processed} de {batch.total} · puedes cambiar de pestaña, te avisamos al terminar
               </Text>
+              <Pressable style={[styles.batchAddMoreButton, { borderColor: colors.accent }]} onPress={handleAddToBatchQueue}>
+                <Ionicons name="add" size={16} color={colors.accent} />
+                <Text style={[styles.batchAddMoreText, { color: colors.accent }]}>Agregar más al lote</Text>
+              </Pressable>
             </>
           ) : (
             <>
@@ -1136,6 +1204,17 @@ const styles = StyleSheet.create({
   // sus hijos, y este botón ahora casi siempre tiene otro botón justo
   // arriba (Sellar otro lote) en vez de solo texto — el marginTop de
   // sealAnotherButton duplicaba el espacio en ese caso.
+  batchAddMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 100,
+    borderWidth: 1.5,
+  },
+  batchAddMoreText: { fontWeight: '600', fontSize: 13 },
   batchDoneButton: {
     paddingVertical: 14,
     paddingHorizontal: 24,
