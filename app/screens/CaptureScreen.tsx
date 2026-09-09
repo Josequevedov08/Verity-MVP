@@ -741,6 +741,19 @@ export default function CaptureScreen() {
     setBatch(null);
   }
 
+  /**
+   * Encadena un lote nuevo directo desde el resumen del anterior — sin
+   * esto, el usuario tenía que tocar "Listo" primero (los botones
+   * normales de sellar están ocultos mientras `batch` no sea null,
+   * durante el progreso Y mientras se muestra el resumen) para recién
+   * ahí poder abrir la galería de nuevo. Feedback real de pruebas:
+   * "si quería agregar otro lote no me dejaba".
+   */
+  async function handleSealAnotherBatch() {
+    setBatch(null);
+    await handleGalleryPick();
+  }
+
   return (
     <>
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -831,7 +844,21 @@ export default function CaptureScreen() {
               <Text style={[styles.batchSummaryText, { color: colors.textMuted }]}>
                 {describeBatchSummary(batch)}
               </Text>
-              <Pressable style={[styles.sealAnotherButton, { borderColor: colors.accent }]} onPress={handleBatchFinish}>
+              {/* Solo si no se cortó por el límite gratis a mitad de
+                  camino (ahí lo que sigue es el paywall, no otro lote) y
+                  sigue siendo PRO (por si dejó de serlo justo mientras
+                  sellaba, aunque sea un caso raro). */}
+              {!batch.limitReachedMidBatch && usage?.isPro && (
+                <Pressable
+                  style={[styles.sealAnotherButtonPrimary, { backgroundColor: colors.accent }]}
+                  onPress={handleSealAnotherBatch}
+                >
+                  <Text style={[styles.sealAnotherTextPrimary, { color: colors.accentText }]}>
+                    Sellar otro lote
+                  </Text>
+                </Pressable>
+              )}
+              <Pressable style={[styles.batchDoneButton, { borderColor: colors.accent }]} onPress={handleBatchFinish}>
                 <Text style={[styles.sealAnotherText, { color: colors.accent }]}>Listo</Text>
               </Pressable>
             </>
@@ -1095,4 +1122,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sealAnotherText: { fontWeight: '700' },
+  sealAnotherButtonPrimary: {
+    marginTop: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignSelf: 'stretch',
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  sealAnotherTextPrimary: { fontWeight: '700' },
+  // Igual que sealAnotherButton, pero SIN marginTop propio: en la
+  // pantalla de resumen del lote, batchBox ya usa gap:12 entre todos
+  // sus hijos, y este botón ahora casi siempre tiene otro botón justo
+  // arriba (Sellar otro lote) en vez de solo texto — el marginTop de
+  // sealAnotherButton duplicaba el espacio en ese caso.
+  batchDoneButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignSelf: 'stretch',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
 });
