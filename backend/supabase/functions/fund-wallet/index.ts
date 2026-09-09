@@ -32,9 +32,12 @@ import { ethers } from 'npm:ethers@6';
 
 const AMOY_RPC_URL = 'https://polygon-amoy-bor-rpc.publicnode.com';
 
-// 0.01 POL — suficiente para decenas de sellos (cada anclaje es una tx de
-// valor 0, solo paga gas) sin comprometer el fondo del proyecto.
-const FUNDING_AMOUNT_WEI = ethers.parseEther('0.01');
+// Antes 0.01 POL — se quedaba corto en pruebas reales con sellado en
+// lote (varios anclajes seguidos agotaban el saldo a mitad de camino,
+// con error real "insufficient funds for intrinsic transaction cost").
+// 0.05 da margen real para un lote grande sin comprometer demasiado el
+// fondo del proyecto (sigue siendo testnet, sin costo real).
+const FUNDING_AMOUNT_WEI = ethers.parseEther('0.05');
 
 // Si la wallet ya tiene al menos esto, no se le manda nada.
 const MIN_BALANCE_THRESHOLD_WEI = ethers.parseEther('0.001');

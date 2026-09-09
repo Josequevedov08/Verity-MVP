@@ -118,6 +118,23 @@ interface BatchState {
   limitReachedMidBatch: boolean;
 }
 
+/**
+ * Arma el resumen final del lote como UN string ya completo, en vez de
+ * mezclar texto y expresiones condicionales directo en el JSX (como
+ * estaba antes) — un usuario reportó el mensaje "cortado" a mitad de
+ * frase en pruebas reales. No se pudo confirmar una causa estructural
+ * exacta en el JSX anterior, pero construir el string entero de una
+ * sola vez, explícito, elimina cualquier ambigüedad de cómo React
+ * Native une texto y expresiones entre líneas — garantiza que nunca
+ * falte un pedazo.
+ */
+function describeBatchSummary(batch: BatchState): string {
+  const parts = [`${batch.sealedCount} sellados`];
+  if (batch.duplicateCount > 0) parts.push(`${batch.duplicateCount} ya estaban sellados`);
+  if (batch.failedCount > 0) parts.push(`${batch.failedCount} fallaron`);
+  return `${parts.join(', ')} de ${batch.total}.`;
+}
+
 export default function CaptureScreen() {
   const { colors } = useTheme();
   const [step, setStep] = useState<CaptureStep>('idle');
@@ -731,9 +748,7 @@ export default function CaptureScreen() {
                 {batch.limitReachedMidBatch ? 'Llegaste a tu límite gratis a mitad de camino' : 'Lote sellado'}
               </Text>
               <Text style={[styles.batchSummaryText, { color: colors.textMuted }]}>
-                {batch.sealedCount} sellados
-                {batch.duplicateCount > 0 ? `, ${batch.duplicateCount} ya estaban sellados` : ''}
-                {batch.failedCount > 0 ? `, ${batch.failedCount} fallaron` : ''} de {batch.total}.
+                {describeBatchSummary(batch)}
               </Text>
               <Pressable style={[styles.sealAnotherButton, { borderColor: colors.accent }]} onPress={handleBatchFinish}>
                 <Text style={[styles.sealAnotherText, { color: colors.accent }]}>Listo</Text>
