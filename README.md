@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.43.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.44.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -32,13 +32,21 @@ VERITY/
 
 ## Cómo probar la app
 
+Desde la v0.3.43, la app se prueba **exclusivamente con un build real de
+EAS (APK instalable)**, ya no con Expo Go: varios módulos nativos que usa
+Verity (`expo-media-library`, `expo-notifications`,
+`react-native-background-actions` para el sellado en segundo plano) no
+tienen módulo nativo disponible en Expo Go y rompían el bundle entero ahí
+(confirmado en pruebas reales), así que mantener compatibilidad con las
+dos formas de probar dejó de tener sentido.
+
 ```bash
 npm install
-npm start
+npx eas build --platform android --profile preview
 ```
 
-Esto abre Expo Dev Tools; escanea el QR con la app **Expo Go** en tu
-teléfono Android, o presiona `a` para abrir un emulador Android.
+Eso genera un `.apk` instalable directo en el teléfono (no requiere Play
+Store ni cuenta de desarrollador de Google para probar).
 
 Antes de sellar de verdad necesitas:
 
@@ -49,14 +57,6 @@ Antes de sellar de verdad necesitas:
    prueba sola, en silencio, la primera vez que hace falta (ver "Gas
    automático para wallets nuevas" más abajo). Ya no hace falta ir a
    ningún faucet a mano.
-
-⚠️ Importante: probado tanto en **Expo Go** como en un build real de
-EAS (APK instalable). Un módulo nativo (`expo-media-library`, para
-guardar las capturas en la galería del sistema — ver "Qué SÍ incluye
-este MVP") solo funciona confiablemente en un build real; en Expo Go
-puede no pedir el permiso correcto, así que esa copia adicional puede
-fallar en silencio ahí sin afectar el sellado en sí (la copia interna
-de Verity, que es la que usa la app, siempre funciona en ambos).
 
 ## Qué SÍ incluye este MVP
 
@@ -128,8 +128,14 @@ de Verity, que es la que usa la app, siempre funciona en ambos).
   privada de la app. Sin esto, "Verificar → Elegir de mi galería"
   nunca podía encontrar algo sellado con la cámara — el archivo
   simplemente no existía ahí. Solo se pide permiso de "agregar", no de
-  leer el resto de la galería. Requiere un build real (no funciona
-  confiablemente en Expo Go).
+  leer el resto de la galería.
+- **Sellado en segundo plano de verdad** (`react-native-background-actions`,
+  v0.3.43): un lote sigue sellando aunque el usuario salga de Verity del
+  todo (botón inicio, otra app, pantalla apagada), no solo al cambiar de
+  pestaña dentro de la app — antes Android congelaba el proceso apenas
+  Verity dejaba de estar en primer plano y el lote se cortaba a mitad de
+  camino. Notificación de progreso persistente y actualizable mientras
+  dura el lote (además del resumen final).
 
 ## Capturas de pantalla
 
@@ -207,10 +213,13 @@ identifica esos sellos como tuyos.
 Mitigaciones implementadas, ambas en "Mis sellos" / Ajustes:
 
 - **Historial**: exportar/importar un `.json` con hashes, números de
-  sello y metadatos (nunca la foto ni una miniatura — Verity no sube ni
-  guarda el archivo original en ningún respaldo, a propósito). El
-  respaldo por sí solo no prueba autoría de una foto, solo restaura tu
-  propio índice de "qué sellé y cuándo".
+  sello, metadatos y una miniatura diminuta y muy comprimida de cada
+  foto/video (agregada tras detectar que un historial importado grande
+  era, en la práctica, imposible de reconocer a simple vista — "tengo 40
+  sellos y no sé cuál es cuál"). Nunca el archivo original ni una copia
+  con calidad suficiente para servir de evidencia — el respaldo por sí
+  solo no prueba autoría de una foto, solo restaura tu propio índice de
+  "qué sellé y cuándo" de forma reconocible.
 - **Wallet**: "Respaldar mi wallet" (Ajustes) exporta la clave privada
   del dispositivo a un archivo — tan sensible como una contraseña, con
   advertencia explícita — y "Restaurar desde respaldo" la reinstala en

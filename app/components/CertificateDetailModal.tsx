@@ -363,6 +363,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                 uri={certificate.thumbnailUri}
                 mediaType={certificate.metadata.mediaType}
                 previewUri={certificate.previewImageUri}
+                backupThumbnail={certificate.backupThumbnailBase64}
                 trustLevel={certificate.trustLevel}
                 style={[styles.photo, { borderColor: colors.border }]}
                 iconSize={22}

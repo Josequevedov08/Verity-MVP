@@ -126,14 +126,42 @@ export interface VerityCertificate {
    * cupo de verdad.
    */
   importedAt?: string;
+  /**
+   * Miniatura DIMINUTA (unos 96px de lado) y muy comprimida, guardada como
+   * data URI base64 directamente dentro del certificado. Solo existe en
+   * certificados que llegaron por una copia de seguridad (ver
+   * cryptoUtils.ts: buildBackup/importBackup) — un certificado sellado de
+   * verdad en este teléfono usa `thumbnailUri` (el archivo real, en el
+   * propio dispositivo) y nunca necesita esto.
+   *
+   * Por qué existe: sin ninguna referencia visual, un historial grande de
+   * sellos importados es criptográficamente válido pero prácticamente
+   * inútil — no hay forma humana de saber cuál certificado corresponde a
+   * cuál foto (planteado por el usuario: "tengo 40 sellos y no sé cuál es
+   * cada uno"). Esta miniatura resuelve ESO, nada más.
+   *
+   * Deliberadamente NO es evidencia ni un respaldo real de la foto: la
+   * compresión es agresiva a propósito (mala calidad, tamaño mínimo) para
+   * que sea inservible como sustituto del archivo original — el hash
+   * anclado en la blockchain sigue siendo la única prueba real. Ver
+   * también LegalContentModal.tsx (sección de copias de seguridad).
+   */
+  backupThumbnailBase64?: string;
 }
 
 /**
  * Formato del archivo de copia de seguridad exportable del historial local
- * (ver cryptoUtils.ts: buildBackup/importBackup). Deliberadamente NO
- * incluye la foto ni su miniatura — solo hashes, números de sello y
- * metadatos — así que por sí solo no prueba autoría de una imagen, solo
- * restaura el índice local de "qué se selló y cuándo".
+ * (ver cryptoUtils.ts: buildBackup/importBackup). NUNCA incluye la foto o
+ * video original ni una copia utilizable de ellos — solo hashes, números
+ * de sello y metadatos — así que por sí solo no prueba autoría de una
+ * imagen, solo restaura el índice local de "qué se selló y cuándo".
+ *
+ * Única excepción, agregada después del lanzamiento inicial: cada
+ * certificado puede traer `backupThumbnailBase64`, una miniatura diminuta
+ * y muy comprimida (ver ese campo en VerityCertificate más arriba) —
+ * pensada solo para que un humano pueda reconocer visualmente sus propios
+ * sellos importados, nunca como evidencia ni como sustituto del archivo
+ * original.
  */
 export interface CertificatesBackup {
   version: 1;

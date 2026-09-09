@@ -7,10 +7,19 @@
  * ningún servidor — coherente con "la app funciona sin cuenta".
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImageManipulator from 'expo-image-manipulator';
 import type {
   VerityCertificate,
   CertificatesBackup,
 } from '../../documentation/technical/verity-protocol';
+
+// Lado de la miniatura de respaldo, en píxeles — deliberadamente chico
+// (ver VerityCertificate.backupThumbnailBase64): solo necesita alcanzar
+// para que un humano reconozca "esta es la foto del cumpleaños", no para
+// verse bien ni servir de evidencia.
+const BACKUP_THUMBNAIL_SIZE = 96;
+// Compresión agresiva a propósito, mismo motivo.
+const BACKUP_THUMBNAIL_QUALITY = 0.4;
 
 const CERTIFICATES_STORAGE_KEY = 'verity_certificates_history';
 const SEQUENCE_STORAGE_KEY = 'verity_next_sequence_number';
@@ -94,20 +103,60 @@ export async function findCertificateByTxHash(
 }
 
 /**
+ * Genera la miniatura diminuta y comprimida que viaja en el respaldo (ver
+ * VerityCertificate.backupThumbnailBase64) a partir del archivo real que
+ * SÍ existe en este dispositivo ahora mismo. Nunca bloquea el respaldo si
+ * falla: en el peor caso, ese certificado queda sin miniatura al
+ * restaurarse en otro teléfono, no se pierde nada más.
+ */
+async function buildBackupThumbnail(
+  thumbnailUri: string | undefined,
+  previewImageUri: string | undefined
+): Promise<string | undefined> {
+  // Para un video, el archivo real (thumbnailUri) es el video en sí, que
+  // <Image> no puede decodificar — se usa el frame ya extraído al sellar
+  // (previewImageUri) como fuente. Para una foto, es el mismo archivo.
+  const sourceUri = previewImageUri ?? thumbnailUri;
+  if (!sourceUri) return undefined;
+
+  try {
+    const result = await ImageManipulator.manipulateAsync(
+      sourceUri,
+      [{ resize: { width: BACKUP_THUMBNAIL_SIZE } }],
+      { compress: BACKUP_THUMBNAIL_QUALITY, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+    );
+    return result.base64 ? `data:image/jpeg;base64,${result.base64}` : undefined;
+  } catch (error) {
+    console.warn('No se pudo generar la miniatura de respaldo de un certificado (no es crítico):', error);
+    return undefined;
+  }
+}
+
+/**
  * Arma el objeto de respaldo a partir del historial local actual (ver
- * CertificatesBackup en verity-protocol.ts para el porqué de su formato
- * deliberadamente mínimo: nunca incluye la foto, solo hashes y metadatos).
+ * CertificatesBackup en verity-protocol.ts: nunca incluye la foto o video
+ * original, solo hashes, metadatos, y una miniatura diminuta pensada
+ * únicamente para reconocimiento visual humano).
  */
 export async function buildBackup(): Promise<CertificatesBackup> {
   const all = await getCertificates();
+  const certificates = await Promise.all(
+    all.map(async ({ thumbnailUri, previewImageUri, ...rest }) => {
+      // Si este certificado YA es uno importado (no tiene archivo local
+      // propio, ver backupThumbnailBase64 de una restauración anterior),
+      // no hay de dónde generar una miniatura mejor — se conserva la que
+      // ya traía tal cual, en vez de perderla al re-exportar.
+      if (rest.backupThumbnailBase64) return rest;
+
+      const backupThumbnailBase64 = await buildBackupThumbnail(thumbnailUri, previewImageUri);
+      return backupThumbnailBase64 ? { ...rest, backupThumbnailBase64 } : rest;
+    })
+  );
+
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
-    // Se omiten thumbnailUri y previewImageUri a propósito: son rutas
-    // locales del dispositivo (no una foto en sí) que de todos modos no
-    // existirán en otro teléfono, y así queda explícito que el respaldo
-    // no contiene ninguna imagen ni frame de video.
-    certificates: all.map(({ thumbnailUri, previewImageUri, ...rest }) => rest),
+    certificates,
   };
 }
 

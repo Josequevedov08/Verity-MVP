@@ -27,7 +27,6 @@ import {
   ActivityIndicator,
   Modal,
   FlatList,
-  Image,
   Pressable,
   Alert,
   ScrollView,
@@ -47,6 +46,7 @@ import { getCertificates, findCertificateByHash, findCertificateByTxHash } from 
 import CameraButton from '../components/CameraButton';
 import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
+import MediaThumbnail from '../components/MediaThumbnail';
 import SettingsButton from '../components/SettingsButton';
 import CoachMark from '../components/CoachMark';
 import { useTheme } from '../theme/ThemeContext';
@@ -449,9 +449,21 @@ export default function VerificationScreen() {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <Pressable style={styles.pickerRow} onPress={() => handlePickFromHistory(item)}>
-                {item.thumbnailUri && (
-                  <Image source={{ uri: item.thumbnailUri }} style={styles.pickerThumbnail} />
-                )}
+                {/* MediaThumbnail (no un <Image> suelto) para que un
+                    certificado importado muestre su miniatura de respaldo
+                    (ver backupThumbnailBase64) en vez de quedar en blanco
+                    — antes de esto, un historial con varios sellos
+                    importados se veía como una lista de filas idénticas
+                    sin ninguna forma de distinguirlas a simple vista. */}
+                <MediaThumbnail
+                  uri={item.thumbnailUri}
+                  mediaType={item.metadata.mediaType}
+                  previewUri={item.previewImageUri}
+                  backupThumbnail={item.backupThumbnailBase64}
+                  trustLevel={item.trustLevel}
+                  style={styles.pickerThumbnail}
+                  iconSize={16}
+                />
                 <View style={{ flex: 1 }}>
                   <Text numberOfLines={1} style={[styles.pickerHash, { color: colors.text }]}>
                     {item.sha256}

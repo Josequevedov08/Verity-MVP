@@ -9,12 +9,17 @@
  *   en la esquina superior izquierda para distinguirlo de una foto (una
  *   <Image> no puede decodificar video, así que sin el frame real solo
  *   se podía mostrar un ícono genérico).
- * - Cualquier otro caso (video sin vista previa, o sin archivo local en
- *   absoluto — ej. un certificado restaurado desde una copia de
- *   seguridad, que nunca incluye la foto/video): SealMedallion, el
- *   sello circular de verificación coloreado según el nivel de
- *   confianza (NO una imagen del contenido — a propósito, para no
- *   confundir "esto certifica el hash" con "esto es la foto real").
+ * - Sin archivo local (certificado restaurado de una copia de seguridad)
+ *   PERO con backupThumbnail (ver VerityCertificate.backupThumbnailBase64):
+ *   se muestra esa miniatura diminuta, con una insignia de "restaurado"
+ *   en la esquina — así se distingue de una foto real de alta calidad,
+ *   sin dejar el certificado completamente irreconocible. Ver el porqué
+ *   de este campo en verity-protocol.ts.
+ * - Cualquier otro caso (video sin vista previa, o sin archivo local NI
+ *   miniatura de respaldo): SealMedallion, el sello circular de
+ *   verificación coloreado según el nivel de confianza (NO una imagen
+ *   del contenido — a propósito, para no confundir "esto certifica el
+ *   hash" con "esto es la foto real").
  *
  * Se usa en CertificateCard, CertificatesScreen (grilla) y
  * CertificateDetailModal — antes cada uno repetía esta lógica.
@@ -29,6 +34,7 @@ export default function MediaThumbnail({
   uri,
   mediaType,
   previewUri,
+  backupThumbnail,
   trustLevel,
   style,
   iconSize = 22,
@@ -38,6 +44,10 @@ export default function MediaThumbnail({
   /** Frame real extraído del video, si se generó al sellar (solo aplica
    * cuando mediaType === 'video'). */
   previewUri?: string;
+  /** Miniatura diminuta y comprimida de un certificado restaurado desde
+   * una copia de seguridad (ver VerityCertificate.backupThumbnailBase64)
+   * — solo se usa cuando no hay `uri` (no hay archivo local real). */
+  backupThumbnail?: string;
   /** Solo se usa para colorear SealMedallion cuando no hay nada más que
    * mostrar. */
   trustLevel?: VerityCertificate['trustLevel'];
@@ -72,6 +82,21 @@ export default function MediaThumbnail({
         <Image source={{ uri: previewUri }} style={StyleSheet.absoluteFill} />
         <View style={[styles.videoBadge, { backgroundColor: 'rgba(0,0,0,0.55)' }]} pointerEvents="none">
           <Ionicons name="videocam" size={Math.max(10, Math.round(iconSize * 0.5))} color="#fff" />
+        </View>
+      </View>
+    );
+  }
+
+  if (backupThumbnail) {
+    return (
+      <View style={viewStyle}>
+        <Image source={{ uri: backupThumbnail }} style={StyleSheet.absoluteFill} />
+        {/* Insignia de "restaurado" — deja claro que esto NO es la foto
+            real en su calidad original, solo una referencia visual chica
+            para reconocerla (ver backupThumbnailBase64 en
+            verity-protocol.ts). */}
+        <View style={[styles.videoBadge, { backgroundColor: 'rgba(0,0,0,0.55)' }]} pointerEvents="none">
+          <Ionicons name="time-outline" size={Math.max(10, Math.round(iconSize * 0.5))} color="#fff" />
         </View>
       </View>
     );

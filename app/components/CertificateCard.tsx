@@ -33,6 +33,7 @@ export default function CertificateCard({
         uri={certificate.thumbnailUri}
         mediaType={certificate.metadata.mediaType}
         previewUri={certificate.previewImageUri}
+        backupThumbnail={certificate.backupThumbnailBase64}
         trustLevel={certificate.trustLevel}
         style={styles.thumbnail}
         iconSize={26}
