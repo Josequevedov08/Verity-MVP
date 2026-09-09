@@ -142,7 +142,18 @@ export default function VerificationScreen() {
 
   function handlePickFromHistory(certificate: VerityCertificate) {
     setPickerVisible(false);
-    if (!certificate.thumbnailUri) return;
+    if (!certificate.thumbnailUri) {
+      // Pasa con certificados IMPORTADOS de una copia de seguridad: un
+      // respaldo nunca incluye el archivo real (solo hashes y
+      // metadatos), así que no hay nada que hashear acá. Antes esto
+      // fallaba en silencio (el usuario tocaba el certificado y no
+      // pasaba nada) — bug real encontrado en pruebas.
+      Alert.alert(
+        'No se puede verificar por archivo',
+        'Este certificado se restauró desde una copia de seguridad, que nunca incluye el archivo original. Usa "Por número de sello" con el número de este certificado en vez de elegirlo aquí.'
+      );
+      return;
+    }
     checkFile(certificate.thumbnailUri);
   }
 
@@ -245,7 +256,7 @@ export default function VerificationScreen() {
         <View style={styles.actions} ref={byFileRef} collapsable={false}>
           <CameraButton label="Elegir de mi galería" onPress={handlePickFromGallery} />
           <CameraButton
-            label="Elegir de Mis sellos"
+            label="Elegir de mis sellos"
             secondary
             onPress={() => setPickerVisible(true)}
           />
@@ -426,7 +437,7 @@ export default function VerificationScreen() {
           <Pressable onPress={() => setPickerVisible(false)} style={styles.closeButton}>
             <Text style={[styles.closeText, { color: colors.accent }]}>Cerrar ✕</Text>
           </Pressable>
-          <Text style={[styles.title, { color: colors.text }]}>Elegir de Mis sellos</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Elegir de mis sellos</Text>
           <FlatList
             data={certificates}
             keyExtractor={(item) => item.id}

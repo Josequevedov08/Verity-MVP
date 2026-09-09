@@ -937,6 +937,14 @@ const styles = StyleSheet.create({
   sealAnotherButton: {
     marginTop: 16,
     paddingVertical: 14,
+    paddingHorizontal: 24,
+    // Sin esto, un texto corto ("Listo") hacía que el botón se encogiera
+    // a su propio ancho de texto en vez de ocupar el ancho de la
+    // tarjeta, quedando como un óvalo angosto que no combina con el
+    // resto de botones de la app (todos de ancho completo) — se notaba
+    // más con "Listo" que con "Sellar otro archivo" (más largo, disimulaba
+    // el problema al estirarse solo).
+    alignSelf: 'stretch',
     borderRadius: 14,
     borderWidth: 1.5,
     alignItems: 'center',
