@@ -840,38 +840,40 @@ export default function CaptureScreen() {
           motivó); en cuanto quedan 7 o menos, la MISMA tira cambia a
           tono de aviso (color warning + texto de cuenta regresiva) —
           más urgente justo cuando importa, sin sumar una segunda caja. */}
-      {usage && !usage.isPro && (
-        <Pressable
-          style={[
-            styles.proStrip,
-            usage.limit - usage.used <= 7
-              ? { borderColor: colors.warning, backgroundColor: colors.background }
-              : { borderColor: colors.border, backgroundColor: colors.background },
-          ]}
-          onPress={() => setPaywallVisible(true)}
-        >
-          <Ionicons
-            name={usage.limit - usage.used <= 7 ? 'alert-circle-outline' : 'ribbon-outline'}
-            size={14}
-            color={usage.limit - usage.used <= 7 ? colors.warning : colors.accent}
-          />
-          <Text
+      {usage && !usage.isPro && (() => {
+        // Math.max(0, ...) a propósito: `used` puede terminar SIENDO
+        // mayor que `limit` en la práctica (ej. sellaste en lote siendo
+        // PRO y después desactivaste el modo prueba) — sin este límite,
+        // esta tira llegaba a mostrar "Te quedan -20 sellos gratis este
+        // mes", que se ve como un bug aunque el conteo real esté bien.
+        const remaining = Math.max(0, usage.limit - usage.used);
+        const urgent = remaining <= 7;
+        return (
+          <Pressable
             style={[
-              styles.proStripText,
-              { color: usage.limit - usage.used <= 7 ? colors.warning : colors.textMuted },
+              styles.proStrip,
+              urgent
+                ? { borderColor: colors.warning, backgroundColor: colors.background }
+                : { borderColor: colors.border, backgroundColor: colors.background },
             ]}
+            onPress={() => setPaywallVisible(true)}
           >
-            {usage.limit - usage.used <= 7
-              ? `Te quedan ${usage.limit - usage.used} sellos gratis este mes`
-              : `Llevas ${usage.used} de ${usage.limit} sellos gratis · Hazte PRO para sellos ilimitados`}
-          </Text>
-          <Ionicons
-            name="chevron-forward"
-            size={14}
-            color={usage.limit - usage.used <= 7 ? colors.warning : colors.textMuted}
-          />
-        </Pressable>
-      )}
+            <Ionicons
+              name={urgent ? 'alert-circle-outline' : 'ribbon-outline'}
+              size={14}
+              color={urgent ? colors.warning : colors.accent}
+            />
+            <Text style={[styles.proStripText, { color: urgent ? colors.warning : colors.textMuted }]}>
+              {urgent
+                ? remaining === 0
+                  ? `Ya usaste tus ${usage.limit} sellos gratis este mes`
+                  : `Te quedan ${remaining} sellos gratis este mes`
+                : `Llevas ${usage.used} de ${usage.limit} sellos gratis · Hazte PRO para sellos ilimitados`}
+            </Text>
+            <Ionicons name="chevron-forward" size={14} color={urgent ? colors.warning : colors.textMuted} />
+          </Pressable>
+        );
+      })()}
 
       {/* Lote múltiple (PRO): toma el lugar de toda la UI de `step`
           mientras hay uno en curso o mostrando su resumen — no tiene
