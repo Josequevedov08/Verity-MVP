@@ -2,7 +2,7 @@
   "expo": {
     "name": "Verity",
     "slug": "verity-mvp",
-    "version": "0.3.41",
+    "version": "0.3.42",
     "orientation": "portrait",
     "icon": "./assets/icons/app-icon.png",
     "userInterfaceStyle": "automatic",
@@ -48,8 +48,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/icons/adaptive-icon-foreground.png",
-          "imageWidth": 160,
+          "image": "./assets/icons/splash-icon.png",
+          "imageWidth": 120,
           "resizeMode": "contain",
           "backgroundColor": "#0B0B0F"
         }
@@ -57,7 +57,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/icons/adaptive-icon-foreground.png",
+          "icon": "./assets/icons/notification-icon.png",
           "color": "#4C9AFF"
         }
       ]

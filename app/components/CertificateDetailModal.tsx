@@ -467,7 +467,15 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                 </Pressable>
               </>
             ) : (
-              <View style={styles.cardBackNoMedia}>
+              // Mismo pausado al mantener presionado que el caso con foto
+              // (arriba) — faltaba acá, único de los tres casos sin él: el
+              // sello siempre volteaba solo de golpe, sin dar tiempo a
+              // leer el texto de explicación. Feedback real de pruebas.
+              <Pressable
+                style={styles.cardBackNoMedia}
+                onPressIn={pauseAutoReturn}
+                onPressOut={resumeAutoReturn}
+              >
                 <SealMedallion trustLevel={certificate.trustLevel} size={190} />
                 <Text style={[styles.cardBackNoMediaText, { color: colors.textMuted }]}>
                   Este {mediaLabel} no está guardado en este teléfono (el certificado se restauró desde una
@@ -482,7 +490,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                   <Ionicons name="arrow-back" size={16} color={colors.accent} />
                   <Text style={[styles.backToCardTextDark, { color: colors.accent }]}>Volver al certificado</Text>
                 </Pressable>
-              </View>
+              </Pressable>
             )}
           </View>
         )}

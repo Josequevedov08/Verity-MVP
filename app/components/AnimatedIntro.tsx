@@ -7,71 +7,48 @@
  * Android/iOS (que por naturaleza no puede animarse) y antes del
  * onboarding/la app.
  *
+ * El splash NATIVO (app.json → plugin expo-splash-screen,
+ * assets/icons/splash-icon.png) ya muestra la caja clara + "VRT" en
+ * azul, estática, ANTES de que este componente JS llegue a montarse —
+ * así que acá NO se vuelve a animar esa entrada desde cero (antes sí lo
+ * hacía: rebote de tamaño 0 + "golpe de sello" del texto). Hacerlo dos
+ * veces se veía como un doble splash — el usuario lo notó probando en
+ * el teléfono ("primero sale Verity en negro y luego la intro"): el
+ * splash nativo mostraba la caja fija, y este componente la reiniciaba
+ * a invisible para volver a animarla desde cero, un salto visible.
+ * Ahora la caja + "VRT" arrancan YA visibles (idénticos al splash
+ * nativo, sin ningún salto) y la animación real empieza directo en el
+ * wordmark "VERITY".
+ *
  * Secuencia (en este orden exacto):
- *   1. El contenedor negro (redondeado + sombra, como un ícono de app)
- *      aparece con un rebote (spring) desde tamaño 0 — vacío, sin texto.
- *   2. Inmediatamente después, "VRT" aparece encima en blanco con un
- *      efecto rápido tipo "golpe de sello" (opacidad + escala, arranca
- *      grande y se asienta de golpe).
- *   3. Debajo del ícono, "VERITY" se revela letra por letra en cascada
- *      (ver CascadeText.tsx) — automático, sin esperar ningún toque.
- *   4. Pausa fija de 2000ms con todo quieto en pantalla.
- *   5. Todo el conjunto (ícono + VRT + VERITY) crece un 15% y luego se
+ *   1. El contenedor + "VRT" ya están visibles desde el primer frame
+ *      (continúa exactamente lo que mostraba el splash nativo).
+ *   2. Debajo, "VERITY" se revela letra por letra en cascada (ver
+ *      CascadeText.tsx) — automático, sin esperar ningún toque.
+ *   3. Pausa fija de 2000ms con todo quieto en pantalla.
+ *   4. Todo el conjunto (ícono + VRT + VERITY) crece un 15% y luego se
  *      desvanece (fade out).
- *   6. Al terminar, se llama a `onFinish()` — quien lo use decide qué
+ *   5. Al terminar, se llama a `onFinish()` — quien lo use decide qué
  *      desmontar/montar (ver App.tsx: pasa a onboarding o a home).
  */
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Animated, StyleSheet, Easing } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, Animated, StyleSheet, Easing } from 'react-native';
 import CascadeText from './CascadeText';
 
 const GROWTH_SCALE = 1.15; // "agrandarse un 15%"
 const PAUSE_MS = 2000; // "exactamente 2 segundos de pausa"
 
 export default function AnimatedIntro({ onFinish }: { onFinish: () => void }) {
-  // Escala de TODO el conjunto (ícono + VRT + VERITY): 0 → 1 (rebote de
-  // entrada) y, al final, 1 → 1.15 (crecimiento de salida). Vive en el
-  // envoltorio exterior, no en el ícono solo, para que el wordmark
-  // "VERITY" crezca junto con él en el paso final.
-  const containerScale = useRef(new Animated.Value(0)).current;
-  // Overlay del texto "VRT": arranca grande y transparente, y se asienta
-  // de golpe — el mismo lenguaje visual de "sello de tinta" ya usado en
-  // StampReveal.tsx para el certificado recién sellado.
-  const textScale = useRef(new Animated.Value(2.2)).current;
-  const textOpacity = useRef(new Animated.Value(0)).current;
+  // Arranca en 1 (no en 0) — ver nota de arriba: la caja ya está
+  // visible desde el splash nativo, no hay entrada que animar. Solo se
+  // usa al final, para el crecimiento de salida (1 → 1.15).
+  const containerScale = useRef(new Animated.Value(1)).current;
   // Opacidad general: solo se usa al final, para el fundido de salida.
   const overallOpacity = useRef(new Animated.Value(1)).current;
 
-  // "VERITY" no arranca solo — espera a que el ícono termine de rebotar
-  // Y el golpe de sello de "VRT" se asiente, para que se sienta como
-  // una secuencia (ícono → sello → wordmark), no todo junto de golpe.
-  const [playCascade, setPlayCascade] = useState(false);
-
-  useEffect(() => {
-    Animated.sequence([
-      // 1) Entrada con rebote de TODO el conjunto, vacío.
-      Animated.spring(containerScale, {
-        toValue: 1,
-        friction: 4,
-        tension: 50,
-        useNativeDriver: true,
-      }),
-      // 2) Efecto sello: "VRT" golpea y se asienta.
-      Animated.parallel([
-        Animated.timing(textOpacity, {
-          toValue: 1,
-          duration: 110,
-          useNativeDriver: true,
-        }),
-        Animated.spring(textScale, {
-          toValue: 1,
-          friction: 4,
-          tension: 140,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start(() => setPlayCascade(true));
-  }, []);
+  // "VERITY" arranca de inmediato al montar — ya no espera ninguna
+  // animación de entrada del ícono (esa ya "pasó" en el splash nativo).
+  const [playCascade] = useState(true);
 
   /** Se llama cuando la última letra de "VERITY" termina de revelarse —
    * recién ahí empieza la pausa fija, no antes (si no, la pausa se
@@ -105,11 +82,7 @@ export default function AnimatedIntro({ onFinish }: { onFinish: () => void }) {
         }}
       >
         <View style={styles.container}>
-          <Animated.Text
-            style={[styles.vrtText, { opacity: textOpacity, transform: [{ scale: textScale }] }]}
-          >
-            VRT
-          </Animated.Text>
+          <Text style={styles.vrtText}>VRT</Text>
         </View>
 
         <View style={styles.wordmarkWrap}>
