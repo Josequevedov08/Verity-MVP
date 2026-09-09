@@ -42,8 +42,25 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 // API "legacy" de expo-file-system, no la nueva (Directory/File/Paths) —
 // ver saveCapturePermanently más abajo para el porqué.
 import * as LegacyFileSystem from 'expo-file-system/legacy';
+import * as Notifications from 'expo-notifications';
 import { randomUUID } from 'expo-crypto';
 import Ionicons from '@expo/vector-icons/Ionicons';
+
+// A diferencia de expo-media-library, las notificaciones LOCALES (no
+// push/remoto) sí funcionan en Expo Go — solo el registro para
+// notificaciones remotas se quitó de Expo Go, no esto. Se configura acá
+// arriba (una sola vez, fuera del componente) para que la notificación
+// del lote se vea como una alerta normal incluso con la app abierta —
+// sin esto, Android/iOS la ignoran silenciosamente si la app está en
+// primer plano.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 import { hashFile } from '../services/hashService';
 import { anchorHashOnChain } from '../services/blockchainService';
@@ -128,7 +145,9 @@ interface BatchState {
  * Native une texto y expresiones entre líneas — garantiza que nunca
  * falte un pedazo.
  */
-function describeBatchSummary(batch: BatchState): string {
+function describeBatchSummary(
+  batch: Pick<BatchState, 'total' | 'sealedCount' | 'duplicateCount' | 'failedCount'>
+): string {
   const parts = [`${batch.sealedCount} sellados`];
   if (batch.duplicateCount > 0) parts.push(`${batch.duplicateCount} ya estaban sellados`);
   if (batch.failedCount > 0) parts.push(`${batch.failedCount} fallaron`);
@@ -492,18 +511,59 @@ export default function CaptureScreen() {
   }
 
   /**
+   * Avisa que el lote terminó con una notificación local — para que el
+   * usuario pueda cambiar de pestaña (o dejar el teléfono un rato) en
+   * vez de quedarse mirando la barra de progreso hasta el final. Pide
+   * el permiso justo antes de la primera vez que hace falta, no al
+   * abrir la app — así el pedido tiene contexto ("te lo pido porque
+   * estás por sellar un lote", no un permiso genérico al azar).
+   *
+   * Nunca bloquea ni interrumpe el sellado si el permiso se niega o la
+   * notificación falla por cualquier motivo: es un aviso de cortesía,
+   * no un requisito para que el lote funcione.
+   */
+  async function notifyBatchComplete(body: string) {
+    try {
+      const { status: existing } = await Notifications.getPermissionsAsync();
+      let granted = existing === 'granted';
+      if (!granted) {
+        const { status } = await Notifications.requestPermissionsAsync();
+        granted = status === 'granted';
+      }
+      if (!granted) return;
+
+      await Notifications.scheduleNotificationAsync({
+        content: { title: 'Verity — Lote sellado', body },
+        trigger: null, // null = ya mismo, no programada para después.
+      });
+    } catch (error) {
+      console.warn('No se pudo mostrar la notificación del lote (no es crítico):', error);
+    }
+  }
+
+  /**
    * Sella varios archivos elegidos de golpe en la galería (solo PRO —
    * ver handleGalleryPick). Se procesan UNO POR UNO, nunca en paralelo:
    * cada sello es su propia transacción en Polygon, y mandarlas todas
    * a la vez arriesgaría un choque de nonce en la wallet del
    * dispositivo. La UI no bloquea con una confirmación por archivo —
-   * solo una barra de progreso general — para que el usuario no tenga
-   * que quedarse mirando cada uno.
+   * solo una barra de progreso general, para poder cambiar de pestaña
+   * mientras tanto — y al terminar se avisa con una notificación (ver
+   * notifyBatchComplete), para que el usuario no tenga que quedarse
+   * mirando cada uno.
    */
   async function processBatch(assets: ImagePicker.ImagePickerAsset[]) {
     setErrorMessage(null);
     setCertificate(null);
     setIsDuplicate(false);
+    // Contadores en variables locales, en paralelo al estado de React
+    // (setBatch, abajo) — así el resumen final y la notificación no
+    // dependen de leer `prev` desde dentro de un updater de setState,
+    // que además de no ser el patrón más limpio, complica saber con
+    // certeza el valor justo en el momento en que el lote termina.
+    let sealedCount = 0;
+    let duplicateCount = 0;
+    let failedCount = 0;
     setBatch({
       total: assets.length,
       processed: 0,
@@ -531,11 +591,14 @@ export default function CaptureScreen() {
         setBatch((prev) => (prev ? { ...prev, done: true, limitReachedMidBatch: true } : prev));
         refreshUsage();
         setPaywallVisible(true);
+        notifyBatchComplete('Llegaste a tu límite gratis a mitad del lote. Toca para ver el resumen.');
         return;
       }
 
       try {
         const { duplicate } = await sealAsset(asset, 'gallery');
+        if (duplicate) duplicateCount += 1;
+        else sealedCount += 1;
         setBatch((prev) =>
           prev
             ? {
@@ -548,12 +611,16 @@ export default function CaptureScreen() {
         );
       } catch (error) {
         console.error('Error al sellar en lote:', error);
+        failedCount += 1;
         setBatch((prev) => (prev ? { ...prev, processed: prev.processed + 1, failedCount: prev.failedCount + 1 } : prev));
       }
     }
 
     refreshUsage();
     setBatch((prev) => (prev ? { ...prev, done: true } : prev));
+    notifyBatchComplete(
+      describeBatchSummary({ total: assets.length, sealedCount, duplicateCount, failedCount })
+    );
   }
 
   /** Extrae la extensión de un archivo a partir de su URI (sin el punto), o null si no se puede determinar. */
@@ -734,7 +801,7 @@ export default function CaptureScreen() {
                 />
               </View>
               <Text style={[styles.batchProgressLabel, { color: colors.textMuted }]}>
-                {batch.processed} de {batch.total}
+                {batch.processed} de {batch.total} · puedes cambiar de pestaña, te avisamos al terminar
               </Text>
             </>
           ) : (
