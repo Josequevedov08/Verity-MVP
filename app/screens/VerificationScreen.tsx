@@ -145,13 +145,19 @@ export default function VerificationScreen() {
     if (!certificate.thumbnailUri) {
       // Pasa con certificados IMPORTADOS de una copia de seguridad: un
       // respaldo nunca incluye el archivo real (solo hashes y
-      // metadatos), así que no hay nada que hashear acá. Antes esto
-      // fallaba en silencio (el usuario tocaba el certificado y no
-      // pasaba nada) — bug real encontrado en pruebas.
-      Alert.alert(
-        'No se puede verificar por archivo',
-        'Este certificado se restauró desde una copia de seguridad, que nunca incluye el archivo original. Usa "Por número de sello" con el número de este certificado en vez de elegirlo aquí.'
-      );
+      // metadatos), así que no hay nada que hashear. Primera versión de
+      // este arreglo mostraba una alerta explicando por qué no se podía
+      // verificar — funcionaba, pero desde el punto de vista de
+      // alguien usando la app se sentía como un error sin salida
+      // ("veo algo, pero no sé qué falló", feedback real de pruebas).
+      //
+      // La solución real: no hace falta "verificar" nada en este caso.
+      // El usuario lo eligió DESDE su propio historial local — ya es,
+      // por definición, un certificado válido de este teléfono. Se
+      // muestra directo, igual que si se hubiera encontrado por hash:
+      // CertificateDetailModal ya sabe mostrar bien un certificado sin
+      // archivo local (usa el sello en vez de la foto).
+      setFileResult({ status: 'found', certificate });
       return;
     }
     checkFile(certificate.thumbnailUri);
