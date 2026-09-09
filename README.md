@@ -384,13 +384,22 @@ punto de vista, sellar simplemente funciona.
 - [x] Freemium con RevenueCat conectado (límite real + paywall + restaurar compra)
 - [x] Sellar varias fotos/videos a la vez (selección múltiple, solo PRO)
 - [x] Índice público (`backend/`, Supabase) + página web de verificación (`docs/index.html`)
-- [x] Gas automático para wallets nuevas (sin salir a un faucet externo)
-- [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro)
+- [x] Gas automático para wallets nuevas (sin salir a un faucet externo,
+      con tope de recargas por dirección en vez de "una vez para
+      siempre" — v0.3.38)
 - [x] Guardar capturas en la galería del sistema (`expo-media-library`)
-- [ ] Selector de idioma (multi-idioma) — pospuesto a la fase del APK
+- [x] Notificación local al terminar un lote (v0.3.36-0.3.37) + agregar
+      archivos a un lote MIENTRAS sigue corriendo (v0.3.40) — pendiente
+      de confirmar en el APK real (Expo Go la bloquea a propósito)
 - [x] Ícono de la app (real, con la identidad del sello — ver abajo)
+- [x] Registro en Shipaton 2026 (Devpost)
+- [ ] Selector de idioma (multi-idioma) — pospuesto, no es prioridad
+      con el tiempo que queda para el cierre de Shipaton (30 sept)
+- [ ] Seguir sellando en segundo plano con la app minimizada/cerrada
+      del todo — necesita un servicio en primer plano de Android
+      (código nativo nuevo), pospuesto a después de Shipaton a propósito
+- [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro) — última fase
 - [ ] Screenshots para la ficha de Play Store/Devpost (`assets/`)
 - [ ] Materiales de Devpost (borrador del "Story" listo, falta llenar screenshots/video/RevenueCat ID)
-- [x] Registro en Shipaton 2026 (Devpost)
 - [ ] Guion y grabación del video demo
 - [ ] Cuenta de Google Play Console y build de producción (v1.0.0)
