@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.33.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.34.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -80,9 +80,18 @@ de Verity, que es la que usa la app, siempre funciona en ambos).
 - Número de sello con secuencia real (`#A00001`, `#A00002`...): el
   orden en que se selló cada archivo en ese teléfono — no un dato
   decorativo, sirve para nombrar/ordenar archivos propios.
-- Detección de duplicados: si sellas el mismo archivo dos veces, Verity
-  te muestra el certificado existente en vez de anclar (y cobrar gas) de
-  nuevo.
+- **Detección de duplicados, en dos niveles** (v0.3.33): si sellas el
+  mismo archivo dos veces, Verity te muestra el certificado existente
+  en vez de anclar (y cobrar gas) de nuevo. Primero revisa el
+  historial de ESTE dispositivo; si no hay nada, revisa también el
+  índice público antes de anclar — necesario porque dos
+  instalaciones distintas en el mismo teléfono (ej. esta app y Expo
+  Go) son, para Android, dos apps completamente separadas con su
+  propio almacenamiento, cada una con su propia wallet. Sin este
+  segundo nivel, cada instalación podía terminar anclando (y pagando
+  gas por) el mismo archivo exacto por separado, sin saberlo — un
+  hash ya anclado en la blockchain existe ahí sin importar qué
+  wallet o instalación lo pregunte después.
 - Copia de seguridad exportable/importable del historial local, y
   **respaldo/restauración de la wallet del dispositivo** (ver sección
   "Respaldo y recuperación" abajo — sin esto, borrar los datos de la

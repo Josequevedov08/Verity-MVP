@@ -57,7 +57,7 @@ import CoachMark from '../components/CoachMark';
 import PaywallModal from '../components/PaywallModal';
 import { useTheme } from '../theme/ThemeContext';
 import { getSealUsage, canSealThisMonth, type SealUsage } from '../services/revenuecatService';
-import { submitToPublicIndex } from '../services/verificationIndexService';
+import { submitToPublicIndex, lookupInPublicIndex } from '../services/verificationIndexService';
 import type {
   CaptureMetadata,
   TrustLevel,
@@ -342,6 +342,55 @@ export default function CaptureScreen() {
       const existing = await findCertificateByHash(hashResult.sha256);
       if (existing) {
         return { certificate: existing, duplicate: true };
+      }
+
+      // 1.6) Esta comprobación SOLO mira el historial de ESTE dispositivo
+      // (AsyncStorage) — dos instalaciones distintas (ej. esta APK y
+      // Expo Go) no comparten ese almacenamiento, cada una es una app
+      // separada para Android. Eso está bien para casi todo, pero NO
+      // para esto: el hash, una vez anclado, existe en la blockchain
+      // sin importar qué app o wallet lo pregunte. Sin este segundo
+      // paso, dos instalaciones distintas podían terminar creando DOS
+      // anclajes reales (gastando gas dos veces) para el mismo archivo
+      // exacto — bug real señalado por el usuario, y tenía toda la
+      // razón: "es imposible sellar algo que ya existe en la
+      // blockchain" debería cumplirse siempre, no solo dentro de la
+      // misma instalación.
+      //
+      // El índice público (Supabase) es justo el mecanismo para
+      // preguntar "¿esto ya existe en la cadena?" sin depender del
+      // almacenamiento local de nadie — y solo acepta hashes que ya
+      // verificó contra Polygon Amoy de verdad (ver
+      // backend/supabase/functions/submit-certificate/index.ts), así
+      // que es una fuente confiable. Fail-open a propósito (mismo
+      // criterio que submitToPublicIndex): si el índice no responde,
+      // seguimos el flujo normal en vez de bloquear el sellado por
+      // esto.
+      try {
+        const publicMatch = await lookupInPublicIndex(hashResult.sha256);
+        if (publicMatch) {
+          const crossDeviceCertificate: VerityCertificate = {
+            id: certificateId,
+            sha256: hashResult.sha256,
+            trustLevel: publicMatch.trustLevel,
+            metadata,
+            anchor: {
+              txHash: publicMatch.txHash,
+              walletAddress: publicMatch.walletAddress,
+              anchoredAt: publicMatch.sealedAt,
+              explorerUrl: publicMatch.explorerUrl,
+            },
+            // Igual que un certificado importado de un respaldo: no hay
+            // archivo local que mostrar (el anclaje real es de OTRA
+            // instalación/wallet), y no debe contar contra el cupo
+            // mensual de este dispositivo — nunca se gastó gas aquí.
+            importedAt: new Date().toISOString(),
+          };
+          await saveCertificate(crossDeviceCertificate);
+          return { certificate: crossDeviceCertificate, duplicate: true };
+        }
+      } catch (error) {
+        console.warn('No se pudo consultar el índice público antes de sellar (no es crítico):', error);
       }
 
       // 2) Si viene de la cámara, copiarla a una carpeta propia y
