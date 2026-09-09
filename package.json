@@ -1,6 +1,6 @@
 {
   "name": "verity-mvp",
-  "version": "0.3.36",
+  "version": "0.3.37",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {

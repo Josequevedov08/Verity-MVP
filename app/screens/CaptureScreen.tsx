@@ -42,25 +42,19 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 // API "legacy" de expo-file-system, no la nueva (Directory/File/Paths) —
 // ver saveCapturePermanently más abajo para el porqué.
 import * as LegacyFileSystem from 'expo-file-system/legacy';
-import * as Notifications from 'expo-notifications';
 import { randomUUID } from 'expo-crypto';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-// A diferencia de expo-media-library, las notificaciones LOCALES (no
-// push/remoto) sí funcionan en Expo Go — solo el registro para
-// notificaciones remotas se quitó de Expo Go, no esto. Se configura acá
-// arriba (una sola vez, fuera del componente) para que la notificación
-// del lote se vea como una alerta normal incluso con la app abierta —
-// sin esto, Android/iOS la ignoran silenciosamente si la app está en
-// primer plano.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+// OJO: expo-notifications, igual que expo-media-library más arriba, NO
+// se importa de forma estática — un import normal revienta el bundle
+// entero en Expo Go ("Unable to resolve './NotificationCategoriesModule'
+// from expo-notifications/build/getNotificationCategoriesAsync.js",
+// confirmado en pruebas reales; la suposición inicial de que las
+// notificaciones LOCALES sí funcionaban en Expo Go resultó incorrecta
+// para esta versión/config de Metro). Se importa dinámico, dentro de
+// notifyBatchComplete, y SOLO si no estamos en Expo Go — mismo patrón
+// exacto que saveToSystemGallery.
+let notificationHandlerConfigured = false;
 
 import { hashFile } from '../services/hashService';
 import { anchorHashOnChain } from '../services/blockchainService';
@@ -523,7 +517,27 @@ export default function CaptureScreen() {
    * no un requisito para que el lote funcione.
    */
   async function notifyBatchComplete(body: string) {
+    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return;
+
     try {
+      const Notifications = await import('expo-notifications');
+
+      // Sin esto, Android/iOS ignoran en silencio la notificación si la
+      // app está en primer plano. Se configura una sola vez (import
+      // dinámico repetido no vuelve a ejecutar módulo, pero el handler
+      // en sí puede pisarse sin necesidad si se llama de más).
+      if (!notificationHandlerConfigured) {
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldShowBanner: true,
+            shouldShowList: true,
+            shouldPlaySound: false,
+            shouldSetBadge: false,
+          }),
+        });
+        notificationHandlerConfigured = true;
+      }
+
       const { status: existing } = await Notifications.getPermissionsAsync();
       let granted = existing === 'granted';
       if (!granted) {
