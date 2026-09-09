@@ -172,6 +172,20 @@
     max-width: 46ch;
     margin: 0 auto;
   }
+  /* Contador en vivo del índice público — da la sensación de un
+     producto vivo, no de una maqueta estática. Se oculta por completo
+     (en vez de mostrar "0") si la consulta falla o mientras carga, para
+     nunca mostrar un número que no sea real. */
+  .live-count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 7px;
+    margin-top: 22px;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .live-count[hidden] { display: none; }
+  .live-count .n { font-size: 22px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .live-count .label { font-size: 12px; color: var(--text-faint); letter-spacing: 0.02em; }
 
   /* Insignia flotante entre el hero y el contenido — mismo truco visual
      que el paywall de la app (insignia partida entre dos secciones). */
@@ -362,6 +376,10 @@
     <p class="eyebrow" data-i18n="eyebrow"></p>
     <h1 data-i18n="title"></h1>
     <p class="hero-lede" data-i18n="lede"></p>
+    <div class="live-count" id="liveCount" hidden>
+      <span class="n" id="liveCountN">0</span>
+      <span class="label" data-i18n="liveCountLabel"></span>
+    </div>
   </div>
 
   <svg class="seal-badge" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -433,6 +451,7 @@
       eyebrow: 'Registro público · Polygon Amoy',
       title: 'Verificación pública de Verity',
       lede: 'Comprueba si una foto o video fue sellado con Verity, sin instalar la app. La huella digital se calcula en tu propio navegador — el archivo nunca sale de ahí.',
+      liveCountLabel: 'sellos anclados hasta ahora',
       byFileTitle: 'Por archivo',
       byFileSub: 'Elige el archivo — su huella digital (SHA-256) se calcula en tu navegador y solo eso se consulta.',
       dropLabel: 'Toca para elegir, o arrastra aquí',
@@ -471,6 +490,7 @@
       eyebrow: 'Public registry · Polygon Amoy',
       title: 'Verity Public Verification',
       lede: 'Check whether a photo or video was sealed with Verity, without installing the app. The fingerprint is computed in your own browser — the file never leaves it.',
+      liveCountLabel: 'seals anchored so far',
       byFileTitle: 'By file',
       byFileSub: 'Choose the file — its fingerprint (SHA-256) is computed in your browser, and that’s all that gets checked.',
       dropLabel: 'Tap to choose, or drag here',
@@ -762,6 +782,36 @@
   });
 
   applyStaticText();
+
+  // ---------------- Contador en vivo ----------------
+  // Pide solo el conteo total (Prefer: count=exact + HEAD), nunca las
+  // filas en sí — barato incluso si el índice crece mucho. Se queda
+  // oculto (nunca en "0" ni con un placeholder) si algo falla, para no
+  // mostrar jamás un número que no sea real.
+  (async function loadLiveCount() {
+    try {
+      // GET, no HEAD: algunas conexiones se cuelgan con HEAD contra este
+      // endpoint (confirmado probando con curl). Range 0-0 pide de todas
+      // formas solo 1 fila — el conteo real igual viaja en Content-Range.
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/certificates?select=sha256`, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          Prefer: 'count=exact',
+          Range: '0-0',
+        },
+      });
+      const range = res.headers.get('content-range'); // formato "0-24/123"
+      const total = range ? parseInt(range.split('/')[1], 10) : NaN;
+      if (Number.isFinite(total) && total > 0) {
+        document.getElementById('liveCountN').textContent = total.toLocaleString(lang === 'es' ? 'es' : 'en');
+        document.getElementById('liveCount').hidden = false;
+      }
+    } catch {
+      // Silencioso a propósito — este contador es un plus, no algo
+      // crítico para el resto de la página.
+    }
+  })();
 
   // ---------------- Privacidad (modal simple) ----------------
   const privacyBackdrop = document.getElementById('privacyBackdrop');
