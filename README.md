@@ -398,15 +398,20 @@ punto de vista, sellar simplemente funciona.
       siempre" — v0.3.38)
 - [x] Guardar capturas en la galería del sistema (`expo-media-library`)
 - [x] Notificación local al terminar un lote (v0.3.36-0.3.37) + agregar
-      archivos a un lote MIENTRAS sigue corriendo (v0.3.40) — pendiente
-      de confirmar en el APK real (Expo Go la bloquea a propósito)
+      archivos a un lote MIENTRAS sigue corriendo (v0.3.40) —
+      confirmado funcionando en APK real
 - [x] Ícono de la app (real, con la identidad del sello — ver abajo)
 - [x] Registro en Shipaton 2026 (Devpost)
+- [x] Sellado en segundo plano de verdad, con la app minimizada del
+      todo (`react-native-background-actions` + notificación de
+      progreso persistente y actualizable — v0.3.43), y el permiso de
+      notificaciones pedido al terminar el onboarding en vez de a
+      mitad de un lote
+- [x] Miniatura diminuta y comprimida en la copia de seguridad, para
+      poder reconocer un sello importado a simple vista sin depender
+      de memorizar hashes (v0.3.44 — ver "Respaldo y recuperación")
 - [ ] Selector de idioma (multi-idioma) — pospuesto, no es prioridad
       con el tiempo que queda para el cierre de Shipaton (30 sept)
-- [ ] Seguir sellando en segundo plano con la app minimizada/cerrada
-      del todo — necesita un servicio en primer plano de Android
-      (código nativo nuevo), pospuesto a después de Shipaton a propósito
 - [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro) — última fase
 - [ ] Screenshots para la ficha de Play Store/Devpost (`assets/`)
 - [ ] Materiales de Devpost (borrador del "Story" listo, falta llenar screenshots/video/RevenueCat ID)
