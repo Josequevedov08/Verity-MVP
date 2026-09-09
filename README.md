@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.37.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.38.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -355,12 +355,13 @@ de "wallet invisible" que sostiene toda la app.
 Ahora, justo antes de anclar, la app le pide en silencio una gotita de POL
 a una Edge Function (`fund-wallet`, ver `backend/README.md`) si detecta
 que el saldo local es bajo. Esa función paga con una wallet propia del
-proyecto (fondeada una sola vez por nosotros, vía el faucet oficial de
-Amoy; su clave privada vive solo en Supabase Vault) y tiene protecciones
-para que nadie pueda vaciarla: cada dirección se fondea una única vez
-para siempre, y hay un límite de pedidos por IP. El usuario nunca ve nada
-de esto — desde su punto de vista, sellar simplemente funciona la primera
-vez.
+proyecto (fondeada por nosotros, vía el faucet oficial de Amoy; su clave
+privada vive solo en Supabase Vault) y tiene protecciones para que nadie
+pueda vaciarla: cada dirección tiene un tope de recargas de por vida (no
+ilimitado, pero tampoco una sola vez para siempre — sellar un lote
+grande puede gastar de verdad el gas dado, y eso no es abuso), más un
+límite de pedidos por IP. El usuario nunca ve nada de esto — desde su
+punto de vista, sellar simplemente funciona.
 
 ## Versionado
 

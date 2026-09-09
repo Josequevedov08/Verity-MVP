@@ -2,7 +2,7 @@
   "expo": {
     "name": "Verity",
     "slug": "verity-mvp",
-    "version": "0.3.37",
+    "version": "0.3.38",
     "orientation": "portrait",
     "icon": "./assets/icons/app-icon.png",
     "userInterfaceStyle": "automatic",

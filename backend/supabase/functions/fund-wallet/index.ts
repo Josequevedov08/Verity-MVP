@@ -14,9 +14,12 @@
 //
 // Protecciones contra abuso (alguien tratando de vaciar el fondo del
 // proyecto generando wallets nuevas sin parar):
-//   1. `funded_wallets`: cada dirección se fondea UNA SOLA VEZ para
-//      siempre — un segundo pedido para la misma address se rechaza sin
-//      tocar la blockchain.
+//   1. `funded_wallets`: cada dirección puede recibir hasta
+//      MAX_FUNDINGS_PER_ADDRESS recargas en su vida — antes era una
+//      sola vez para siempre, pero resultó demasiado estricto: sellar
+//      un lote grande puede gastar de verdad el gas dado, sin que eso
+//      sea abuso. Un tope (en vez de ilimitado) sigue acotando el
+//      daño máximo posible por dirección.
 //   2. `fund_requests_log` + límite por IP: como no hay login, la IP de
 //      origen es la única señal disponible — máx. 3 pedidos por IP cada
 //      10 minutos.
@@ -44,6 +47,12 @@ const MIN_BALANCE_THRESHOLD_WEI = ethers.parseEther('0.001');
 
 const MAX_REQUESTS_PER_IP = 3;
 const RATE_LIMIT_WINDOW_MINUTES = 10;
+
+// Tope de recargas totales por dirección, de por vida — antes era 1
+// (para siempre), lo que bloqueaba a alguien que de verdad gastó su gas
+// sellando en lote. 5 recargas × 0.05 POL = 0.25 POL máximo posible por
+// dirección, acotado y razonable para testnet.
+const MAX_FUNDINGS_PER_ADDRESS = 5;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -93,19 +102,21 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   );
 
-  // 1) ¿Ya se fondeó esta dirección alguna vez? Si sí, no se hace nada más.
-  const { data: alreadyFunded, error: fundedLookupError } = await supabase
+  // 1) ¿Ya se agotó el tope de recargas de esta dirección? Antes esto
+  // era "¿ya se fondeó alguna vez?" (una sola vez para siempre) — ahora
+  // es un CONTEO, para permitir varias recargas legítimas sin abrir la
+  // puerta a un abuso ilimitado.
+  const { count: fundingCount, error: fundedLookupError } = await supabase
     .from('funded_wallets')
-    .select('address')
-    .eq('address', normalizedAddress)
-    .maybeSingle();
+    .select('id', { count: 'exact', head: true })
+    .eq('address', normalizedAddress);
 
   if (fundedLookupError) {
     console.error('Error consultando funded_wallets:', fundedLookupError);
     return jsonResponse({ error: 'Error interno.' }, 500);
   }
-  if (alreadyFunded) {
-    return jsonResponse({ ok: true, funded: false, reason: 'already_funded' });
+  if ((fundingCount ?? 0) >= MAX_FUNDINGS_PER_ADDRESS) {
+    return jsonResponse({ ok: true, funded: false, reason: 'max_fundings_reached' });
   }
 
   // 2) Límite por IP — evita pedidos en cadena desde el mismo origen.
@@ -171,8 +182,8 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: 'No se pudo enviar el financiamiento. Intenta de nuevo.' }, 502);
   }
 
-  // 6) Registrar el fondeo — de aquí en adelante esta dirección nunca
-  // vuelve a calificar, sin importar qué pase con su balance después.
+  // 6) Registrar el fondeo — cuenta contra el tope MAX_FUNDINGS_PER_ADDRESS
+  // de esta dirección (ver paso 1).
   const { error: insertError } = await supabase.from('funded_wallets').insert({
     address: normalizedAddress,
     tx_hash: txHash,
