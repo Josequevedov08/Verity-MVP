@@ -13,3 +13,6 @@ ios/build/
 # Capturas de pantalla pegadas en el chat durante pruebas manuales — no
 # son assets del proyecto (esos viven en assets/screenshots/).
 /Imagenes App apk pruebas/
+
+# Archivos de trabajo temporales (ej. artefactos publicados), no parte del proyecto
+/scratch/
