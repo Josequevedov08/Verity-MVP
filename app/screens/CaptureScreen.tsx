@@ -32,32 +32,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as VideoThumbnails from 'expo-video-thumbnails';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
-// OJO: expo-media-library NO se importa arriba con las demás — un
-// import estático se evalúa (y su módulo nativo se busca) apenas se
-// carga este archivo, y en Expo Go eso revienta la app ENTERA con
-// "Cannot find native module 'ExpoMediaLibraryNext'" incluso sin
-// llegar a usarlo (confirmado en pruebas reales). Se importa dinámico,
-// dentro de saveToSystemGallery, y SOLO si no estamos en Expo Go.
+// Import estático normal: desde que se decidió probar todo por APK real
+// (nunca más Expo Go), ya no hace falta el import dinámico + guard de
+// ExecutionEnvironment que esto tenía antes (expo-media-library no tiene
+// módulo nativo en Expo Go y reventaba el bundle entero ahí).
+import * as MediaLibrary from 'expo-media-library';
 // API "legacy" de expo-file-system, no la nueva (Directory/File/Paths) —
 // ver saveCapturePermanently más abajo para el porqué.
 import * as LegacyFileSystem from 'expo-file-system/legacy';
 import { randomUUID } from 'expo-crypto';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-// OJO: expo-notifications, igual que expo-media-library más arriba, NO
-// se importa de forma estática — un import normal revienta el bundle
-// entero en Expo Go ("Unable to resolve './NotificationCategoriesModule'
-// from expo-notifications/build/getNotificationCategoriesAsync.js",
-// confirmado en pruebas reales; la suposición inicial de que las
-// notificaciones LOCALES sí funcionaban en Expo Go resultó incorrecta
-// para esta versión/config de Metro). Se importa dinámico, dentro de
-// notifyBatchComplete, y SOLO si no estamos en Expo Go — mismo patrón
-// exacto que saveToSystemGallery.
-let notificationHandlerConfigured = false;
-
 import { hashFile } from '../services/hashService';
 import { anchorHashOnChain } from '../services/blockchainService';
+import { notifyBatchProgress, notifyBatchComplete, dismissBatchProgress } from '../services/notificationService';
+import {
+  startBackgroundSealing,
+  updateBackgroundSealingProgress,
+  stopBackgroundSealing,
+} from '../services/backgroundSealingService';
 import CameraButton from '../components/CameraButton';
 import CertificateCard from '../components/CertificateCard';
 import CertificateDetailModal from '../components/CertificateDetailModal';
@@ -301,14 +294,7 @@ export default function CaptureScreen() {
    * acá — esto es un beneficio adicional, no un requisito para sellar.
    */
   async function saveToSystemGallery(uri: string): Promise<void> {
-    // En Expo Go, expo-media-library no tiene su módulo nativo disponible
-    // — ni siquiera importarlo funciona ahí. Se sale antes de intentarlo
-    // siquiera, para poder seguir probando todo lo demás por Expo Go sin
-    // que esto tumbe la app entera.
-    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return;
-
     try {
-      const MediaLibrary = await import('expo-media-library');
       const { status } = await MediaLibrary.requestPermissionsAsync(true);
       if (status !== 'granted') return;
       await MediaLibrary.saveToLibraryAsync(uri);
@@ -512,57 +498,6 @@ export default function CaptureScreen() {
   }
 
   /**
-   * Avisa que el lote terminó con una notificación local — para que el
-   * usuario pueda cambiar de pestaña (o dejar el teléfono un rato) en
-   * vez de quedarse mirando la barra de progreso hasta el final. Pide
-   * el permiso justo antes de la primera vez que hace falta, no al
-   * abrir la app — así el pedido tiene contexto ("te lo pido porque
-   * estás por sellar un lote", no un permiso genérico al azar).
-   *
-   * Nunca bloquea ni interrumpe el sellado si el permiso se niega o la
-   * notificación falla por cualquier motivo: es un aviso de cortesía,
-   * no un requisito para que el lote funcione.
-   */
-  async function notifyBatchComplete(body: string) {
-    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return;
-
-    try {
-      const Notifications = await import('expo-notifications');
-
-      // Sin esto, Android/iOS ignoran en silencio la notificación si la
-      // app está en primer plano. Se configura una sola vez (import
-      // dinámico repetido no vuelve a ejecutar módulo, pero el handler
-      // en sí puede pisarse sin necesidad si se llama de más).
-      if (!notificationHandlerConfigured) {
-        Notifications.setNotificationHandler({
-          handleNotification: async () => ({
-            shouldShowBanner: true,
-            shouldShowList: true,
-            shouldPlaySound: false,
-            shouldSetBadge: false,
-          }),
-        });
-        notificationHandlerConfigured = true;
-      }
-
-      const { status: existing } = await Notifications.getPermissionsAsync();
-      let granted = existing === 'granted';
-      if (!granted) {
-        const { status } = await Notifications.requestPermissionsAsync();
-        granted = status === 'granted';
-      }
-      if (!granted) return;
-
-      await Notifications.scheduleNotificationAsync({
-        content: { title: 'Verity — Lote sellado', body },
-        trigger: null, // null = ya mismo, no programada para después.
-      });
-    } catch (error) {
-      console.warn('No se pudo mostrar la notificación del lote (no es crítico):', error);
-    }
-  }
-
-  /**
    * Sella varios archivos elegidos de golpe en la galería (solo PRO —
    * ver handleGalleryPick). Se procesan UNO POR UNO, nunca en paralelo:
    * cada sello es su propia transacción en Polygon, y mandarlas todas
@@ -591,6 +526,14 @@ export default function CaptureScreen() {
     setErrorMessage(null);
     setCertificate(null);
     setIsDuplicate(false);
+
+    // Foreground service real: mantiene la app con vida aunque el
+    // usuario salga del todo (inicio, otra app, pantalla apagada) —
+    // ver backgroundSealingService.ts para el porqué. Se arranca acá,
+    // al iniciar un lote NUEVO (no cuando solo se agregan archivos a
+    // uno que ya está corriendo, ver el "return" de arriba).
+    await startBackgroundSealing();
+
     // Contadores en variables locales, en paralelo al estado de React
     // (setBatch, abajo) — así el resumen final y la notificación no
     // dependen de leer `prev` desde dentro de un updater de setState,
@@ -622,6 +565,11 @@ export default function CaptureScreen() {
           ? `Sellando video ${i + 1} de ${queue.length}...`
           : `Sellando foto ${i + 1} de ${queue.length}...`;
       setBatch((prev) => (prev ? { ...prev, currentLabel: label } : prev));
+      // Misma etiqueta, pero en la notificación de progreso persistente
+      // (barra de estado de Android) — así el usuario ve el avance real
+      // aunque haya salido de Verity, no solo dentro de la app.
+      notifyBatchProgress(i, queue.length, label);
+      updateBackgroundSealingProgress(label);
 
       // El lote es una función PRO (ilimitado), pero esto queda como
       // protección real por si algún día cambia esa regla: si a mitad
@@ -631,6 +579,8 @@ export default function CaptureScreen() {
         setBatch((prev) => (prev ? { ...prev, done: true, limitReachedMidBatch: true } : prev));
         refreshUsage();
         setPaywallVisible(true);
+        dismissBatchProgress();
+        await stopBackgroundSealing();
         notifyBatchComplete('Llegaste a tu límite gratis a mitad del lote. Toca para ver el resumen.');
         batchQueueRef.current = []; // lo que quedaba en la cola no se va a sellar; no dejarlo "fantasma".
         return;
@@ -670,6 +620,8 @@ export default function CaptureScreen() {
 
     refreshUsage();
     setBatch((prev) => (prev ? { ...prev, done: true } : prev));
+    dismissBatchProgress();
+    await stopBackgroundSealing();
     notifyBatchComplete(
       describeBatchSummary({ total: processedCount, sealedCount, duplicateCount, failedCount })
     );

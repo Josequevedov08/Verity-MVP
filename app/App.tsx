@@ -17,6 +17,7 @@ import HomeScreen from './screens/HomeScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import AnimatedIntro from './components/AnimatedIntro';
 import { initRevenueCat } from './services/revenuecatService';
+import { requestNotificationPermission } from './services/notificationService';
 import { hasSeenOnboarding, markOnboardingSeen } from './utils/onboardingUtils';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 
@@ -49,6 +50,11 @@ function AppContent() {
 
   async function handleOnboardingDone() {
     await markOnboardingSeen();
+    // Se pide acá, justo al terminar el onboarding (una sola vez, la
+    // primera vez que se abre la app) — antes se pedía recién después
+    // del primer lote sellado, lo cual se sentía como que aparecía de
+    // la nada en medio de otra tarea. Nunca bloquea nada si se niega.
+    requestNotificationPermission();
     setOnboardingDone(true);
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "verity-mvp",
-  "version": "0.3.42",
+  "version": "0.3.43",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -36,6 +36,7 @@
     "expo-video-thumbnails": "~57.0.1",
     "react": "19.2.3",
     "react-native": "0.86.3",
+    "react-native-background-actions": "^4.1.0",
     "react-native-get-random-values": "~1.11.0",
     "react-native-purchases": "^8.2.0",
     "react-native-safe-area-context": "~5.7.0",
