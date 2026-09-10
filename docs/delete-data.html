@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Eliminar mis datos — Verity</title>
+<style>
+  :root {
+    --bg: #0B0B0F;
+    --surface: #16171D;
+    --border: #2A2C36;
+    --text: #F2F2F5;
+    --text-muted: #9A9DAA;
+    --accent: #4C9AFF;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 48px 20px 80px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .mark {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px; letter-spacing: 0.02em;
+  }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  .updated { color: var(--text-muted); font-size: 13px; margin-bottom: 40px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  p, li { color: #D6D8E0; margin: 0 0 8px; }
+  ol, ul { padding-left: 22px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin: 20px 0;
+  }
+  .mail-btn {
+    display: inline-block;
+    margin-top: 8px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 10px;
+  }
+  a { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  th { color: var(--text-muted); font-weight: 600; }
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="mark">VRT</div>
+    <div><strong>Verity</strong></div>
+  </div>
+
+  <h1>Eliminar mis datos de Verity</h1>
+  <p class="updated">Última actualización: septiembre de 2026</p>
+
+  <p>Verity es la app desarrollada por <strong>Jose Quevedo</strong> (paquete <code>com.verity.mvp</code>). Como Verity no pide cuenta ni login, no existe un "usuario registrado" al que borrar de un sistema central — pero hay dos lugares donde sí queda información tuya, y esta página explica cómo eliminar cada uno.</p>
+
+  <h2>1. Tu historial local (en tu teléfono)</h2>
+  <p>Las miniaturas, fechas y números de sello que ves en "Mis sellos" viven únicamente en el almacenamiento de tu propio dispositivo. Para borrarlos:</p>
+  <ol>
+    <li>Abrí Ajustes de Android → Aplicaciones → Verity → Almacenamiento → <strong>Borrar datos</strong>, o directamente <strong>desinstalá la app</strong>.</li>
+  </ol>
+  <p>Esto no requiere contactarnos — es inmediato y bajo tu control total.</p>
+
+  <h2>2. Tu registro en el índice público de verificación</h2>
+  <p>Si sellaste algo con Verity, se guardó una fila en nuestro índice público (para que "Verificar → Por archivo" funcione desde otro dispositivo). Esa fila contiene: el hash SHA-256 de tu archivo, el número de transacción, la dirección de tu wallet, el nivel de confianza, el tipo de archivo y la fecha de sellado — <strong>nunca la foto o video en sí</strong>.</p>
+
+  <div class="card">
+    <p style="margin:0 0 4px; font-weight:600;">Para solicitar que eliminemos esa fila, escribinos:</p>
+    <a class="mail-btn" href="mailto:joseramonquevedovillalobos@gmail.com?subject=Eliminar%20mi%20registro%20de%20Verity">joseramonquevedovillalobos@gmail.com</a>
+    <p style="margin-top:12px; font-size:13px;">Incluí el número de sello (o el hash SHA-256) del certificado que querés eliminar. Respondemos en un plazo de hasta 30 días.</p>
+  </div>
+
+  <h2>Qué se elimina y qué se conserva</h2>
+  <table>
+    <tr><th>Dato</th><th>¿Se puede eliminar?</th></tr>
+    <tr><td>Historial local (miniaturas, fechas)</td><td>Sí, de inmediato, vos mismo</td></tr>
+    <tr><td>Fila en el índice público (Supabase)</td><td>Sí, por correo, hasta 30 días</td></tr>
+    <tr><td>El hash anclado en la blockchain de Polygon</td><td>No — una blockchain pública es inmutable por diseño; ningún sistema (ni siquiera nosotros) puede borrar una transacción ya confirmada</td></tr>
+  </table>
+  <p style="font-size:13px; color:var(--text-muted);">El hash anclado nunca fue tu foto ni información personal identificable por sí solo — es un texto de 64 caracteres sin valor fuera de tu propio dispositivo.</p>
+
+  <footer>
+    Verity · MVP para Shipaton 2026 · <a href="https://github.com/Josequevedov08/Verity-MVP">código en GitHub</a> · <a href="privacy.html">Política de privacidad</a>
+  </footer>
+</div>
+</body>
+</html>
