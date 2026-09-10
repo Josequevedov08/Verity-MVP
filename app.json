@@ -61,6 +61,12 @@
           "color": "#4C9AFF"
         }
       ],
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "production"
+        }
+      ],
       "./plugins/withBackgroundActions.js"
     ],
     "extra": {

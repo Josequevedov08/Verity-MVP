@@ -17,6 +17,7 @@ import HomeScreen from './screens/HomeScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import AnimatedIntro from './components/AnimatedIntro';
 import { initRevenueCat } from './services/revenuecatService';
+import { initOneSignal } from './services/onesignalService';
 import { requestNotificationPermission } from './services/notificationService';
 import { hasSeenOnboarding, markOnboardingSeen } from './utils/onboardingUtils';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
@@ -30,6 +31,7 @@ function AppContent() {
 
   useEffect(() => {
     initRevenueCat();
+    initOneSignal();
     hasSeenOnboarding().then(setSeenOnboarding);
   }, []);
 
