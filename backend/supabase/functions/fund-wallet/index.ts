@@ -48,6 +48,17 @@ const MIN_BALANCE_THRESHOLD_WEI = ethers.parseEther('0.001');
 const MAX_REQUESTS_PER_IP = 3;
 const RATE_LIMIT_WINDOW_MINUTES = 10;
 
+// Tope AGREGADO por IP en 24h, además del de 10 minutos de arriba —
+// pensado para un patrón distinto de abuso (no detectado hasta que pasó
+// de verdad en pruebas): desinstalar y reinstalar la app genera una
+// wallet NUEVA cada vez (SecureStore se borra con la desinstalación), y
+// cada wallet nueva puede pedir su propia recarga — el límite de 10
+// minutos no frena eso si las reinstalaciones están espaciadas. 20
+// pedidos/día × 0.05 POL = 1 POL máximo posible por IP en un día,
+// generoso para pruebas reales pero ya no ilimitado.
+const MAX_REQUESTS_PER_IP_PER_DAY = 20;
+const DAILY_LIMIT_WINDOW_HOURS = 24;
+
 // Tope de recargas totales por dirección, de por vida — antes era 1
 // (para siempre), lo que bloqueaba a alguien que de verdad gastó su gas
 // sellando en lote. 5 recargas × 0.05 POL = 0.25 POL máximo posible por
@@ -133,6 +144,24 @@ Deno.serve(async (req: Request) => {
   }
   if ((recentRequestCount ?? 0) >= MAX_REQUESTS_PER_IP) {
     return jsonResponse({ error: 'Demasiados pedidos, intenta más tarde.' }, 429);
+  }
+
+  // 2.5) Tope diario por IP — ver comentario en MAX_REQUESTS_PER_IP_PER_DAY
+  // más arriba. Cubre el caso de reinstalaciones espaciadas (cada una con
+  // wallet nueva) que el límite de 10 minutos no alcanza a frenar.
+  const dayWindowStart = new Date(Date.now() - DAILY_LIMIT_WINDOW_HOURS * 60 * 60_000).toISOString();
+  const { count: dailyRequestCount, error: dailyLimitError } = await supabase
+    .from('fund_requests_log')
+    .select('id', { count: 'exact', head: true })
+    .eq('ip', clientIp)
+    .gte('requested_at', dayWindowStart);
+
+  if (dailyLimitError) {
+    console.error('Error consultando el tope diario en fund_requests_log:', dailyLimitError);
+    return jsonResponse({ error: 'Error interno.' }, 500);
+  }
+  if ((dailyRequestCount ?? 0) >= MAX_REQUESTS_PER_IP_PER_DAY) {
+    return jsonResponse({ error: 'Se alcanzó el máximo de recargas por hoy desde este origen. Intenta mañana.' }, 429);
   }
 
   // Se registra el intento ANTES de mandar la transacción, para que el
