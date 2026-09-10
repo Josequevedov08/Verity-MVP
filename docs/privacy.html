@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Política de privacidad — Verity</title>
+<style>
+  :root {
+    --bg: #0B0B0F;
+    --surface: #16171D;
+    --border: #2A2C36;
+    --text: #F2F2F5;
+    --text-muted: #9A9DAA;
+    --accent: #4C9AFF;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 48px 20px 80px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .mark {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px; letter-spacing: 0.02em;
+  }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  .updated { color: var(--text-muted); font-size: 13px; margin-bottom: 40px; }
+  h2 { font-size: 17px; margin: 36px 0 10px; }
+  p { color: #D6D8E0; margin: 0 0 8px; white-space: pre-line; }
+  a { color: var(--accent); }
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="mark">VRT</div>
+    <div><strong>Verity</strong></div>
+  </div>
+
+  <h1>Política de privacidad</h1>
+  <p class="updated">Última actualización: septiembre de 2026</p>
+
+  <h2>Qué NO hace Verity</h2>
+  <p>Verity no pide cuenta ni login, no vende tus datos, y nunca sube tu foto ni tu video original a ningún sitio (ver "Qué se procesa en tu teléfono" abajo para el detalle de qué sí sale del dispositivo). No hay analítica de terceros ni publicidad en esta versión.</p>
+
+  <h2>Qué se procesa en tu teléfono</h2>
+  <p>Al sellar una foto o video, Verity calcula su huella digital (hash SHA-256) directamente en tu dispositivo. El archivo original nunca sale de tu teléfono: solo esa huella (un texto de 64 caracteres, no reversible a la imagen original) se envía a la red pública de Polygon para quedar registrada con fecha y hora.</p>
+
+  <h2>Qué se guarda y dónde</h2>
+  <p>El historial de sellos (miniaturas, fechas, número de sello) se guarda únicamente en el almacenamiento local de tu teléfono. Si desinstalas la app o borras sus datos, ese historial local se pierde, pero los sellos ya anclados en Polygon siguen existiendo ahí para siempre y se pueden volver a consultar con "Buscar por número de sello". Puedes exportar una copia de seguridad de tu historial desde "Mis sellos": incluye hashes, metadatos y una miniatura diminuta y muy comprimida de cada foto/video (para poder reconocerlos al restaurar), nunca el archivo original ni una copia con calidad suficiente para servir de evidencia — la prueba real siempre es el hash anclado en Polygon.</p>
+
+  <h2>Índice público de verificación</h2>
+  <p>Para que alguien pueda verificar un archivo sellado en OTRO dispositivo sin tener el número de sello a mano, Verity envía a un servidor propio del proyecto (no de un tercero) el hash SHA-256, el número de transacción, la dirección de la wallet, el nivel de confianza, el tipo de archivo (foto o video) y la fecha de sellado. Nunca se envía el archivo original ni una miniatura. Este servidor solo acepta datos que ya puede confirmar como reales consultando directamente la blockchain, así que no depende de la palabra de nadie.</p>
+
+  <h2>Permisos que pide la app</h2>
+  <p>• Cámara: para tomar la foto o grabar el video que vas a sellar.
+• Ubicación: solo cuando usas la cámara de la app (no para archivos de galería), para poder darle el nivel de confianza más alto a esa captura. Puedes negar este permiso y seguir usando la app con un nivel de confianza menor.
+• Fotos/galería: solo cuando tú eliges explícitamente sellar o verificar un archivo existente, o para guardar ahí la copia de lo que sellas con la cámara.</p>
+
+  <h2>Blockchain y wallet</h2>
+  <p>Verity crea automáticamente una wallet en tu dispositivo (no visible como billetera cripto tradicional) solo para poder anclar hashes en Polygon Amoy, una red de pruebas (testnet) sin valor monetario real durante este MVP. La dirección de esa wallet es pública por diseño (así funciona cualquier blockchain). La puedes ver en Ajustes.</p>
+
+  <h2>Pagos y suscripción PRO</h2>
+  <p>Si te haces PRO, el pago lo procesa Google Play directamente. RevenueCat, un proveedor externo, gestiona el estado de tu suscripción (si está activa, cuándo se renueva) para que Verity sepa que eres PRO; no ve el contenido de tus fotos ni videos, solo datos de la suscripción en sí.</p>
+
+  <h2>Menores de edad</h2>
+  <p>Verity no está dirigida a menores de 13 años y no recopila a sabiendas información de menores de esa edad.</p>
+
+  <h2>Cambios a esta política</h2>
+  <p>Esta política puede actualizarse mientras el proyecto evoluciona más allá del MVP del hackathon. La fecha de la última actualización aparece arriba de todo.</p>
+
+  <h2>Contacto</h2>
+  <p>Este es un proyecto MVP para el hackathon Shipaton 2026. Para preguntas sobre privacidad, escribe a <a href="mailto:joseramonquevedovillalobos@gmail.com">joseramonquevedovillalobos@gmail.com</a>.</p>
+
+  <footer>
+    Verity · MVP para Shipaton 2026 · <a href="https://github.com/Josequevedov08/Verity-MVP">código en GitHub</a> · <a href="index.html">Verificación pública</a>
+  </footer>
+</div>
+</body>
+</html>
