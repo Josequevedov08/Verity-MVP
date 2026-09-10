@@ -139,34 +139,54 @@ Antes de sellar de verdad necesitas:
 
 ## Capturas de pantalla
 
-Probadas en dispositivo Android real (Expo Go), modo claro y oscuro.
-El botón circular gris flotante que aparece en algunas capturas
-**no es parte de la app** — es el propio botón de Expo Go para abrir
-su menú de desarrollador durante las pruebas; no existe en un build
-real.
+Tomadas en un teléfono Android real con el APK de la v0.3.47 (EAS
+Build, no Expo Go) — 40 capturas completas en `assets/screenshots/`,
+acá se muestra una selección representativa de cada pantalla en modo
+claro y oscuro.
 
 <table>
 <tr>
-<td width="33%"><img src="assets/screenshots/01-sellar-oscuro.jpeg" width="100%" alt="Sellar, modo oscuro" /><br/><sub><b>Sellar</b> — modo oscuro</sub></td>
-<td width="33%"><img src="assets/screenshots/02-sellar-claro.jpeg" width="100%" alt="Sellar, modo claro" /><br/><sub><b>Sellar</b> — modo claro</sub></td>
-<td width="33%"><img src="assets/screenshots/03-certificado-detalle.jpeg" width="100%" alt="Detalle de certificado" /><br/><sub>Detalle de certificado, con nivel de confianza y evidencia de origen</sub></td>
+<td width="33%"><img src="assets/screenshots/02-onboarding-1-editar.jpeg" width="100%" alt="Onboarding, slide 1" /><br/><sub><b>Onboarding</b> — "Una foto se puede editar después"</sub></td>
+<td width="33%"><img src="assets/screenshots/04-onboarding-3-tiempo.jpeg" width="100%" alt="Onboarding, slide 3" /><br/><sub><b>Onboarding</b> — "Toma 2 segundos más"</sub></td>
+<td width="33%"><img src="assets/screenshots/05-onboarding-4-gratis.jpeg" width="100%" alt="Onboarding, slide 4" /><br/><sub><b>Onboarding</b> — "30 sellos gratis cada mes"</sub></td>
 </tr>
 <tr>
-<td width="33%"><img src="assets/screenshots/04-mis-sellos-grilla.jpeg" width="100%" alt="Mis sellos, grilla" /><br/><sub><b>Mis sellos</b> — grilla, con el sello (SealMedallion) para certificados sin archivo local</sub></td>
-<td width="33%"><img src="assets/screenshots/05-mis-sellos-lista.jpeg" width="100%" alt="Mis sellos, lista" /><br/><sub><b>Mis sellos</b> — lista, con estadísticas por nivel de confianza</sub></td>
-<td width="33%"><img src="assets/screenshots/06-verificar-oscuro.jpeg" width="100%" alt="Verificar, modo oscuro" /><br/><sub><b>Verificar</b> — modo oscuro, con el enlace a la web pública</sub></td>
+<td width="33%"><img src="assets/screenshots/08-sellar-resultado-oscuro.jpeg" width="100%" alt="Sellar, resultado" /><br/><sub><b>Sellar</b> — certificado recién sellado, modo oscuro</sub></td>
+<td width="33%"><img src="assets/screenshots/11-lote-progreso-claro.jpeg" width="100%" alt="Lote sellando" /><br/><sub><b>Lote (PRO)</b> — sellando, con "Agregar más al lote" en vivo</sub></td>
+<td width="33%"><img src="assets/screenshots/10-notificacion-progreso.jpeg" width="100%" alt="Notificación de progreso" /><br/><sub>Notificación de progreso persistente mientras sella</sub></td>
 </tr>
 <tr>
-<td width="33%"><img src="assets/screenshots/07-verificar-claro.jpeg" width="100%" alt="Verificar, resultado" /><br/><sub><b>Verificar</b> — modo claro, resultado por número de sello</sub></td>
-<td width="33%"><img src="assets/screenshots/08-paywall-pro.jpeg" width="100%" alt="Paywall PRO" /><br/><sub>Paywall de <b>Verity PRO</b></sub></td>
-<td width="33%"><img src="assets/screenshots/09-ajustes-apariencia.jpeg" width="100%" alt="Ajustes" /><br/><sub><b>Ajustes</b> — apariencia y "Acerca de Verity"</sub></td>
+<td width="33%"><img src="assets/screenshots/13-lote-resumen-oscuro.jpeg" width="100%" alt="Lote sellado, resumen" /><br/><sub><b>Lote</b> — resumen final, modo oscuro</sub></td>
+<td width="33%"><img src="assets/screenshots/18-certificado-detalle-claro.jpeg" width="100%" alt="Detalle de certificado" /><br/><sub>Detalle de certificado, nivel de confianza y evidencia de origen</sub></td>
+<td width="33%"><img src="assets/screenshots/20-certificado-foto-oscuro.jpeg" width="100%" alt="Certificado, carta volteada" /><br/><sub>Carta volteada mostrando la foto real</sub></td>
 </tr>
 <tr>
-<td width="33%"><img src="assets/screenshots/10-ajustes-wallet-legal.jpeg" width="100%" alt="Ajustes, wallet y legal" /><br/><sub><b>Ajustes</b> — respaldo de wallet, sincronizar índice público, legal</sub></td>
-<td width="33%"><img src="assets/screenshots/11-faq.jpeg" width="100%" alt="Preguntas frecuentes" /><br/><sub>Preguntas frecuentes — sección legal real, no texto de relleno</sub></td>
-<td width="33%"><img src="assets/screenshots/12-web-verificacion-publica.png" width="100%" alt="Página web de verificación pública" /><br/><sub><b>Página web pública</b> — <a href="https://josequevedov08.github.io/Verity-MVP/">josequevedov08.github.io/Verity-MVP</a></sub></td>
+<td width="33%"><img src="assets/screenshots/22-certificado-video-claro.jpeg" width="100%" alt="Certificado de video" /><br/><sub>Certificado de <b>video</b>, reproducible desde la carta</sub></td>
+<td width="33%"><img src="assets/screenshots/15-mis-sellos-grilla-oscuro.jpeg" width="100%" alt="Mis sellos, grilla" /><br/><sub><b>Mis sellos</b> — grilla, modo oscuro</sub></td>
+<td width="33%"><img src="assets/screenshots/17-mis-sellos-lista-claro.jpeg" width="100%" alt="Mis sellos, lista" /><br/><sub><b>Mis sellos</b> — lista, con estadísticas por nivel de confianza</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="assets/screenshots/32-verificar-resultado-oscuro.jpeg" width="100%" alt="Verificar, resultado cruzado" /><br/><sub><b>Verificar</b> — sello de otro dispositivo, encontrado por hash</sub></td>
+<td width="33%"><img src="assets/screenshots/35-verificar-numero-sello-claro.jpeg" width="100%" alt="Verificar por número de sello" /><br/><sub><b>Verificar</b> — por número de sello, modo claro</sub></td>
+<td width="33%"><img src="assets/screenshots/24-paywall-pro-oscuro.jpeg" width="100%" alt="Paywall PRO" /><br/><sub>Paywall de <b>Verity PRO</b></sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="assets/screenshots/26-ajustes-apariencia-claro.jpeg" width="100%" alt="Ajustes" /><br/><sub><b>Ajustes</b> — apariencia y "Acerca de Verity"</sub></td>
+<td width="33%"><img src="assets/screenshots/28-faq-1.jpeg" width="100%" alt="Preguntas frecuentes" /><br/><sub>Preguntas frecuentes — sección legal real, no texto de relleno</sub></td>
+<td width="33%"><img src="assets/screenshots/40-web-oscuro-es.jpeg" width="100%" alt="Página web de verificación pública" /><br/><sub><b>Página web pública</b>, con contador de sellos en vivo — <a href="https://josequevedov08.github.io/Verity-MVP/">josequevedov08.github.io/Verity-MVP</a></sub></td>
 </tr>
 </table>
+
+<details>
+<summary>Ver las 43 capturas completas (todas las pantallas, ambos temas, y la web en ES/EN)</summary>
+
+Todas viven en [`assets/screenshots/`](assets/screenshots/), numeradas
+en el orden del flujo de la app: intro/onboarding (01-05) → Sellar
+(06-08) → Lote y notificaciones (09-13) → Mis sellos (14-17) →
+Certificado (18-23) → Paywall (24-25) → Ajustes (26-27, 38-39) → FAQ
+(28-29) → Verificar (30-37) → web pública, claro/oscuro y ES/EN (40-43).
+
+</details>
 
 ## Freemium y pagos
 
@@ -428,7 +448,9 @@ punto de vista, sellar simplemente funciona.
 - [ ] Selector de idioma (multi-idioma) — pospuesto, no es prioridad
       con el tiempo que queda para el cierre de Shipaton (30 sept)
 - [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro) — última fase
-- [ ] Screenshots para la ficha de Play Store/Devpost (`assets/`)
-- [ ] Materiales de Devpost (borrador del "Story" listo, falta llenar screenshots/video/RevenueCat ID)
+- [x] Screenshots para la ficha de Play Store/Devpost (`assets/screenshots/`,
+      40 capturas del APK real v0.3.47 — ver "Capturas de pantalla" arriba)
+- [ ] Materiales de Devpost (borrador del "Story" listo, screenshots ya
+      listas, falta llenar video/RevenueCat ID)
 - [ ] Guion y grabación del video demo
 - [ ] Cuenta de Google Play Console y build de producción (v1.0.0)
