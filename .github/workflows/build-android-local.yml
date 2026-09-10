@@ -1,0 +1,43 @@
+name: Build Android AAB (local, sin costo)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configurar Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar eas-cli
+        run: npm install -g eas-cli
+
+      - name: Compilar AAB de producción (local)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas build --platform android --profile production --local \
+            --non-interactive \
+            --output "${{ github.workspace }}/verity-production.aab"
+
+      - name: Subir AAB como artefacto descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: verity-production-aab
+          path: verity-production.aab
+          retention-days: 14
