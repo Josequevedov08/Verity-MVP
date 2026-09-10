@@ -418,9 +418,10 @@ punto de vista, sellar simplemente funciona.
       `AndroidManifest.xml` sí lo tenía, pero Android 14+ exige que
       coincida con lo que se pasa al arrancar el servicio, o crashea
       con una excepción nativa que ningún try/catch de JavaScript
-      puede atrapar. Corregido y reactivado en v0.3.47 — **pendiente
-      de confirmar en un teléfono real** que el fix realmente resolvió
-      el crash (ver backgroundSealingService.ts).
+      puede atrapar. Corregido y reactivado en v0.3.47 — **confirmado
+      funcionando en teléfono real**: se probó sellando en lote y
+      saliendo de la app del todo (botón inicio) a mitad de camino, y
+      siguió sellando solo (ver backgroundSealingService.ts).
 - [x] Miniatura diminuta y comprimida en la copia de seguridad, para
       poder reconocer un sello importado a simple vista sin depender
       de memorizar hashes (v0.3.44 — ver "Respaldo y recuperación")
