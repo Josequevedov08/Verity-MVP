@@ -196,11 +196,12 @@ Certificado (18-23) → Paywall (24-25) → Ajustes (26-27, 38-39) → FAQ
   límite se bloquea con el paywall en vez de dejar sellar gratis sin
   tope.
 - **Lo que falta para cobrar de verdad**: un producto de suscripción
-  real dado de alta en Google Play Console (requiere el registro de
-  desarrollador, $25 pago único — deliberadamente pospuesto a la fase
-  de publicación). Hasta entonces, tocar "Suscribirme" avisa
-  honestamente que no está disponible todavía, en vez de fallar en
-  silencio o simular una compra.
+  real dado de alta en Google Play Console. El registro de
+  desarrollador ($25 pago único) ya está hecho (10 sept 2026); lo que
+  falta es armar la app "Google Play" en RevenueCat y reemplazar la
+  clave de prueba por la real (ver hoja de ruta más abajo). Hasta
+  entonces, tocar "Suscribirme" avisa honestamente que no está
+  disponible todavía, en vez de fallar en silencio o simular una compra.
 - **Restaurar compra**: como Verity no pide cuenta, la suscripción se
   identifica con un ID vinculado a la cuenta de Google Play del
   dispositivo — si se borran los datos de la app o se reinstala, ese ID
@@ -447,7 +448,9 @@ punto de vista, sellar simplemente funciona.
       de memorizar hashes (v0.3.44 — ver "Respaldo y recuperación")
 - [ ] Selector de idioma (multi-idioma) — pospuesto, no es prioridad
       con el tiempo que queda para el cierre de Shipaton (30 sept)
-- [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro) — última fase
+- [x] Registro de desarrollador de Google Play pagado ($25, 10 sept 2026)
+- [ ] Producto de suscripción real en Google Play Console + app "Google Play"
+      en RevenueCat con clave real — última fase
 - [x] Screenshots para la ficha de Play Store/Devpost (`assets/screenshots/`,
       40 capturas del APK real v0.3.47 — ver "Capturas de pantalla" arriba)
 - [x] Submission de Devpost cargada: galería de imágenes (ícono +
@@ -455,7 +458,10 @@ punto de vista, sellar simplemente funciona.
       details"/"Additional info" completa — 3 de 5 pasos del formulario
       listos. Solo falta subir el video demo para poder mandar el
       "Submit" final.
-- [ ] Guion y grabación del video demo
+- [x] Video corto grabado (sellado en segundo plano, evidencia para la
+      declaración de permisos de Google Play)
+- [ ] Guion y grabación del video demo pulido para Devpost/Shipaton (2 min,
+      voz en off, subtítulos en inglés)
 - [x] Cuenta de Google Play Console creada, identidad verificada, app
       "Verity" creada, ficha de Play Store completa (descripción,
       ícono, gráfico de funciones, 8 capturas), prueba cerrada
@@ -469,4 +475,11 @@ punto de vista, sellar simplemente funciona.
       AAB de la prueba cerrada no tuviera el paywall completamente
       roto, no para el lanzamiento real.
 - [ ] 12 testers aceptando la prueba cerrada + 14 días corridos antes
-      de poder pedir acceso a producción
+      de poder pedir acceso a producción (6/12 al 10 sept, buscando el
+      resto en comunidad de Shipaton)
+- [x] `react-native-purchases` actualizado a 9.15.2 (Play exige Billing
+      Library 8.0.0+, la versión anterior usaba una más vieja)
+- [x] Workflow de GitHub Actions (`build-android-local.yml`) para
+      compilar el AAB sin costo cuando se agotan los builds gratis de
+      EAS (usa `eas build --local` en un runner gratuito, sin consumir
+      la cuota mensual de la nube de EAS)
