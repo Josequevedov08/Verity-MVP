@@ -35,15 +35,13 @@ import { ethers } from 'npm:ethers@6';
 
 const AMOY_RPC_URL = 'https://polygon-amoy-bor-rpc.publicnode.com';
 
-// TEMPORAL (9 sep, hasta poder recargar el funder de verdad mañana):
-// bajado de 0.05 a 0.02 POL — el funder se quedó con solo ~0.049 POL
-// (encontrado en pruebas: cada reinstalación de la APK genera una
-// wallet nueva que pide su propia recarga, ver el commit del tope
-// diario por IP) y los faucets externos están todos con límite de 24h
-// agotado. A 0.02 alcanza para 1-2 rondas más de prueba esta noche en
-// vez de dejar la app completamente bloqueada hasta mañana. Subir de
-// nuevo a 0.05 (o más) en cuanto se recargue el funder.
-const FUNDING_AMOUNT_WEI = ethers.parseEther('0.02');
+// TEMPORAL (10 sep): bajado otra vez, ahora a 0.01 POL — el funder
+// quedó con solo ~0.0178 POL (por debajo incluso de los 0.02 que
+// pedía repartir, así que ninguna recarga podía salir). A 0.01 alcanza
+// para una wallet más mientras se recarga de verdad con el faucet
+// oficial (ya disponible desde las 7pm de ayer). Subir de nuevo en
+// cuanto haya colchón real.
+const FUNDING_AMOUNT_WEI = ethers.parseEther('0.01');
 
 // Si la wallet ya tiene al menos esto, no se le manda nada.
 const MIN_BALANCE_THRESHOLD_WEI = ethers.parseEther('0.001');
