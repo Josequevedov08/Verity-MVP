@@ -450,7 +450,10 @@ punto de vista, sellar simplemente funciona.
 - [ ] Producto de suscripción real en Google Play Console (requiere pagar el registro) — última fase
 - [x] Screenshots para la ficha de Play Store/Devpost (`assets/screenshots/`,
       40 capturas del APK real v0.3.47 — ver "Capturas de pantalla" arriba)
-- [ ] Materiales de Devpost (borrador del "Story" listo, screenshots ya
-      listas, falta llenar video/RevenueCat ID)
+- [x] Submission de Devpost cargada: galería de imágenes (ícono +
+      8 capturas con captions en inglés) y toda la info de "Project
+      details"/"Additional info" completa — 3 de 5 pasos del formulario
+      listos. Solo falta subir el video demo para poder mandar el
+      "Submit" final.
 - [ ] Guion y grabación del video demo
 - [ ] Cuenta de Google Play Console y build de producción (v1.0.0)
