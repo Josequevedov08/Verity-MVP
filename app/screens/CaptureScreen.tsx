@@ -550,19 +550,16 @@ export default function CaptureScreen() {
     setCertificate(null);
     setIsDuplicate(false);
 
-    // DESACTIVADO (v0.3.45): en la primera prueba real en el teléfono,
-    // la app se cerraba de golpe (crash nativo, "Verity falló debido a
-    // sus propios problemas") justo al llegar a este punto — arrancar
-    // un lote. Un crash nativo así no lo frena ningún try/catch de
-    // JavaScript (ver backgroundSealingService.ts, que sí tiene el
-    // suyo, pero eso solo atrapa errores de JS, no una excepción nativa
-    // de Android como MissingForegroundServiceTypeException). Sin poder
-    // conectar un adb logcat real para ver la excepción exacta, no es
-    // seguro seguir arriesgando que esto tumbe el sellado en lote (la
-    // función más importante de la app) — se apaga hasta poder
-    // diagnosticarlo bien. La función sigue existiendo en
-    // backgroundSealingService.ts, lista para reactivar.
-    // await startBackgroundSealing();
+    // REACTIVADO (v0.3.47): la v0.3.45 lo apagó por un crash nativo al
+    // arrancar el lote. Causa real encontrada leyendo el código fuente
+    // de react-native-background-actions y sus issues de GitHub (sin
+    // necesitar acceso físico al teléfono): faltaba declarar
+    // `foregroundServiceType` en las opciones de arranque — el
+    // AndroidManifest sí lo tenía (ver plugins/withBackgroundActions.js)
+    // pero la librería también lo necesita al llamar a start(), y si no
+    // coincide, Android 14+ tira una excepción nativa que ningún
+    // try/catch de JavaScript puede atrapar. Ver backgroundSealingService.ts.
+    await startBackgroundSealing();
 
     // Contadores en variables locales, en paralelo al estado de React
     // (setBatch, abajo) — así el resumen final y la notificación no

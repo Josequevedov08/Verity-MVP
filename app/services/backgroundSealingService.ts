@@ -56,6 +56,17 @@ const START_OPTIONS = {
   taskIcon: { name: 'notification_icon', type: 'drawable' },
   color: '#4C9AFF',
   parameters: {},
+  // CAUSA REAL del crash de la v0.3.45 (encontrado sin acceso al
+  // teléfono, leyendo el código fuente de la librería y sus issues de
+  // GitHub, no adivinando): esto faltaba. plugins/withBackgroundActions.js
+  // declara `android:foregroundServiceType="dataSync"` en el
+  // AndroidManifest, pero la librería TAMBIÉN necesita que se le diga el
+  // tipo acá, al arrancar — si el manifest y el arranque no coinciden,
+  // Android 14+ tira una excepción nativa (MissingForegroundServiceTypeException)
+  // que no se puede atrapar con try/catch de JavaScript, y crashea la
+  // app entera. Sin este campo, la librería arrancaba sin ningún tipo,
+  // que nunca coincide con lo declarado en el manifest.
+  foregroundServiceType: ['dataSync' as const],
 };
 
 /**

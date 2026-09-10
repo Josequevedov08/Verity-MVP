@@ -8,7 +8,7 @@ Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
 este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
 
-**Versión actual: 0.3.46.** Ver "Versionado" más abajo para el esquema
+**Versión actual: 0.3.47.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
 
 ## Estructura del proyecto
@@ -406,7 +406,21 @@ punto de vista, sellar simplemente funciona.
       todo (`react-native-background-actions` + notificación de
       progreso persistente y actualizable — v0.3.43), y el permiso de
       notificaciones pedido al terminar el onboarding en vez de a
-      mitad de un lote
+      mitad de un lote. **Historial real de este feature** (para que
+      quede constancia, no quedó "verde" a la primera): en la primera
+      prueba en teléfono real (v0.3.45) crasheaba la app apenas
+      arrancaba un lote — se desactivó por completo mientras se
+      diagnosticaba, dejando el sellado como antes (solo funciona si
+      no salís de la app). Causa real encontrada leyendo el código
+      fuente de la librería y sus issues de GitHub, sin acceso físico
+      al teléfono: faltaba declarar `foregroundServiceType` en las
+      opciones de arranque (`BackgroundService.start()`) — el
+      `AndroidManifest.xml` sí lo tenía, pero Android 14+ exige que
+      coincida con lo que se pasa al arrancar el servicio, o crashea
+      con una excepción nativa que ningún try/catch de JavaScript
+      puede atrapar. Corregido y reactivado en v0.3.47 — **pendiente
+      de confirmar en un teléfono real** que el fix realmente resolvió
+      el crash (ver backgroundSealingService.ts).
 - [x] Miniatura diminuta y comprimida en la copia de seguridad, para
       poder reconocer un sello importado a simple vista sin depender
       de memorizar hashes (v0.3.44 — ver "Respaldo y recuperación")
