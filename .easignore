@@ -1,0 +1,10 @@
+# Archivos que NO hacen falta para compilar el APK — no se suben al
+# tarball de EAS Build, solo lo ralentizan (y, en un entorno con
+# conexión inestable, aumentan la ventana de tiempo en la que una
+# subida grande puede cortarse a mitad de camino).
+reference/
+documentation/shipaton-submission/
+docs/
+backend/
+scratch/
+*.md
