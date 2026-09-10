@@ -198,6 +198,20 @@ export async function anchorHashOnChain(sha256Hash: string): Promise<AnchorResul
 
   await ensureWalletHasGas(wallet.address, provider);
 
+  // Verificación rápida antes de intentar la transacción: si después de
+  // pedir gas automático la wallet SIGUE sin fondos suficientes (ej. el
+  // propio funder se quedó sin saldo para repartir — bug real
+  // encontrado en pruebas), se falla YA con un error claro en vez de
+  // dejar que ethers intente la transacción igual. Sin esto, un RPC
+  // lento podía tardar mucho en rechazarla, colgando el sellado en
+  // lote entero por un solo archivo sin gas.
+  const currentBalance = await provider.getBalance(wallet.address);
+  if (currentBalance < MIN_BALANCE_THRESHOLD_WEI) {
+    const error = new Error('insufficient funds for gas (fail-fast check)') as Error & { code?: string };
+    error.code = 'INSUFFICIENT_FUNDS';
+    throw error;
+  }
+
   const hashBytes = sha256Hash.startsWith('0x') ? sha256Hash : `0x${sha256Hash}`;
 
   // Transacción de valor 0 hacia la propia wallet, con el hash en `data`.

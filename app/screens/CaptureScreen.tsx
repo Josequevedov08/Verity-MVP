@@ -4,11 +4,13 @@
  * Pantalla principal de "Sellar". Flujo (sin jerga técnica para el usuario):
  *
  *   1. Elegir foto (cámara de la app o galería)
- *   2. Si viene de la cámara, se copia a una carpeta PROPIA y permanente
- *      de Verity (ver saveCapturePermanently) Y ADEMÁS a la galería del
- *      sistema (ver saveToSystemGallery) — así queda disponible después
- *      para probarla en "Verificar", tanto desde "Mis sellos" como desde
- *      la galería normal del teléfono.
+ *   2. Se copia a una carpeta PROPIA y permanente de Verity (ver
+ *      saveCapturePermanently) sin importar de dónde vino — la URI que
+ *      entrega el selector de galería de Android es temporal, no un
+ *      archivo estable. Si además viene de la cámara, TAMBIÉN se guarda
+ *      en la galería del sistema (ver saveToSystemGallery) — así queda
+ *      disponible después para probarla en "Verificar", tanto desde
+ *      "Mis sellos" como desde la galería normal del teléfono.
  *   3. Calcular su "huella digital" en el propio teléfono (hashService)
  *   4. Registrarla en el "registro público" (blockchainService → Polygon Amoy)
  *   5. Mostrar el certificado con su nivel de confianza
@@ -78,6 +80,24 @@ type CaptureStep = 'idle' | 'hashing' | 'anchoring' | 'done' | 'error';
  * uno detrás de otro) para que un lote no tarde una eternidad, no un
  * límite de producto. */
 const MAX_BATCH_SIZE = 50;
+
+// Tiempo máximo que se espera por UN archivo del lote antes de darlo por
+// fallado y seguir con el siguiente. Sin esto, un solo archivo sin gas
+// (o un RPC lento/colgado) podía trabar el lote ENTERO por minutos —
+// bug real encontrado en pruebas: la notificación de progreso se quedó
+// clavada en "Sellando foto 1 de 11" durante más de 2 minutos sin
+// avanzar ni fallar. 45s alcanza de sobra en condiciones normales
+// (Amoy suele confirmar en unos pocos segundos).
+const SEAL_TIMEOUT_MS = 45_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Se agotó el tiempo de espera (probablemente sin gas disponible ahora).')), ms)
+    ),
+  ]);
+}
 
 /**
  * Traduce un error de sellado a un mensaje pensado para el usuario. Antes
@@ -416,18 +436,21 @@ export default function CaptureScreen() {
         console.warn('No se pudo consultar el índice público antes de sellar (no es crítico):', error);
       }
 
-      // 2) Si viene de la cámara, copiarla a una carpeta propia y
-      // permanente de la app (la caché de la cámara se puede borrar en
-      // cualquier momento). Si viene de galería, ya vive en un lugar
-      // persistente del sistema.
+      // 2) Copiarla a una carpeta propia y permanente de la app, sin
+      // importar de dónde vino. Antes esto solo pasaba para la cámara
+      // (razonamiento original: "si viene de galería, ya vive en un
+      // lugar persistente del sistema") — pero ese razonamiento era
+      // incorrecto para el selector de Android: `asset.uri` ahí suele
+      // ser una URI temporal (content://) con permiso de lectura
+      // acotado, no un archivo estable. Bug real encontrado en pruebas:
+      // certificados sellados desde galería (sobre todo en lote)
+      // terminaban sin miniatura visible más adelante, porque esa URI
+      // ya no era legible para cuando se intentaba mostrar.
       // La extensión NO puede quedar fija en .jpg: ahora también se
       // sellan videos (.mp4 típicamente). Se toma del archivo original;
       // si no se puede determinar, se usa un respaldo según el tipo.
       const extension = getFileExtension(asset.uri) ?? (metadata.mediaType === 'video' ? 'mp4' : 'jpg');
-      const persistentUri =
-        source === 'camera'
-          ? await saveCapturePermanently(asset.uri, `${certificateId}.${extension}`)
-          : asset.uri;
+      const persistentUri = await saveCapturePermanently(asset.uri, `${certificateId}.${extension}`);
 
       // 2.5) Si es un video, generar un frame real como vista previa (una
       // <Image> no puede decodificar video, así que sin esto solo se
@@ -594,7 +617,7 @@ export default function CaptureScreen() {
       }
 
       try {
-        const { duplicate } = await sealAsset(asset, 'gallery');
+        const { duplicate } = await withTimeout(sealAsset(asset, 'gallery'), SEAL_TIMEOUT_MS);
         if (duplicate) duplicateCount += 1;
         else sealedCount += 1;
         setBatch((prev) =>
@@ -648,10 +671,20 @@ export default function CaptureScreen() {
       return;
     }
 
+    // exif: false a propósito acá (a diferencia del picker de un solo
+    // archivo) — pedir EXIF obliga al selector nativo de Android a leer
+    // los metadatos de CADA archivo elegido antes de devolverlos, lo que
+    // dispara su propio diálogo de "Preparando el contenido
+    // multimedia..." (UI del sistema, no de Verity) y se nota mucho más
+    // cuanto más archivos se eligen de golpe. El costo es real pero
+    // menor: en lote, "capturedAt" para archivos de galería ya dependía
+    // solo del EXIF (nunca hubo respaldo), así que se pierde precisión
+    // de nivel de confianza en fotos de galería sin fecha real —
+    // aceptable a cambio de un selector de lote fluido.
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images', 'videos'],
       quality: 1,
-      exif: true,
+      exif: false,
       allowsMultipleSelection: true,
       selectionLimit: MAX_BATCH_SIZE,
     });
@@ -735,10 +768,17 @@ export default function CaptureScreen() {
     }
 
     const isPro = usage?.isPro ?? false;
+    // exif: false cuando se habilita selección múltiple (PRO) — mismo
+    // motivo que en handleAddToBatchQueue: con varios archivos elegidos
+    // de golpe, pedir EXIF dispara el diálogo nativo de "Preparando el
+    // contenido multimedia..." de Android, más notorio cuantos más
+    // archivos. Con selección de UNO SOLO (free, o PRO que igual elige
+    // uno) sí se pide, ahí no hay ese costo y la precisión del nivel de
+    // confianza importa más.
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images', 'videos'],
       quality: 1,
-      exif: true,
+      exif: !isPro,
       ...(isPro ? { allowsMultipleSelection: true, selectionLimit: MAX_BATCH_SIZE } : null),
     });
 
