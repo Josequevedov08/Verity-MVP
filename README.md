@@ -456,4 +456,17 @@ punto de vista, sellar simplemente funciona.
       listos. Solo falta subir el video demo para poder mandar el
       "Submit" final.
 - [ ] Guion y grabación del video demo
-- [ ] Cuenta de Google Play Console y build de producción (v1.0.0)
+- [x] Cuenta de Google Play Console creada, identidad verificada, app
+      "Verity" creada, ficha de Play Store completa (descripción,
+      ícono, gráfico de funciones, 8 capturas), prueba cerrada
+      configurada (países + lista de testers)
+- [ ] **Pendiente antes de pedir acceso a producción**: reemplazar la
+      clave de RevenueCat de PRUEBA (`test_...`) que hoy está en el
+      ambiente "production" de EAS por la clave REAL — requiere armar
+      la app "Google Play" en RevenueCat (vinculada al paquete
+      `com.verity.mvp` + credenciales de una cuenta de servicio de
+      Google Cloud). Se usó la de prueba temporalmente para que el
+      AAB de la prueba cerrada no tuviera el paywall completamente
+      roto, no para el lanzamiento real.
+- [ ] 12 testers aceptando la prueba cerrada + 14 días corridos antes
+      de poder pedir acceso a producción
