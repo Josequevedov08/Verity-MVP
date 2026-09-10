@@ -35,13 +35,18 @@ import { ethers } from 'npm:ethers@6';
 
 const AMOY_RPC_URL = 'https://polygon-amoy-bor-rpc.publicnode.com';
 
-// TEMPORAL (10 sep): bajado otra vez, ahora a 0.01 POL — el funder
-// quedó con solo ~0.0178 POL (por debajo incluso de los 0.02 que
-// pedía repartir, así que ninguna recarga podía salir). A 0.01 alcanza
-// para una wallet más mientras se recarga de verdad con el faucet
-// oficial (ya disponible desde las 7pm de ayer). Subir de nuevo en
-// cuanto haya colchón real.
-const FUNDING_AMOUNT_WEI = ethers.parseEther('0.01');
+// TEMPORAL (10 sep, 16:15): bajado a 0.003 POL — el funder quedó con
+// solo ~0.007 POL (por debajo incluso de los 0.01 que pedía repartir,
+// así que NINGUNA recarga podía salir, rompiendo el sellado para
+// cualquier wallet nueva). Un seal real gasta solo ~0.00024 POL según
+// los últimos fund_requests_log, así que 0.003 alcanza de sobra para
+// varios sellados y estira el fondo para ~2 wallets nuevas más
+// mientras se consigue una recarga real. Los faucets conocidos están
+// todos rate-limitados por IP (no solo por dirección) y por ahora no
+// hay ninguno que funcione sin esperar 24h ni sin ETH en mainnet
+// (Alchemy, QuickNode piden eso). Subir de nuevo en cuanto haya
+// colchón real.
+const FUNDING_AMOUNT_WEI = ethers.parseEther('0.003');
 
 // Si la wallet ya tiene al menos esto, no se le manda nada.
 const MIN_BALANCE_THRESHOLD_WEI = ethers.parseEther('0.001');
