@@ -1,0 +1,24 @@
+workflows:
+  android-local-eas:
+    name: Build Android AAB (respaldo de GitHub Actions)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      node: 20
+      vars:
+        # EXPO_TOKEN se configura como variable de entorno "sensible" en
+        # Codemagic (pestaña "Environment variables" de esta app), NO acá
+        # en texto plano -- mismo secreto que ya existe en GitHub Actions.
+        EXPO_TOKEN: $EXPO_TOKEN
+    scripts:
+      - name: Instalar dependencias
+        script: npm ci
+      - name: Instalar eas-cli
+        script: npm install -g eas-cli
+      - name: Compilar AAB de producción (local)
+        script: |
+          eas build --platform android --profile production --local \
+            --non-interactive \
+            --output "$CM_BUILD_DIR/verity-production.aab"
+    artifacts:
+      - verity-production.aab
