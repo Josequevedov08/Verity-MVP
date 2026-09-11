@@ -101,7 +101,7 @@ export async function notifyBatchComplete(body: string): Promise<void> {
   try {
     if (!(await hasPermission())) return;
     await Notifications.scheduleNotificationAsync({
-      content: { title: 'Verity — Lote sellado', body },
+      content: { title: 'Verity: lote sellado', body },
       trigger: null,
     });
   } catch (error) {

@@ -195,13 +195,13 @@ Certificado (18-23) → Paywall (24-25) → Ajustes (26-27, 38-39) → FAQ
   verdad — antes de sellar se revisa el uso del mes, y al llegar al
   límite se bloquea con el paywall en vez de dejar sellar gratis sin
   tope.
-- **Lo que falta para cobrar de verdad**: un producto de suscripción
-  real dado de alta en Google Play Console. El registro de
-  desarrollador ($25 pago único) ya está hecho (10 sept 2026); lo que
-  falta es armar la app "Google Play" en RevenueCat y reemplazar la
-  clave de prueba por la real (ver hoja de ruta más abajo). Hasta
-  entonces, tocar "Suscribirme" avisa honestamente que no está
-  disponible todavía, en vez de fallar en silencio o simular una compra.
+- **Ya se puede cobrar de verdad** (desde el 11 sept 2026): producto de
+  suscripción real dado de alta en Google Play Console
+  (`verity_pro_monthly`, $4.99/mes), conectado en RevenueCat con la
+  clave de producción real. Lo único que falta es una cuenta bancaria
+  para recibir el dinero (ver "Estado y próximos pasos" más abajo) —
+  eso no bloquea que la suscripción funcione, solo que Jose pueda
+  retirar lo cobrado.
 - **Restaurar compra**: como Verity no pide cuenta, la suscripción se
   identifica con un ID vinculado a la cuenta de Google Play del
   dispositivo — si se borran los datos de la app o se reinstala, ese ID
@@ -460,26 +460,65 @@ punto de vista, sellar simplemente funciona.
       "Submit" final.
 - [x] Video corto grabado (sellado en segundo plano, evidencia para la
       declaración de permisos de Google Play)
-- [ ] Guion y grabación del video demo pulido para Devpost/Shipaton (2 min,
-      voz en off, subtítulos en inglés)
+- [x] Guion del video demo pulido para Devpost/Shipaton listo (2 min,
+      timing por sección, narración en español + subtítulos en inglés
+      ya traducidos — `documentation/shipaton-submission/guion-video-demo.md`)
+- [ ] Grabación real del video demo pulido (guion listo, falta grabar)
 - [x] Cuenta de Google Play Console creada, identidad verificada, app
       "Verity" creada, ficha de Play Store completa (descripción,
       ícono, gráfico de funciones, 8 capturas), prueba cerrada
       configurada (países + lista de testers)
-- [ ] **Pendiente antes de pedir acceso a producción**: reemplazar la
-      clave de RevenueCat de PRUEBA (`test_...`) que hoy está en el
-      ambiente "production" de EAS por la clave REAL — requiere armar
-      la app "Google Play" en RevenueCat (vinculada al paquete
-      `com.verity.mvp` + credenciales de una cuenta de servicio de
-      Google Cloud). Se usó la de prueba temporalmente para que el
-      AAB de la prueba cerrada no tuviera el paywall completamente
-      roto, no para el lanzamiento real.
+- [x] Clave real de RevenueCat (`goog_...`) puesta en el ambiente
+      "production" de EAS, reemplazando la de prueba (11 sept) — la app
+      "Google Play" en RevenueCat ya existía de una sesión anterior,
+      solo faltaba conectarla.
+- [x] **Bug crítico encontrado y resuelto (11 sept)**: la app crasheaba
+      al abrir para CUALQUIER tester real — el SDK de RevenueCat 9.9.0+
+      dejó de soportar claves de prueba (`test_...`) en Android, y la
+      actualización a Billing Library 8 (arriba) usaba justo esa clave
+      de prueba en el build que ya estaba en Play Console. Corregido con
+      la clave real (AAB v6/v7).
+- [x] Producto de suscripción PRO real creado de punta a punta: en Play
+      Console (`verity_pro_monthly`, $4.99/mes, 174 países) e importado
+      + vinculado en RevenueCat (Product catalog + entitlement +
+      offering) — el paywall ya vende de verdad, sin necesitar un build
+      nuevo para esto.
 - [ ] 12 testers aceptando la prueba cerrada + 14 días corridos antes
-      de poder pedir acceso a producción (6/12 al 10 sept, buscando el
-      resto en comunidad de Shipaton)
+      de poder pedir acceso a producción (9 en el grupo, ~5 confirmados
+      por Google al 11 sept por la mañana — buscando el resto en
+      comunidad de Shipaton, Reddit, y contactos personales).
+- [x] Bug encontrado y arreglado en el Grupo de Google de testers
+      (`verity-closed-testers`): la config de privacidad bloqueaba a
+      cualquier no-miembro de ver la página antes de poder unirse
+      ("Contenido no disponible") — no era demora de propagación de
+      Google como se pensó al principio.
 - [x] `react-native-purchases` actualizado a 9.15.2 (Play exige Billing
       Library 8.0.0+, la versión anterior usaba una más vieja)
 - [x] Workflow de GitHub Actions (`build-android-local.yml`) para
       compilar el AAB sin costo cuando se agotan los builds gratis de
       EAS (usa `eas build --local` en un runner gratuito, sin consumir
-      la cuota mensual de la nube de EAS)
+      la cuota mensual de la nube de EAS) — usado para las versiones 6 y 7.
+- [x] OneSignal integrado (`app/services/onesignalService.ts`) para
+      mandar recordatorios push a los testers ("abrí Verity hoy") — Google
+      exige testers activos a diario durante los 14 días, no solo la
+      instalación inicial.
+- [x] `codemagic.yaml` agregado como segunda vía de build gratis (500
+      min/mes), sin usar todavía — GitHub Actions sigue siendo la
+      principal.
+- [x] Wallet "funder" (gas automático) recuperada de 0.007 a ~0.43 POL
+      tras vaciarse por completo — usando el truco de wallets puente
+      (reclamar en direcciones nuevas y transferir al funder real, ya
+      que los faucets bloquean por dirección de destino, no por IP). Ver
+      `verity-gas-funder` en la memoria del proyecto para el detalle.
+- [ ] 2 bugs de UI encontrados por testers reales, pendientes de
+      arreglar (no bloquean el envío a Shipaton): el tutorial guiado
+      ("CoachMark") se traba en algunos teléfonos si la medición del
+      recorte queda desalineada, y la escala de fuente del sistema
+      (accesibilidad de Android) desacomoda el layout en varias
+      pantallas.
+- [ ] Cómo cobrar la suscripción real desde Venezuela sigue sin
+      resolver — Airtm y Wally descartados (no dan cuenta bancaria
+      venezolana), Payoneer sin la función de cuenta de recepción
+      activada, Mercantil es la única vía oficial confirmada pero el
+      usuario no tiene cuenta ahí. No bloquea la prueba cerrada, solo
+      el cobro real futuro.

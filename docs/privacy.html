@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Política de privacidad — Verity</title>
+<title>Política de privacidad: Verity</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230B0B0F'/%3E%3Ctext x='50' y='63' font-family='Arial,sans-serif' font-size='32' font-weight='800' fill='white' text-anchor='middle'%3EVRT%3C/text%3E%3C/svg%3E" />
 <style>
   :root {
     --bg: #0B0B0F;
@@ -54,7 +55,7 @@
   <p>Al sellar una foto o video, Verity calcula su huella digital (hash SHA-256) directamente en tu dispositivo. El archivo original nunca sale de tu teléfono: solo esa huella (un texto de 64 caracteres, no reversible a la imagen original) se envía a la red pública de Polygon para quedar registrada con fecha y hora.</p>
 
   <h2>Qué se guarda y dónde</h2>
-  <p>El historial de sellos (miniaturas, fechas, número de sello) se guarda únicamente en el almacenamiento local de tu teléfono. Si desinstalas la app o borras sus datos, ese historial local se pierde, pero los sellos ya anclados en Polygon siguen existiendo ahí para siempre y se pueden volver a consultar con "Buscar por número de sello". Puedes exportar una copia de seguridad de tu historial desde "Mis sellos": incluye hashes, metadatos y una miniatura diminuta y muy comprimida de cada foto/video (para poder reconocerlos al restaurar), nunca el archivo original ni una copia con calidad suficiente para servir de evidencia — la prueba real siempre es el hash anclado en Polygon.</p>
+  <p>El historial de sellos (miniaturas, fechas, número de sello) se guarda únicamente en el almacenamiento local de tu teléfono. Si desinstalas la app o borras sus datos, ese historial local se pierde, pero los sellos ya anclados en Polygon siguen existiendo ahí para siempre y se pueden volver a consultar con "Buscar por número de sello". Puedes exportar una copia de seguridad de tu historial desde "Mis sellos": incluye hashes, metadatos y una miniatura diminuta y muy comprimida de cada foto/video (para poder reconocerlos al restaurar), nunca el archivo original ni una copia con calidad suficiente para servir de evidencia. La prueba real siempre es el hash anclado en Polygon.</p>
 
   <h2>Índice público de verificación</h2>
   <p>Para que alguien pueda verificar un archivo sellado en OTRO dispositivo sin tener el número de sello a mano, Verity envía a un servidor propio del proyecto (no de un tercero) el hash SHA-256, el número de transacción, la dirección de la wallet, el nivel de confianza, el tipo de archivo (foto o video) y la fecha de sellado. Nunca se envía el archivo original ni una miniatura. Este servidor solo acepta datos que ya puede confirmar como reales consultando directamente la blockchain, así que no depende de la palabra de nadie.</p>

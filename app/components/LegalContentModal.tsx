@@ -66,7 +66,7 @@ export const LEGAL_DOCS: Record<LegalDocId, LegalDoc> = {
       },
       {
         heading: 'Qué se guarda y dónde',
-        body: 'El historial de sellos (miniaturas, fechas, número de sello) se guarda únicamente en el almacenamiento local de tu teléfono. Si desinstalas la app o borras sus datos, ese historial local se pierde, pero los sellos ya anclados en Polygon siguen existiendo ahí para siempre y se pueden volver a consultar con "Buscar por número de sello". Puedes exportar una copia de seguridad de tu historial desde "Mis sellos": incluye hashes, metadatos y una miniatura diminuta y muy comprimida de cada foto/video (para poder reconocerlos al restaurar), nunca el archivo original ni una copia con calidad suficiente para servir de evidencia — la prueba real siempre es el hash anclado en Polygon.',
+        body: 'El historial de sellos (miniaturas, fechas, número de sello) se guarda únicamente en el almacenamiento local de tu teléfono. Si desinstalas la app o borras sus datos, ese historial local se pierde, pero los sellos ya anclados en Polygon siguen existiendo ahí para siempre y se pueden volver a consultar con "Buscar por número de sello". Puedes exportar una copia de seguridad de tu historial desde "Mis sellos": incluye hashes, metadatos y una miniatura diminuta y muy comprimida de cada foto/video (para poder reconocerlos al restaurar), nunca el archivo original ni una copia con calidad suficiente para servir de evidencia. La prueba real siempre es el hash anclado en Polygon.',
       },
       {
         heading: 'Índice público de verificación',
