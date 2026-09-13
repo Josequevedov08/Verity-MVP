@@ -522,3 +522,38 @@ punto de vista, sellar simplemente funciona.
       activada, Mercantil es la única vía oficial confirmada pero el
       usuario no tiene cuenta ahí. No bloquea la prueba cerrada, solo
       el cobro real futuro.
+
+## Hoja de ruta V2.0 (post-Shipaton)
+
+Plan técnico para escalar Verity una vez cerrado el MVP del hackathon.
+Nada de esto es necesario para el envío del 30 de septiembre — se
+documenta para no perder el diseño mientras se prioriza terminar la
+prueba cerrada. Detalle completo (firmas de contrato, ejemplos de UI,
+librerías candidatas) en
+[`documentation/roadmap-v2.md`](documentation/roadmap-v2.md).
+
+- [ ] **Registro dual de hashes**: además del SHA-256 exacto, calcular
+      un pHash/aHash (huella perceptiva) que sobreviva a la
+      compresión de redes sociales (WhatsApp, Instagram). El smart
+      contract pasaría a guardar `(sha256_hash, phash, autor,
+      timestamp)`.
+- [ ] **Motor de validación tolerante**: "Verificar" compararía el
+      pHash de una imagen subida contra el índice público con
+      distancia de Hamming; con ≥90-95% de coincidencia, la marcaría
+      como "copia comprimida" enlazada al sello original en vez de
+      devolver "hash no encontrado".
+- [ ] **Arquitectura cero-gas (account abstraction / ERC-4337)**: la
+      wallet del dispositivo pasaría a solo firmar la intención de
+      sellar; un paymaster/relayer (Biconomy, Gelato o Thirdweb) en el
+      backend pagaría el gas real, cubierto por la suscripción PRO
+      ($4.99/mes).
+- [ ] **Red propia (AppChain)**: migrar de Amoy (testnet pública) a
+      una subred propia (Polygon Edge o Avalanche Subnet) para
+      eliminar el costo de gas a largo plazo y escalar a miles de
+      transacciones por segundo.
+- [ ] **UX sin jerga Web3**: ocultar "blockchain", "gas", "wallet" y
+      "hash" de las pantallas principales, mostrando en su lugar
+      "sello digital", "registro público" y "certificado de origen"
+      (la terminología técnica se queda en GitHub y la sección legal).
+      Optimizar el cálculo en segundo plano de SHA-256 + pHash para
+      lotes grandes con `react-native-background-actions`.
