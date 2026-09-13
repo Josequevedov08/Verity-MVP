@@ -33,18 +33,20 @@ que se sigue de acá en adelante.
 ```
 VERITY/
 ├── app/                    # Código de la app móvil (Expo + TypeScript)
-│   ├── screens/             # Pantallas: Sellar, Mis sellos, Verificar, Onboarding
-│   ├── components/          # Componentes reutilizables (tarjetas, modales, sello, paywall...)
-│   ├── services/             # Hash, blockchain, RevenueCat, índice público
-│   ├── utils/                 # Historial local, respaldo, recorrido guiado
+│   ├── screens/            # Pantallas: Sellar, Mis sellos, Verificar, Onboarding
+│   ├── components/         # Componentes reutilizables (tarjetas, modales, sello, paywall...)
+│   ├── services/           # Hash, blockchain, RevenueCat, índice público
+│   ├── utils/              # Historial local, respaldo, recorrido guiado
+│   ├── theme/              # Paleta de colores y contexto de tema (claro/oscuro)
 │   └── App.tsx
-├── backend/                 # Índice público (Supabase) — ver backend/README.md
-├── docs/                      # Página pública de verificación (GitHub Pages)
-├── assets/                    # Icono y screenshots para Google Play
+├── backend/                # Índice público (Supabase) — ver backend/README.md
+├── docs/                   # Página pública de verificación (GitHub Pages)
+├── assets/                 # Icono y screenshots para Google Play
 ├── documentation/
-│   ├── technical/verity-protocol.ts   # Definición técnica del MVP
-│   └── shipaton-submission/            # Materiales para Devpost
-└── reference/                # Documento maestro y web informativa (NO se implementan tal cual)
+│   ├── technical/          # Definición técnica del MVP + plan de build del APK
+│   ├── shipaton-submission/ # Materiales para Devpost (guion de video, etc.)
+│   └── roadmap-v2.md       # Hoja de ruta técnica post-Shipaton
+└── reference/              # Documento maestro y web informativa (NO se implementan tal cual)
 ```
 
 ## Cómo probar la app
@@ -231,7 +233,10 @@ Certificado (18-23) → Paywall (24-25) → Ajustes (26-27, 38-39) → FAQ
 ## Qué NO incluye (a propósito)
 
 Detección de IA, wallet visible, multi-chain, login, y el token VRT. Ver
-el prompt de proyecto en `documentation/` para el detalle de por qué.
+[`documentation/technical/verity-protocol.ts`](documentation/technical/verity-protocol.ts)
+para el alcance técnico exacto del MVP, y
+[`documentation/roadmap-v2.md`](documentation/roadmap-v2.md) para cuáles
+de estas cosas están planeadas a futuro y cuáles no.
 También se evaluó y se descartó por ahora:
 
 - **Sellado automático desde la cámara nativa del sistema** (sin abrir
@@ -500,10 +505,10 @@ punto de vista, sellar simplemente funciona.
       + vinculado en RevenueCat (Product catalog + entitlement +
       offering) — el paywall ya vende de verdad, sin necesitar un build
       nuevo para esto.
-- [ ] 12 testers aceptando la prueba cerrada + 14 días corridos antes
-      de poder pedir acceso a producción (9 en el grupo, ~5 confirmados
-      por Google al 11 sept por la mañana — buscando el resto en
-      comunidad de Shipaton, Reddit, y contactos personales).
+- [x] **12/12 testers confirmados** por Google Play Console (12 sept) —
+      meta de reclutamiento cumplida. Falta que corran los 14 días
+      seguidos con testers activos antes de poder pedir acceso a
+      producción (por eso OneSignal, arriba, para mantenerlos activos).
 - [x] Bug encontrado y arreglado en el Grupo de Google de testers
       (`verity-closed-testers`): la config de privacidad bloqueaba a
       cualquier no-miembro de ver la página antes de poder unirse
