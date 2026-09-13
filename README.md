@@ -1,12 +1,29 @@
-# Verity — MVP para Shipaton 2026
+# Verity — notario digital para fotos y videos (MVP para Shipaton 2026)
 
-App móvil que sella **fotos y videos** con una huella digital (SHA-256)
-calculada en el dispositivo y la registra en un registro público
-(Polygon Amoy, testnet) — sin subir el archivo original a ningún lado.
+Con la IA generativa, cualquiera puede fabricar una foto o un video
+falso en segundos. Verity resuelve la pregunta que eso vuelve urgente:
+**¿este archivo es real, y desde cuándo existe así?**
+
+La app calcula la huella digital (hash SHA-256) de una foto o video
+**directamente en el teléfono**, sin subir jamás el archivo original a
+ningún servidor, y ancla esa huella en una blockchain pública (Polygon
+Amoy, testnet) junto con la fecha y hora exactas. Si el archivo cambia
+un solo píxel después, el hash ya no coincide: cualquiera puede
+verificar más tarde, desde cualquier dispositivo, si un archivo es el
+original o fue alterado, sin tener que confiar en la palabra de nadie
+ni en un servidor central que podría manipularse o desaparecer.
+
+Pensado para casos reales donde la autenticidad importa: fotógrafos y
+creadores que necesitan probar autoría de su trabajo, periodistas y
+activistas que necesitan demostrar que una evidencia no fue
+manipulada, y cualquier persona que quiera dejar constancia verificable
+de que algo existió en un momento y una forma determinados.
 
 Construida para el hackathon [Shipaton 2026](https://www.shipaton.com/) de
 RevenueCat. Ver el contexto completo del protocolo (fuera de alcance para
-este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf).
+este MVP) en [`reference/VERITY_VRT_Documento_Maestro_v1.1.pdf`](reference/VERITY_VRT_Documento_Maestro_v1.1.pdf),
+y el plan de evolución técnica post-hackathon en
+[`documentation/roadmap-v2.md`](documentation/roadmap-v2.md).
 
 **Versión actual: 0.3.47.** Ver "Versionado" más abajo para el esquema
 que se sigue de acá en adelante.
