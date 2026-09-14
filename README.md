@@ -505,6 +505,13 @@ punto de vista, sellar simplemente funciona.
       + vinculado en RevenueCat (Product catalog + entitlement +
       offering) — el paywall ya vende de verdad, sin necesitar un build
       nuevo para esto.
+- [ ] **Aún nadie ha comprado el PRO de verdad (13 sept)**: Shipaton
+      exige al menos una compra real hecha con el SDK de RevenueCat
+      para calificar, no basta con tener el paywall conectado. Plan:
+      Jose la compra con su propia tarjeta apenas la app quede
+      aprobada en producción de Play Store (~26-27 sept), para no
+      arriesgar el dinero si Google no aprueba a tiempo — ver "Plan B"
+      en la hoja de ruta.
 - [x] **12/12 testers confirmados** por Google Play Console (12 sept) —
       meta de reclutamiento cumplida. Falta que corran los 14 días
       seguidos con testers activos antes de poder pedir acceso a
