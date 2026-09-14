@@ -13,6 +13,11 @@ import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { applyFontScaleGuard } from './utils/fontScaleGuard';
+// Se aplica al importar el módulo, antes de que se monte cualquier
+// pantalla — ver el comentario en fontScaleGuard.ts para el porqué.
+applyFontScaleGuard();
+
 import HomeScreen from './screens/HomeScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import AnimatedIntro from './components/AnimatedIntro';

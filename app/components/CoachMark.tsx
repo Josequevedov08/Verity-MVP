@@ -71,19 +71,61 @@ export default function CoachMark({
     // .measure() en vez de .measureInWindow(): da pageX/pageY por una
     // ruta nativa distinta (measureLayout relativo a la raíz de la
     // página) que en la práctica resulta más confiable en Android que
-    // measureInWindow para este caso. Se mide más de una vez a
-    // propósito: si el layout todavía se está acomodando (ej. justo
-    // después de volver de la cámara nativa, o mientras cargan datos
-    // async arriba en la pantalla), una sola medición temprana puede
-    // quedar desactualizada. Cada medición posterior SOBRESCRIBE a la
-    // anterior con la posición más reciente.
-    const measure = () => {
+    // measureInWindow para este caso.
+    //
+    // Bug real reportado por una tester (10-11 sept 2026): en su
+    // teléfono el recorte quedaba desalineado del botón real, tapándolo
+    // y bloqueando el scroll (los paneles oscuros capturan el toque
+    // fuera del recorte). Antes se medía 3 veces a tiempos fijos
+    // (120/350/700ms) y se usaba la última sin verificar nada — en un
+    // teléfono más lento, o con una pantalla anterior todavía
+    // reacomodándose (ej. texto más grande por accesibilidad tardando
+    // más en re-envolver), esa última medición podía seguir siendo
+    // vieja, y el recorte se quedaba pegado en la posición incorrecta.
+    //
+    // Ahora se mide en un bucle hasta que dos mediciones seguidas den
+    // exactamente el mismo resultado (el layout ya se asentó), con un
+    // tope de intentos por si el elemento nunca llega a medir bien —
+    // así nunca depende de adivinar cuántos milisegundos hacen falta.
+    let cancelled = false;
+    let lastRect: { x: number; y: number; width: number; height: number } | null = null;
+    let stableCount = 0;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 25; // ~2.5s a 100ms por intento, tope de seguridad
+    const STABLE_READINGS_NEEDED = 2;
+
+    function scheduleNext() {
+      if (cancelled) return;
+      setTimeout(tick, attempts === 0 ? 80 : 100);
+    }
+
+    function tick() {
+      if (cancelled) return;
+      attempts += 1;
       step?.targetRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
-        if (width > 0 && height > 0) setRect({ x: pageX, y: pageY, width, height });
+        if (cancelled) return;
+        if (width > 0 && height > 0) {
+          const next = { x: pageX, y: pageY, width, height };
+          const same =
+            !!lastRect &&
+            lastRect.x === next.x &&
+            lastRect.y === next.y &&
+            lastRect.width === next.width &&
+            lastRect.height === next.height;
+          stableCount = same ? stableCount + 1 : 0;
+          lastRect = next;
+          setRect(next);
+        }
+        if (stableCount < STABLE_READINGS_NEEDED && attempts < MAX_ATTEMPTS) {
+          scheduleNext();
+        }
       });
+    }
+
+    scheduleNext();
+    return () => {
+      cancelled = true;
     };
-    const timers = [setTimeout(measure, 120), setTimeout(measure, 350), setTimeout(measure, 700)];
-    return () => timers.forEach(clearTimeout);
   }, [visible, stepIndex, step]);
 
   if (!visible || !step || !rect) return null;
