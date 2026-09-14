@@ -539,18 +539,30 @@ punto de vista, sellar simplemente funciona.
       (reclamar en direcciones nuevas y transferir al funder real, ya
       que los faucets bloquean por dirección de destino, no por IP). Ver
       `verity-gas-funder` en la memoria del proyecto para el detalle.
-- [ ] 2 bugs de UI encontrados por testers reales, pendientes de
-      arreglar (no bloquean el envío a Shipaton): el tutorial guiado
-      ("CoachMark") se traba en algunos teléfonos si la medición del
-      recorte queda desalineada, y la escala de fuente del sistema
-      (accesibilidad de Android) desacomoda el layout en varias
-      pantallas.
+- [x] **2 bugs de UI arreglados (13 sept)**: escala de fuente del
+      sistema acotada a un máximo de 1.3x (`app/utils/fontScaleGuard.ts`)
+      en vez de sin tope, y el "CoachMark" ahora mide el elemento real
+      hasta que el layout se asienta (dos mediciones seguidas iguales)
+      en vez de 3 tiempos fijos que podían quedar obsoletos en un
+      teléfono más lento (`app/components/CoachMark.tsx`). Pendiente
+      de confirmar en teléfono real.
 - [ ] Cómo cobrar la suscripción real desde Venezuela sigue sin
       resolver — Airtm y Wally descartados (no dan cuenta bancaria
       venezolana), Payoneer sin la función de cuenta de recepción
       activada, Mercantil es la única vía oficial confirmada pero el
       usuario no tiene cuenta ahí. No bloquea la prueba cerrada, solo
       el cobro real futuro.
+- [ ] **Auditoría de reglas oficiales de Shipaton (13 sept)**, 2
+      pendientes reales encontrados que no estaban trackeados:
+      - Falta crear un **código promocional** (Play Console → Monetiza
+        → `verity_pro_monthly` → Códigos promocionales) para que los
+        jueces prueben el PRO sin pagar — regla obligatoria de
+        Shipaton, válido hasta que termine el juzgamiento (13 oct).
+      - Falta confirmar que la app (no solo la suscripción) esté
+        distribuida a **Estados Unidos** — Shipaton lo exige. La
+        pantalla de países de producción en Play Console solo se
+        activa al crear la versión de producción, así que se confirma
+        junto con el acceso a producción (~26 sept).
 
 ## Hoja de ruta V2.0 (post-Shipaton)
 
