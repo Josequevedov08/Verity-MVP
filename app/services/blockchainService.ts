@@ -46,7 +46,14 @@ const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 // hace falta pedir la gotita automática — mismo valor que usa la Edge
 // Function fund-wallet del lado del servidor (ver
 // backend/supabase/functions/fund-wallet/index.ts).
-const MIN_BALANCE_THRESHOLD_WEI = 1_000_000_000_000_000n; // 0.001 POL
+//
+// Subido de 0.001 a 0.005 POL (14 sept 2026): un pico real de gas en
+// Amoy (de ~30 a ~120 gwei) hizo que un seal costara ~0.0026 POL, más
+// del doble del umbral viejo — el cliente veía balance "suficiente" y
+// nunca pedía más gas, y el sello fallaba con "fondos insuficientes"
+// de verdad. El umbral debe cubrir el costo real de un seal con
+// margen, no solo ser "más que cero".
+const MIN_BALANCE_THRESHOLD_WEI = 5_000_000_000_000_000n; // 0.005 POL
 
 // Cuántas veces (y cada cuánto) se revisa si la gotita de gas ya llegó a
 // la blockchain antes de intentar anclar. Amoy suele confirmar en unos

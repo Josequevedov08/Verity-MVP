@@ -16,3 +16,9 @@ ios/build/
 
 # Archivos de trabajo temporales (ej. artefactos publicados), no parte del proyecto
 /scratch/
+
+# Builds descargados (.aab/.apk) para subir a Play Console a mano — son
+# binarios de 60+ MB, no pertenecen al repo (se generan con EAS/GitHub Actions)
+*.aab
+*.apk
+verity-production-aab.zip

@@ -35,19 +35,23 @@ import { ethers } from 'npm:ethers@6';
 
 const AMOY_RPC_URL = 'https://polygon-amoy-bor-rpc.publicnode.com';
 
-// Subido de nuevo a 0.01 POL (11 sep) ahora que el funder se recuperó
-// a ~0.43 POL (ver [[verity-gas-funder]]) usando el truco de wallets
-// puente + faucets. Un seal real gasta ~0.00024 POL, así que 0.01 POL
-// cubre unos 41 sellos de colchón por wallet — más que el límite
-// gratis de 30/mes, para que a un tester no se le corte el gas a
-// mitad de mes por casualidad. Con este monto el funder alcanza para
-// ~43 instalaciones nuevas antes de necesitar otra recarga. Bajarlo
-// de nuevo (ver historial de este archivo) solo si el funder vuelve
-// a quedar crítico.
-const FUNDING_AMOUNT_WEI = ethers.parseEther('0.01');
+// Subido a 0.03 POL (14 sept 2026) tras un incidente real: el gas de
+// Amoy se disparó de ~30 a ~120 gwei (4x), y con eso un seal pasó a
+// costar ~0.0026 POL en vez de los ~0.00024 POL asumidos originalmente
+// — los 12 testers activos se quedaron sin poder sellar al mismo
+// tiempo porque 0.01 POL ya no alcanzaba el colchón esperado. Amoy es
+// una red pública que comparten miles de proyectos; su gas puede
+// variar así sin aviso y no depende de nosotros. 0.03 POL da colchón
+// incluso a 120 gwei (~11 sellos) y de sobra a precios normales.
+const FUNDING_AMOUNT_WEI = ethers.parseEther('0.03');
 
-// Si la wallet ya tiene al menos esto, no se le manda nada.
-const MIN_BALANCE_THRESHOLD_WEI = ethers.parseEther('0.001');
+// Si la wallet ya tiene al menos esto, no se le manda nada. Subido de
+// 0.001 a 0.005 POL en el mismo incidente del 14 sept: a 120 gwei un
+// solo seal cuesta ~0.0026 POL, así que 0.001 dejaba pasar wallets que
+// en realidad YA no podían pagar ni una transacción más, sin pedir
+// gas nuevo a tiempo. Debe mantenerse por encima del costo real de un
+// seal con margen, no solo "más que cero".
+const MIN_BALANCE_THRESHOLD_WEI = ethers.parseEther('0.005');
 
 const MAX_REQUESTS_PER_IP = 3;
 const RATE_LIMIT_WINDOW_MINUTES = 10;
@@ -58,14 +62,14 @@ const RATE_LIMIT_WINDOW_MINUTES = 10;
 // wallet NUEVA cada vez (SecureStore se borra con la desinstalación), y
 // cada wallet nueva puede pedir su propia recarga — el límite de 10
 // minutos no frena eso si las reinstalaciones están espaciadas. 20
-// pedidos/día × 0.05 POL = 1 POL máximo posible por IP en un día,
+// pedidos/día × 0.03 POL = 0.6 POL máximo posible por IP en un día,
 // generoso para pruebas reales pero ya no ilimitado.
 const MAX_REQUESTS_PER_IP_PER_DAY = 20;
 const DAILY_LIMIT_WINDOW_HOURS = 24;
 
 // Tope de recargas totales por dirección, de por vida — antes era 1
 // (para siempre), lo que bloqueaba a alguien que de verdad gastó su gas
-// sellando en lote. 5 recargas × 0.05 POL = 0.25 POL máximo posible por
+// sellando en lote. 5 recargas × 0.03 POL = 0.15 POL máximo posible por
 // dirección, acotado y razonable para testnet.
 const MAX_FUNDINGS_PER_ADDRESS = 5;
 
