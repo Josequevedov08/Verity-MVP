@@ -7,16 +7,16 @@
  * nivel de confianza.
  *
  * Si se le pasa `certificates` (la lista completa donde vive este
- * certificado — ej. el historial de "Mis sellos"), se puede deslizar el
+ * certificado, ej. el historial de "Mis sellos"), se puede deslizar el
  * dedo izquierda/derecha para pasar al sello anterior/siguiente sin
  * cerrar el detalle. Esto usa un FlatList horizontal con paginación
- * NATIVA (no un gesto hecho a mano) — es más confiable dentro de un
+ * NATIVA (no un gesto hecho a mano), es más confiable dentro de un
  * contenido que también se desplaza verticalmente, y el "rebote" en los
  * extremos lo da gratis el sistema (efecto de borde de Android/iOS), sin
  * necesitar animación personalizada.
  *
  * El enlace externo al explorador de blockchain sigue siendo una acción
- * secundaria y explícita — nunca automática. "Compartir" comparte la
+ * secundaria y explícita, nunca automática. "Compartir" comparte la
  * foto de verdad (antes el texto decía "listo para compartir" pero no
  * existía ningún botón) y copia el mensaje de verificación al
  * portapapeles para pegar junto con la foto.
@@ -130,12 +130,12 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   const mediaLabel = certificate.metadata.mediaType === 'video' ? 'video' : 'foto';
   const isVideo = certificate.metadata.mediaType === 'video';
   // thumbnailUri es el ARCHIVO real (foto o video), no solo una miniatura
-  // — para video, se usa directo como fuente de reproducción real (con
+  //, para video, se usa directo como fuente de reproducción real (con
   // expo-video), no solo el frame estático (previewImageUri es únicamente
   // para las miniaturas chicas de lista/grilla).
   //
   // La carta SIEMPRE se puede voltear, incluso sin archivo local (ej. un
-  // certificado restaurado desde backup) — en ese caso el reverso
+  // certificado restaurado desde backup), en ese caso el reverso
   // muestra la estampilla de nivel de confianza en vez de "no hay nada
   // que ver". La idea es que importar un historial viejo se sienta
   // "estos sellos siguen siendo válidos", no "esto se rompió".
@@ -147,7 +147,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   // "el giro no para nunca": el auto-retorno programaba
   // `setTimeout(handleCardTap, 2200)`, pero esa llamada recursiva
   // referenciaba la función `handleCardTap` de ESE render (con `flipped`
-  // congelado en su valor de ese momento vía closure) — cuando el
+  // congelado en su valor de ese momento vía closure), cuando el
   // timeout disparaba, `goingToBack = !flipped` se recalculaba con ese
   // valor viejo, así que creía que tenía que girar hacia el reverso otra
   // vez (aunque ya estaba ahí), programaba OTRO retorno, y así para
@@ -161,11 +161,11 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   }
 
   // Un solo valor de 0 a 1 maneja TODO el giro de moneda (ver el mockup
-  // del usuario: coinFlip 0.7s — rotateY 0→180→360, translateY 0→-50→0,
+  // del usuario: coinFlip 0.7s, rotateY 0→180→360, translateY 0→-50→0,
   // scale 1→1.1→1). A diferencia del "flip de carta" clásico (dos caras
   // superpuestas con backfaceVisibility), aquí es UNA sola vista cuyo
   // contenido se intercambia justo en la mitad del giro (con la carta de
-  // canto y casi invisible por la perspectiva) — por eso el giro
+  // canto y casi invisible por la perspectiva), por eso el giro
   // completa 360° y no 180°: para volver a quedar de frente al usuario
   // mostrando el contenido nuevo.
   const spin = useRef(new Animated.Value(0)).current;
@@ -178,7 +178,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
 
   // Cuánto falta del auto-retorno cuando se pausa (mantener el dedo
   // presionado sobre la foto/sello, como en Instagram Stories) y en qué
-  // momento se reanudó por última vez — con esto se puede calcular
+  // momento se reanudó por última vez, con esto se puede calcular
   // cuánto tiempo REAL queda, en vez de reiniciar la cuenta desde cero
   // cada vez que se suelta.
   const autoReturnRemainingMs = useRef(AUTO_RETURN_MS);
@@ -191,7 +191,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   }
 
   /** Mantener el dedo presionado sobre la foto/sello congela el
-   * auto-retorno — no aplica a video (ese ya no tiene auto-retorno, se
+   * auto-retorno, no aplica a video (ese ya no tiene auto-retorno, se
    * controla con play/pausa real). */
   function pauseAutoReturn() {
     if (isVideo || !flipBackTimer.current || autoReturnStartedAt.current === null) return;
@@ -211,9 +211,9 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   /**
    * Dispara UN giro de moneda (una sola vez, nunca en bucle). Para FOTO
    * (o el sello, cuando no hay archivo local), además vuelve sola al
-   * frente a los ~2.2s (un vistazo rápido) — mantener el dedo
+   * frente a los ~2.2s (un vistazo rápido), mantener el dedo
    * presionado sobre la imagen pausa esa cuenta (ver pauseAutoReturn).
-   * Para VIDEO no hay auto-retorno: el video se queda reproduciendo —
+   * Para VIDEO no hay auto-retorno: el video se queda reproduciendo,
    * volver es una acción explícita del usuario (botón "Volver al
    * certificado").
    */
@@ -227,7 +227,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
     const goingToBack = !flippedRef.current;
     spin.setValue(0);
     // El contenido se intercambia a la mitad del giro (de canto, casi
-    // invisible por la perspectiva), no al terminar — así lo que
+    // invisible por la perspectiva), no al terminar, así lo que
     // "aterriza" en la segunda mitad del giro ya es el contenido nuevo.
     swapTimer.current = setTimeout(() => updateFlipped(goingToBack), SPIN_DURATION_MS / 2);
     Animated.timing(spin, {
@@ -290,13 +290,13 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   /**
    * "Sello #A00001" es un número REAL de orden: el 1º, 2º, 3º...
    * archivo que sellaste en ESTE teléfono (foto o video, cámara o
-   * galería, una sola secuencia — ver getNextSequenceNumber en
+   * galería, una sola secuencia, ver getNextSequenceNumber en
    * cryptoUtils.ts). Antes era un dato decorativo inventado sin
    * ninguna utilidad; ahora sirve de verdad para nombrar/ordenar tus
    * propios archivos o documentos.
    */
   /**
-   * Explica los 3 niveles DE UNA VEZ (no solo "Baja") — el punto clave
+   * Explica los 3 niveles DE UNA VEZ (no solo "Baja"), el punto clave
    * a dejar clarísimo: esto NO evalúa si el contenido es real o falso,
    * solo qué tanta información de origen hay disponible.
    */
@@ -319,11 +319,11 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
   }
 
   // Una vez volteada (a lo que sea: video, foto o el sello), tocar la
-  // carta ya NO la regresa de inmediato — antes eso hacía que mantener
+  // carta ya NO la regresa de inmediato, antes eso hacía que mantener
   // el dedo presionado para pausar la foto también contara como "toque"
   // y la volteara de golpe al soltar. Volver es siempre una acción
   // explícita (botón "Volver al certificado") o el auto-retorno normal
-  // (foto/sello, pausable con el dedo — ver pauseAutoReturn).
+  // (foto/sello, pausable con el dedo, ver pauseAutoReturn).
   const cardTapDisabled = !canFlip || flipped;
 
   return (
@@ -379,7 +379,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
             <DataRow label="Fecha" value={formatDate(certificate.anchor.anchoredAt)} />
             <DataRow label="Red" value="Polygon Amoy (testnet)" last />
 
-            {/* Evidencia de origen — dinámica según los metadatos reales */}
+            {/* Evidencia de origen, dinámica según los metadatos reales */}
             <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ORIGEN DEL ARCHIVO</Text>
             <EvidenceLine
               ok={certificate.metadata.source === 'camera'}
@@ -398,13 +398,13 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
             />
 
             {/* Estado final: nivel de confianza. IMPORTANTE dejar claro qué
-                significa (y qué NO significa) — un usuario que sube una
+                significa (y qué NO significa), un usuario que sube una
                 foto real, tomada por él mismo, desde la galería, va a ver
                 "CONFIANZA BAJA" (falta GPS/hora verificables) y podría
                 pensar que la app está diciendo que su foto es falsa o una
                 estafa. Antes había un párrafo largo siempre visible debajo
                 de la insignia (se veía poco profesional, en especial
-                repetido en cada certificado) — ahora toda la insignia es
+                repetido en cada certificado), ahora toda la insignia es
                 tocable y explica los 3 niveles de una vez, en un solo
                 lugar, sin ocupar espacio permanente en la tarjeta. */}
             <TrustPill level={certificate.trustLevel} onPress={handleTrustInfo} />
@@ -426,8 +426,8 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
           </>
         ) : (
           // Reverso: la foto, el VIDEO real (con reproducción de verdad,
-          // no solo el frame), o — sin archivo local (ej. certificado
-          // restaurado desde backup) — el sello de nivel de confianza +
+          // no solo el frame), o, sin archivo local (ej. certificado
+          // restaurado desde backup), el sello de nivel de confianza +
           // un mensaje corto que tranquiliza: el sello sigue siendo
           // válido, solo no hay archivo guardado en ESTE teléfono.
           <View style={styles.cardBack}>
@@ -438,7 +438,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                   active={flipped}
                   onPlaybackEnded={handleCardTap}
                 />
-                {/* Acción explícita para volver — separada de tocar el
+                {/* Acción explícita para volver, separada de tocar el
                     video (que ahora solo controla play/pausa). */}
                 <Pressable style={styles.backToCardButton} onPress={handleCardTap} hitSlop={8}>
                   <Ionicons name="arrow-back" size={16} color="#fff" />
@@ -450,7 +450,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
                 {/* onPressIn/onPressOut (no onPress) para no chocar con
                     el toque normal: mantener el dedo presionado pausa
                     el auto-retorno (estilo Instagram Stories), soltar
-                    lo reanuda con el tiempo que faltaba — así hay
+                    lo reanuda con el tiempo que faltaba, así hay
                     tiempo de sobra para leer/mirar antes de que la
                     carta vuelva sola. delayLongPress alto evita que un
                     toque rápido normal dispare esto por accidente. */}
@@ -469,7 +469,7 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
               </>
             ) : (
               // Mismo pausado al mantener presionado que el caso con foto
-              // (arriba) — faltaba acá, único de los tres casos sin él: el
+              // (arriba), faltaba acá, único de los tres casos sin él: el
               // sello siempre volteaba solo de golpe, sin dar tiempo a
               // leer el texto de explicación. Feedback real de pruebas.
               <Pressable
@@ -503,19 +503,19 @@ function CertificateDocument({ certificate }: { certificate: VerityCertificate }
 /**
  * Reproductor de video real para el reverso de la carta (no un frame
  * estático). `active` refleja si la carta está actualmente volteada hacia
- * este lado — se usa para pausar automáticamente el video en cuanto deja
+ * este lado, se usa para pausar automáticamente el video en cuanto deja
  * de estar visible (al voltear de vuelta o al cerrar el detalle), en vez
  * de dejarlo sonando de fondo.
  *
  * `loop = false` a propósito: el video reproduce una vez y se queda en
- * pausa en el último frame al terminar — los controles nativos ya
+ * pausa en el último frame al terminar, los controles nativos ya
  * muestran un botón de "reproducir de nuevo" en ese estado.
  *
  * `onPlaybackEnded` se llama 3 segundos después de que el video termina
  * (para que el último frame se alcance a ver, no un corte seco), y
  * dispara el giro de vuelta al certificado. Si el usuario le da "play"
  * de nuevo (reproducir otra vez) ANTES de que pasen esos 3 segundos,
- * la espera se cancela — solo vuelve sola cuando el video se queda
+ * la espera se cancela, solo vuelve sola cuando el video se queda
  * quieto en pausa, nunca interrumpiendo una reproducción en curso.
  */
 function VideoBackFace({
@@ -546,7 +546,7 @@ function VideoBackFace({
 
   // Si el usuario le da "play" de nuevo (reproducir otra vez tras
   // terminar) antes de que se cumplan los 3 segundos, se cancela el
-  // retorno automático — no debe volver sola a mitad de una repetición.
+  // retorno automático, no debe volver sola a mitad de una repetición.
   useEventListener(player, 'playingChange', ({ isPlaying }) => {
     if (isPlaying) clearEndTimer();
   });
@@ -565,7 +565,7 @@ function VideoBackFace({
       try {
         player.pause();
       } catch {
-        // el player puede ya estar liberado al desmontar — ignorar
+        // el player puede ya estar liberado al desmontar, ignorar
       }
     };
   }, [player]);
@@ -584,7 +584,7 @@ function middleTruncate(value: string, head: number, tail: number): string {
 /**
  * Número de orden real (ver VerityCertificate.sequenceNumber). Los
  * certificados creados antes de que existiera este campo no lo tienen
- * — para esos, en vez de mentir con un "#1" que no es cierto, se cae a
+ *, para esos, en vez de mentir con un "#1" que no es cierto, se cae a
  * los primeros caracteres del número de sello (sigue siendo único y
  * estable, solo que no es secuencial).
  */
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
   // (con todos los campos) normalmente es más alto que la pantalla, así
   // que se comporta como scroll normal desde arriba; el reverso
   // (foto/video/sello) es mucho más corto, y antes quedaba pegado
-  // arriba con un montón de espacio vacío debajo — ahora queda
+  // arriba con un montón de espacio vacío debajo, ahora queda
   // centrado verticalmente en la pantalla.
   documentScrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingTop: 4 },
   topBar: {
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   },
   // El frente necesita el padding normal de una tarjeta; el reverso
   // (foto/video a pantalla completa) lo pierde a propósito para poder
-  // llegar hasta el borde — se aplica por separado en el JSX según
+  // llegar hasta el borde, se aplica por separado en el JSX según
   // `flipped`, no como parte fija de `card`.
   cardFront: { padding: 20 },
   cardBack: {
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   },
   backToCardText: { color: '#fff', fontSize: 11.5, fontWeight: '700' },
   // Misma acción, pero como botón normal en el flujo (no flotando sobre
-  // una imagen) — el sello no tiene nada debajo para "flotar" encima.
+  // una imagen), el sello no tiene nada debajo para "flotar" encima.
   backToCardButtonDark: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   // Mismo tamaño que .photo (56x56) a propósito: antes el escudo (40x40)
   // y la miniatura de la derecha (56x56) no coincidían, así que el
-  // renglón se veía disparejo — ninguno de los dos quedaba alineado
+  // renglón se veía disparejo, ninguno de los dos quedaba alineado
   // limpiamente con la altura del bloque de texto del medio.
   badge: {
     width: 56,
@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
   evidenceLine: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   evidenceText: { fontSize: 13, flex: 1 },
   // flexDirection:'row' para que quepa el ícono de info junto al texto
-  // — toda la insignia es tocable y explica los 3 niveles (ver
+  //, toda la insignia es tocable y explica los 3 niveles (ver
   // handleTrustInfo), en vez del párrafo largo que había antes siempre
   // visible debajo.
   pill: {

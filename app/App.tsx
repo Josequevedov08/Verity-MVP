@@ -15,7 +15,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { applyFontScaleGuard } from './utils/fontScaleGuard';
 // Se aplica al importar el módulo, antes de que se monte cualquier
-// pantalla — ver el comentario en fontScaleGuard.ts para el porqué.
+// pantalla, ver el comentario en fontScaleGuard.ts para el porqué.
 applyFontScaleGuard();
 
 import HomeScreen from './screens/HomeScreen';
@@ -58,7 +58,7 @@ function AppContent() {
   async function handleOnboardingDone() {
     await markOnboardingSeen();
     // Se pide acá, justo al terminar el onboarding (una sola vez, la
-    // primera vez que se abre la app) — antes se pedía recién después
+    // primera vez que se abre la app), antes se pedía recién después
     // del primer lote sellado, lo cual se sentía como que aparecía de
     // la nada en medio de otra tarea. Nunca bloquea nada si se niega.
     requestNotificationPermission();

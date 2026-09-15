@@ -4,7 +4,7 @@
  * Utilidades pequeñas compartidas por servicios y pantallas. Para el MVP,
  * esto también hace de "base de datos" del historial local de sellos:
  * se guarda en AsyncStorage (almacenamiento local del teléfono), NO en
- * ningún servidor — coherente con "la app funciona sin cuenta".
+ * ningún servidor, coherente con "la app funciona sin cuenta".
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -13,7 +13,7 @@ import type {
   CertificatesBackup,
 } from '../../documentation/technical/verity-protocol';
 
-// Lado de la miniatura de respaldo, en píxeles — deliberadamente chico
+// Lado de la miniatura de respaldo, en píxeles, deliberadamente chico
 // (ver VerityCertificate.backupThumbnailBase64): solo necesita alcanzar
 // para que un humano reconozca "esta es la foto del cumpleaños", no para
 // verse bien ni servir de evidencia.
@@ -26,7 +26,7 @@ const SEQUENCE_STORAGE_KEY = 'verity_next_sequence_number';
 
 /**
  * Devuelve el próximo número de secuencia de este teléfono (1, 2, 3...)
- * y avanza el contador — una sola secuencia para fotos y videos, cámara
+ * y avanza el contador, una sola secuencia para fotos y videos, cámara
  * o galería, en el orden en que se sellaron. Es un número real y útil
  * (sirve para nombrar/ordenar tus propios archivos), no uno inventado
  * solo para verse bien. Ver VerityCertificate.sequenceNumber.
@@ -63,7 +63,7 @@ export async function countSealsThisMonth(): Promise<number> {
   return all.filter((c) => {
     // Un certificado importado de una copia de seguridad (ver
     // importBackup, abajo) se selló de verdad en OTRO teléfono, tal vez
-    // hace meses — no debe contar contra el cupo gratis de ESTE mes en
+    // hace meses, no debe contar contra el cupo gratis de ESTE mes en
     // ESTE dispositivo, aunque su fecha de anclaje original caiga
     // dentro del mes actual. Bug real encontrado en pruebas: sin este
     // filtro, restaurar un respaldo con sellos viejos inflaba el
@@ -114,7 +114,7 @@ async function buildBackupThumbnail(
   previewImageUri: string | undefined
 ): Promise<string | undefined> {
   // Para un video, el archivo real (thumbnailUri) es el video en sí, que
-  // <Image> no puede decodificar — se usa el frame ya extraído al sellar
+  // <Image> no puede decodificar, se usa el frame ya extraído al sellar
   // (previewImageUri) como fuente. Para una foto, es el mismo archivo.
   const sourceUri = previewImageUri ?? thumbnailUri;
   if (!sourceUri) return undefined;
@@ -144,7 +144,7 @@ export async function buildBackup(): Promise<CertificatesBackup> {
     all.map(async ({ thumbnailUri, previewImageUri, ...rest }) => {
       // Si este certificado YA es uno importado (no tiene archivo local
       // propio, ver backupThumbnailBase64 de una restauración anterior),
-      // no hay de dónde generar una miniatura mejor — se conserva la que
+      // no hay de dónde generar una miniatura mejor, se conserva la que
       // ya traía tal cual, en vez de perderla al re-exportar.
       if (rest.backupThumbnailBase64) return rest;
 
@@ -173,7 +173,7 @@ export async function importBackup(backup: CertificatesBackup): Promise<number> 
   const newOnes = backup.certificates
     .filter((c) => !existingIds.has(c.id) && !existingHashes.has(c.sha256))
     // Se marca como importado AHORA (no se conserva un importedAt viejo
-    // si el propio backup ya traía uno de una restauración anterior) —
+    // si el propio backup ya traía uno de una restauración anterior),
     // ver el campo importedAt en verity-protocol.ts para el porqué.
     .map((c) => ({ ...c, importedAt: new Date().toISOString() }));
 

@@ -3,8 +3,8 @@
  * ---------------------------------------------------------------------------
  * El sello circular que se muestra cuando NO hay foto/video local que
  * mostrar (ej. un certificado restaurado desde una copia de seguridad,
- * que por diseño nunca incluye el archivo — ver CertificatesBackup en
- * verity-protocol.ts). NO es una imagen del contenido — a propósito:
+ * que por diseño nunca incluye el archivo, ver CertificatesBackup en
+ * verity-protocol.ts). NO es una imagen del contenido, a propósito:
  * certifica que el hash es genuino y está validado por Verity, sin
  * poder confundirse con la foto/video real.
  *
@@ -12,7 +12,7 @@
  * anillos, texto curvo, monograma) del mockup HTML/SVG que el usuario
  * diseñó y aprobó por fuera de la app (gemini-code-1788800624188.html).
  * Los colores de esa maqueta eran solo de prueba (el usuario los puso
- * "de base" para ver la forma) — el color real usado aquí es el mismo
+ * "de base" para ver la forma), el color real usado aquí es el mismo
  * token de nivel de confianza que ya usa el resto de la app (TrustPill,
  * TrustLevelBadge, insignias de la grilla): colors.success/warning/
  * tabBarInactive, no valores fijos.
@@ -48,7 +48,7 @@ export default function SealMedallion({
         </Defs>
 
         {/* Borde festoneado: stroke-dasharray "0,35.78" + linecap redondo
-            dibuja una fila de puntos (no rayas) — el efecto de moneda. */}
+            dibuja una fila de puntos (no rayas), el efecto de moneda. */}
         <Circle
           cx={250}
           cy={250}

@@ -8,7 +8,7 @@
  * un AndroidManifest.xml que editar a mano de forma permanente. Este plugin
  * inyecta, en cada build, los permisos y la declaración de servicio que la
  * librería necesita para de verdad mantener la app corriendo en segundo
- * plano en Android (foreground service) mientras se sella un lote —
+ * plano en Android (foreground service) mientras se sella un lote,
  * pedido explícito del usuario: "quede en segundo plano" al salir de la
  * app (botón inicio, otra app, pantalla apagada), no solo al cambiar de
  * pestaña dentro de Verity.

@@ -30,7 +30,7 @@ export interface HashResult {
 
 /**
  * Límite de tamaño para hashear un archivo. Este método lee el archivo
- * COMPLETO en memoria (ver nota abajo) — funciona bien para fotos (unos
+ * COMPLETO en memoria (ver nota abajo), funciona bien para fotos (unos
  * pocos MB) y videos cortos, pero un video largo/pesado podría agotar la
  * memoria de la app y hacerla fallar en vez de mostrar un error claro.
  * 80MB es un límite conservador para el MVP; una versión futura debería
@@ -42,19 +42,19 @@ const MAX_HASHABLE_BYTES = 80 * 1024 * 1024;
  * Calcula el SHA-256 de un archivo local a partir de su URI (la que entrega
  * expo-image-picker o expo-camera, ej: "file:///.../photo.jpg").
  *
- * CORREGIDO — bug real encontrado en pruebas: la versión anterior leía el
+ * CORREGIDO, bug real encontrado en pruebas: la versión anterior leía el
  * archivo como texto base64 y le calculaba el hash a ESE TEXTO
  * (`Crypto.digestStringAsync` opera sobre strings, no sobre bytes) en vez
  * de calcular el hash de los BYTES reales del archivo. El resultado era
  * un valor interno consistente para Verity (por eso "duplicados" y "por
  * número de sello" seguían funcionando), pero que NO correspondía al
- * SHA-256 real y estándar del archivo — así que ninguna herramienta
+ * SHA-256 real y estándar del archivo, así que ninguna herramienta
  * externa (incluida la página pública de verificación, que sí calcula el
  * SHA-256 real con la Web Crypto API del navegador) podía reconocerlo,
  * sin importar qué copia del archivo se usara. Ahora se leen los bytes
- * crudos (`file.arrayBuffer()`) y se hashean con `Crypto.digest()` — la
+ * crudos (`file.arrayBuffer()`) y se hashean con `Crypto.digest()`, la
  * versión de expo-crypto que opera sobre bytes, equivalente a
- * `crypto.subtle.digest()` en el navegador — dando el mismo resultado que
+ * `crypto.subtle.digest()` en el navegador, dando el mismo resultado que
  * cualquier herramienta estándar (`sha256sum`, la página web, etc.)
  * calcularía sobre el mismo archivo.
  *
@@ -77,9 +77,9 @@ export async function hashFile(fileUri: string): Promise<HashResult> {
     );
   }
 
-  // Bytes crudos del archivo, en memoria local — nunca se envían a
+  // Bytes crudos del archivo, en memoria local, nunca se envían a
   // ningún servidor. Crypto.digest() espera una vista TypedArray
-  // (Uint8Array), no el ArrayBuffer crudo directo — pasarle el
+  // (Uint8Array), no el ArrayBuffer crudo directo, pasarle el
   // ArrayBuffer tal cual falla en Android ("no ArrayBuffer attached")
   // porque el puente nativo no puede "adjuntarse" a un ArrayBuffer sin
   // una vista encima.

@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------
 // Da a una wallet NUEVA de Verity una "gotita" de POL de prueba (Polygon
 // Amoy testnet) automáticamente, en silencio, la primera vez que la
-// necesita — para que el usuario NUNCA tenga que salir de la app a un
+// necesita, para que el usuario NUNCA tenga que salir de la app a un
 // faucet externo, copiar su dirección a mano y resolver un captcha solo
 // para poder sellar su primera foto. Eso rompería la promesa central de
 // Verity de una "wallet invisible".
@@ -10,24 +10,24 @@
 // La wallet que paga este gas es una wallet propia del proyecto (el
 // "funder"), fondeada UNA sola vez por nosotros vía el faucet oficial de
 // Amoy. Su clave privada vive SOLO en Supabase Vault (secret
-// "verity_funder_private_key") — nunca en el cliente, nunca en el repo.
+// "verity_funder_private_key"), nunca en el cliente, nunca en el repo.
 //
 // Protecciones contra abuso (alguien tratando de vaciar el fondo del
 // proyecto generando wallets nuevas sin parar):
 //   1. `funded_wallets`: cada dirección puede recibir hasta
-//      MAX_FUNDINGS_PER_ADDRESS recargas en su vida — antes era una
+//      MAX_FUNDINGS_PER_ADDRESS recargas en su vida, antes era una
 //      sola vez para siempre, pero resultó demasiado estricto: sellar
 //      un lote grande puede gastar de verdad el gas dado, sin que eso
 //      sea abuso. Un tope (en vez de ilimitado) sigue acotando el
 //      daño máximo posible por dirección.
 //   2. `fund_requests_log` + límite por IP: como no hay login, la IP de
-//      origen es la única señal disponible — máx. 3 pedidos por IP cada
+//      origen es la única señal disponible, máx. 3 pedidos por IP cada
 //      10 minutos.
-//   3. Solo se fondea si el balance on-chain de la wallet es ~0 — así
+//   3. Solo se fondea si el balance on-chain de la wallet es ~0, así
 //      una wallet que ya tiene POL (por ejemplo, alguien reinstalando la
 //      app con la misma keystore) no puede pedir más.
 //
-// Desplegado en el proyecto Supabase "verity-mvp" vía MCP — este archivo
+// Desplegado en el proyecto Supabase "verity-mvp" vía MCP, este archivo
 // es la copia versionada en el repo para referencia/reproducibilidad.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
@@ -38,7 +38,7 @@ const AMOY_RPC_URL = 'https://polygon-amoy-bor-rpc.publicnode.com';
 // Subido a 0.03 POL (14 sept 2026) tras un incidente real: el gas de
 // Amoy se disparó de ~30 a ~120 gwei (4x), y con eso un seal pasó a
 // costar ~0.0026 POL en vez de los ~0.00024 POL asumidos originalmente
-// — los 12 testers activos se quedaron sin poder sellar al mismo
+//, los 12 testers activos se quedaron sin poder sellar al mismo
 // tiempo porque 0.01 POL ya no alcanzaba el colchón esperado. Amoy es
 // una red pública que comparten miles de proyectos; su gas puede
 // variar así sin aviso y no depende de nosotros. 0.03 POL da colchón
@@ -56,18 +56,18 @@ const MIN_BALANCE_THRESHOLD_WEI = ethers.parseEther('0.005');
 const MAX_REQUESTS_PER_IP = 3;
 const RATE_LIMIT_WINDOW_MINUTES = 10;
 
-// Tope AGREGADO por IP en 24h, además del de 10 minutos de arriba —
+// Tope AGREGADO por IP en 24h, además del de 10 minutos de arriba,
 // pensado para un patrón distinto de abuso (no detectado hasta que pasó
 // de verdad en pruebas): desinstalar y reinstalar la app genera una
 // wallet NUEVA cada vez (SecureStore se borra con la desinstalación), y
-// cada wallet nueva puede pedir su propia recarga — el límite de 10
+// cada wallet nueva puede pedir su propia recarga, el límite de 10
 // minutos no frena eso si las reinstalaciones están espaciadas. 20
 // pedidos/día × 0.03 POL = 0.6 POL máximo posible por IP en un día,
 // generoso para pruebas reales pero ya no ilimitado.
 const MAX_REQUESTS_PER_IP_PER_DAY = 20;
 const DAILY_LIMIT_WINDOW_HOURS = 24;
 
-// Tope de recargas totales por dirección, de por vida — antes era 1
+// Tope de recargas totales por dirección, de por vida, antes era 1
 // (para siempre), lo que bloqueaba a alguien que de verdad gastó su gas
 // sellando en lote. 5 recargas × 0.03 POL = 0.15 POL máximo posible por
 // dirección, acotado y razonable para testnet.
@@ -122,7 +122,7 @@ Deno.serve(async (req: Request) => {
   );
 
   // 1) ¿Ya se agotó el tope de recargas de esta dirección? Antes esto
-  // era "¿ya se fondeó alguna vez?" (una sola vez para siempre) — ahora
+  // era "¿ya se fondeó alguna vez?" (una sola vez para siempre), ahora
   // es un CONTEO, para permitir varias recargas legítimas sin abrir la
   // puerta a un abuso ilimitado.
   const { count: fundingCount, error: fundedLookupError } = await supabase
@@ -138,7 +138,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ ok: true, funded: false, reason: 'max_fundings_reached' });
   }
 
-  // 2) Límite por IP — evita pedidos en cadena desde el mismo origen.
+  // 2) Límite por IP, evita pedidos en cadena desde el mismo origen.
   const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60_000).toISOString();
   const { count: recentRequestCount, error: rateLimitError } = await supabase
     .from('fund_requests_log')
@@ -154,7 +154,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: 'Demasiados pedidos, intenta más tarde.' }, 429);
   }
 
-  // 2.5) Tope diario por IP — ver comentario en MAX_REQUESTS_PER_IP_PER_DAY
+  // 2.5) Tope diario por IP, ver comentario en MAX_REQUESTS_PER_IP_PER_DAY
   // más arriba. Cubre el caso de reinstalaciones espaciadas (cada una con
   // wallet nueva) que el límite de 10 minutos no alcanza a frenar.
   const dayWindowStart = new Date(Date.now() - DAILY_LIMIT_WINDOW_HOURS * 60 * 60_000).toISOString();
@@ -194,7 +194,7 @@ Deno.serve(async (req: Request) => {
   // 4) Leer la clave privada del funder desde Vault (nunca del cliente).
   // El esquema "vault" no está expuesto por PostgREST, así que se lee a
   // través de la función RPC get_decrypted_secret (SECURITY DEFINER,
-  // solo ejecutable por la service role — ver migración correspondiente).
+  // solo ejecutable por la service role, ver migración correspondiente).
   const { data: funderPrivateKey, error: secretError } = await supabase.rpc('get_decrypted_secret', {
     secret_name: 'verity_funder_private_key',
   });
@@ -219,7 +219,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: 'No se pudo enviar el financiamiento. Intenta de nuevo.' }, 502);
   }
 
-  // 6) Registrar el fondeo — cuenta contra el tope MAX_FUNDINGS_PER_ADDRESS
+  // 6) Registrar el fondeo, cuenta contra el tope MAX_FUNDINGS_PER_ADDRESS
   // de esta dirección (ver paso 1).
   const { error: insertError } = await supabase.from('funded_wallets').insert({
     address: normalizedAddress,
@@ -227,7 +227,7 @@ Deno.serve(async (req: Request) => {
     amount_wei: FUNDING_AMOUNT_WEI.toString(),
   });
   if (insertError) {
-    // La transacción ya salió — esto solo afecta el registro/protección
+    // La transacción ya salió, esto solo afecta el registro/protección
     // contra reenvíos futuros, se reporta pero no se revierte nada.
     console.error('Error guardando en funded_wallets (la tx ya se envió):', insertError);
   }

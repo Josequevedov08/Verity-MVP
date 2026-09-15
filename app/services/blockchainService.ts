@@ -28,7 +28,7 @@ import { ethers } from 'ethers';
 
 const PRIVATE_KEY_STORAGE_KEY = 'verity_device_wallet_pk';
 
-// Polygon Amoy testnet — RPC público. El endpoint oficial de Polygon
+// Polygon Amoy testnet, RPC público. El endpoint oficial de Polygon
 // (rpc-amoy.polygon.technology) resultó no resolver por DNS en pruebas
 // reales en dispositivo (UnknownHostException en algunas redes/operadores),
 // así que el valor por defecto usa publicnode.com, un proveedor de RPC
@@ -43,13 +43,13 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 // Umbral por debajo del cual se considera que la wallet "no tiene gas" y
-// hace falta pedir la gotita automática — mismo valor que usa la Edge
+// hace falta pedir la gotita automática, mismo valor que usa la Edge
 // Function fund-wallet del lado del servidor (ver
 // backend/supabase/functions/fund-wallet/index.ts).
 //
 // Subido de 0.001 a 0.005 POL (14 sept 2026): un pico real de gas en
 // Amoy (de ~30 a ~120 gwei) hizo que un seal costara ~0.0026 POL, más
-// del doble del umbral viejo — el cliente veía balance "suficiente" y
+// del doble del umbral viejo, el cliente veía balance "suficiente" y
 // nunca pedía más gas, y el sello fallaba con "fondos insuficientes"
 // de verdad. El umbral debe cubrir el costo real de un seal con
 // margen, no solo ser "más que cero".
@@ -67,7 +67,7 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Si la wallet del dispositivo no tiene (o casi no tiene) gas, le pide en
- * silencio una "gotita" de POL de prueba a la Edge Function fund-wallet —
+ * silencio una "gotita" de POL de prueba a la Edge Function fund-wallet,
  * así el usuario nunca tiene que salir de la app a un faucet externo para
  * poder sellar su primera foto. Es la contraparte cliente de
  * backend/supabase/functions/fund-wallet/index.ts (ver ese archivo para
@@ -77,7 +77,7 @@ function sleep(ms: number): Promise<void> {
  * No lanza error si algo falla: si no se puede conseguir gas automático,
  * simplemente se deja que el intento de anclaje siga su curso normal (y
  * falle con su propio error de "fondos insuficientes" si de verdad no hay
- * saldo) — nunca debe bloquear el flujo de sellado por su cuenta.
+ * saldo), nunca debe bloquear el flujo de sellado por su cuenta.
  */
 async function ensureWalletHasGas(address: string, provider: ethers.JsonRpcProvider): Promise<void> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
@@ -96,7 +96,7 @@ async function ensureWalletHasGas(address: string, provider: ethers.JsonRpcProvi
     const result = (await res.json()) as { ok?: boolean; funded?: boolean };
     if (!result.ok || !result.funded) return;
 
-    // La transacción de financiamiento ya se envió — se espera a que se
+    // La transacción de financiamiento ya se envió, se espera a que se
     // confirme en la cadena antes de intentar anclar, si no la primera
     // transacción real del usuario fallaría igual por falta de fondos.
     for (let attempt = 0; attempt < FUNDING_POLL_ATTEMPTS; attempt += 1) {
@@ -140,7 +140,7 @@ async function getOrCreateDeviceWallet(): Promise<ethers.Wallet> {
   const randomWallet = ethers.Wallet.createRandom();
   await SecureStore.setItemAsync(PRIVATE_KEY_STORAGE_KEY, randomWallet.privateKey, {
     // requireAuthentication: false porque el usuario no debe ver ningún
-    // prompt de "wallet" — el sello debe sentirse instantáneo.
+    // prompt de "wallet", el sello debe sentirse instantáneo.
     keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
   });
 
@@ -157,7 +157,7 @@ export async function getDeviceWalletAddress(): Promise<string> {
  * Devuelve la clave privada de la wallet del dispositivo, para poder
  * respaldarla (ver SettingsModal.tsx: "Respaldar mi wallet"). Sin esto,
  * si el usuario borra los datos de la app o cambia de teléfono, pierde
- * para siempre la capacidad de sellar con la misma identidad — no hay
+ * para siempre la capacidad de sellar con la misma identidad, no hay
  * forma de recuperarla, ni siquiera reinstalando. Quien la use decide
  * cómo guardarla a salvo (es tan sensible como una contraseña: quien la
  * tenga puede firmar transacciones como si fuera este dispositivo).
@@ -170,12 +170,12 @@ export async function exportDeviceWalletPrivateKey(): Promise<string> {
 /**
  * Restaura la wallet del dispositivo a partir de una clave privada
  * respaldada antes (ver exportDeviceWalletPrivateKey). Sobrescribe la
- * wallet actual — se usa cuando el usuario perdió su historial local
+ * wallet actual, se usa cuando el usuario perdió su historial local
  * (ej. cambió de teléfono) y quiere recuperar la MISMA identidad con la
  * que selló antes, para que sus certificados viejos sigan mostrando
  * "sellado por" la wallet correcta.
  *
- * Lanza un error con mensaje claro si la clave no tiene forma válida —
+ * Lanza un error con mensaje claro si la clave no tiene forma válida,
  * mejor eso que guardar algo corrupto en SecureStore sin darse cuenta.
  */
 export async function restoreDeviceWalletFromPrivateKey(privateKey: string): Promise<string> {
@@ -207,7 +207,7 @@ export async function anchorHashOnChain(sha256Hash: string): Promise<AnchorResul
 
   // Verificación rápida antes de intentar la transacción: si después de
   // pedir gas automático la wallet SIGUE sin fondos suficientes (ej. el
-  // propio funder se quedó sin saldo para repartir — bug real
+  // propio funder se quedó sin saldo para repartir, bug real
   // encontrado en pruebas), se falla YA con un error claro en vez de
   // dejar que ethers intente la transacción igual. Sin esto, un RPC
   // lento podía tardar mucho en rechazarla, colgando el sellado en
@@ -272,7 +272,7 @@ export interface AnchorLookupResult {
 /**
  * Busca un número de sello (hash de transacción) directamente en la
  * blockchain, SIN necesitar un archivo para comparar. Responde solo
- * "¿este sello existe?" — se usa cuando el usuario escribe un número de
+ * "¿este sello existe?", se usa cuando el usuario escribe un número de
  * sello a mano y quiere confirmar que es real, sin tener (o sin querer
  * elegir todavía) el archivo correspondiente.
  */

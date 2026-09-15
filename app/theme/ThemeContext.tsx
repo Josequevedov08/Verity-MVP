@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * Provee el tema actual (claro/oscuro) a toda la app, según la preferencia
  * del usuario: "Claro", "Oscuro" o "Sistema" (sigue el modo del teléfono).
- * La preferencia se guarda en AsyncStorage — es la respuesta a "no hay
+ * La preferencia se guarda en AsyncStorage, es la respuesta a "no hay
  * opciones de sistema" que pedías.
  */
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';

@@ -5,17 +5,17 @@
  *
  *   1. Elegir foto (cámara de la app o galería)
  *   2. Se copia a una carpeta PROPIA y permanente de Verity (ver
- *      saveCapturePermanently) sin importar de dónde vino — la URI que
+ *      saveCapturePermanently) sin importar de dónde vino, la URI que
  *      entrega el selector de galería de Android es temporal, no un
  *      archivo estable. Si además viene de la cámara, TAMBIÉN se guarda
- *      en la galería del sistema (ver saveToSystemGallery) — así queda
+ *      en la galería del sistema (ver saveToSystemGallery), así queda
  *      disponible después para probarla en "Verificar", tanto desde
  *      "Mis sellos" como desde la galería normal del teléfono.
  *   3. Calcular su "huella digital" en el propio teléfono (hashService)
  *   4. Registrarla en el "registro público" (blockchainService → Polygon Amoy)
  *   5. Mostrar el certificado con su nivel de confianza
  *
- * El archivo original NUNCA se sube a ningún servidor — ver hashService.ts.
+ * El archivo original NUNCA se sube a ningún servidor, ver hashService.ts.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -39,7 +39,7 @@ import * as VideoThumbnails from 'expo-video-thumbnails';
 // ExecutionEnvironment que esto tenía antes (expo-media-library no tiene
 // módulo nativo en Expo Go y reventaba el bundle entero ahí).
 import * as MediaLibrary from 'expo-media-library';
-// API "legacy" de expo-file-system, no la nueva (Directory/File/Paths) —
+// API "legacy" de expo-file-system, no la nueva (Directory/File/Paths),
 // ver saveCapturePermanently más abajo para el porqué.
 import * as LegacyFileSystem from 'expo-file-system/legacy';
 import { randomUUID } from 'expo-crypto';
@@ -74,7 +74,7 @@ import { hasSeenCoachMark, markCoachMarkSeen, useCoachMarkResetVersion } from '.
 
 type CaptureStep = 'idle' | 'hashing' | 'anchoring' | 'done' | 'error';
 
-/** Tope técnico del lote (solo PRO — ver handleGalleryPick). No es un
+/** Tope técnico del lote (solo PRO, ver handleGalleryPick). No es un
  * número que el usuario tenga que conocer o elegir: es una protección
  * de sentido común (cada archivo es su propia transacción en Polygon,
  * uno detrás de otro) para que un lote no tarde una eternidad, no un
@@ -83,7 +83,7 @@ const MAX_BATCH_SIZE = 50;
 
 // Tiempo máximo que se espera por UN archivo del lote antes de darlo por
 // fallado y seguir con el siguiente. Sin esto, un solo archivo sin gas
-// (o un RPC lento/colgado) podía trabar el lote ENTERO por minutos —
+// (o un RPC lento/colgado) podía trabar el lote ENTERO por minutos,
 // bug real encontrado en pruebas: la notificación de progreso se quedó
 // clavada en "Sellando foto 1 de 11" durante más de 2 minutos sin
 // avanzar ni fallar. 45s alcanza de sobra en condiciones normales
@@ -102,7 +102,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 /**
  * Traduce un error de sellado a un mensaje pensado para el usuario. Antes
  * TODO error que no fuera "archivo demasiado pesado" caía en un genérico
- * "revisa tu conexión" — engañoso cuando la causa real era que la wallet
+ * "revisa tu conexión", engañoso cuando la causa real era que la wallet
  * del dispositivo se quedó sin gas (ver blockchainService.ts →
  * ensureWalletHasGas) y el usuario sí tenía internet, como pasó probando
  * la primera APK: ese mensaje lo hizo sospechar de su wifi/datos cuando
@@ -118,7 +118,7 @@ function describeSealError(error: unknown): string {
 
   // ethers.js identifica los fondos insuficientes con code
   // 'INSUFFICIENT_FUNDS', o el mensaje del nodo suele mencionar "insufficient
-  // funds" — se cubren ambas formas por si acaso. Con el financiamiento
+  // funds", se cubren ambas formas por si acaso. Con el financiamiento
   // automático (ensureWalletHasGas) esto debería auto-resolverse solo con
   // reintentar en unos segundos, así que el mensaje invita a eso en vez de
   // culpar a la conexión del usuario.
@@ -145,11 +145,11 @@ interface BatchState {
 /**
  * Arma el resumen final del lote como UN string ya completo, en vez de
  * mezclar texto y expresiones condicionales directo en el JSX (como
- * estaba antes) — un usuario reportó el mensaje "cortado" a mitad de
+ * estaba antes), un usuario reportó el mensaje "cortado" a mitad de
  * frase en pruebas reales. No se pudo confirmar una causa estructural
  * exacta en el JSX anterior, pero construir el string entero de una
  * sola vez, explícito, elimina cualquier ambigüedad de cómo React
- * Native une texto y expresiones entre líneas — garantiza que nunca
+ * Native une texto y expresiones entre líneas, garantiza que nunca
  * falte un pedazo.
  */
 function describeBatchSummary(
@@ -169,17 +169,17 @@ export default function CaptureScreen() {
   const [detailVisible, setDetailVisible] = useState(false);
   const [isDuplicate, setIsDuplicate] = useState(false);
 
-  // Freemium (RevenueCat) — ver revenuecatService.ts. `usage` alimenta
+  // Freemium (RevenueCat), ver revenuecatService.ts. `usage` alimenta
   // tanto el indicador de la pantalla inicial ("3/10 este mes") como el
   // propio paywall (para mostrar "ya usaste tus 10").
   const [usage, setUsage] = useState<SealUsage | null>(null);
   const [paywallVisible, setPaywallVisible] = useState(false);
-  // Lote múltiple (solo PRO — ver handleGalleryPick). No null mientras
+  // Lote múltiple (solo PRO, ver handleGalleryPick). No null mientras
   // se está procesando o mostrando el resumen de un lote; toma el
   // lugar de la UI normal de `step` mientras tanto.
   const [batch, setBatch] = useState<BatchState | null>(null);
   // Archivos agregados a la cola MIENTRAS un lote ya está corriendo (ver
-  // handleAddToBatchQueue) — se van sumando al mismo lote en curso en
+  // handleAddToBatchQueue), se van sumando al mismo lote en curso en
   // vez de arrancar una corrida nueva en paralelo, que arriesgaría un
   // choque de nonce en la wallet del dispositivo. Vive en un ref (no en
   // estado) porque processBatch lo lee dentro de un bucle async que ya
@@ -192,7 +192,7 @@ export default function CaptureScreen() {
     return u;
   }
 
-  // Antes era un useEffect de una sola vez al montar — como esta
+  // Antes era un useEffect de una sola vez al montar, como esta
   // pantalla se queda montada al cambiar de pestaña (es la inicial),
   // activar/restaurar PRO desde Ajustes (otra pantalla) nunca se
   // reflejaba acá hasta reiniciar la app entera. useFocusEffect lo
@@ -206,7 +206,7 @@ export default function CaptureScreen() {
 
   /** Se llama al INICIO de cualquier acción que vaya a sellar algo. Si
    * ya se llegó al límite gratis del mes, muestra el paywall en vez de
-   * dejar continuar — así el límite es real, no decorativo. */
+   * dejar continuar, así el límite es real, no decorativo. */
   async function ensureCanSeal(): Promise<boolean> {
     const u = await refreshUsage();
     if (u.limitReached) {
@@ -217,7 +217,7 @@ export default function CaptureScreen() {
   }
 
   // Recorrido guiado (una sola vez, la primera vez que se entra a esta
-  // pestaña — ver coachMarkUtils.ts). `collapsable={false}` en el View
+  // pestaña, ver coachMarkUtils.ts). `collapsable={false}` en el View
   // que envuelve el botón es necesario en Android para poder medirlo.
   const [showTour, setShowTour] = useState(false);
   const primaryButtonRef = useRef<View>(null);
@@ -232,7 +232,7 @@ export default function CaptureScreen() {
    * Calcula el nivel de confianza según el origen del archivo y sus metadatos.
    *
    * Nota sobre videos de galería: `DateTimeOriginal` es un tag EXIF que solo
-   * existe en fotos — expo-image-picker no expone ninguna fecha de captura
+   * existe en fotos, expo-image-picker no expone ninguna fecha de captura
    * verificable para videos elegidos de la galería (ver ImagePickerAsset:
    * no hay `creationTime`, solo `duration`). Con la regla original, eso
    * hacía que TODO video de galería cayera siempre a BAJO sin importar el
@@ -257,7 +257,7 @@ export default function CaptureScreen() {
    * Copia una foto tomada con la cámara de la app a una carpeta propia y
    * permanente de Verity (fuera de la caché temporal que usa la cámara).
    * Esta es la copia que Verity usa internamente (miniaturas, "Mis
-   * sellos", elegir de "Mis sellos" en Verificar) — independiente de si
+   * sellos", elegir de "Mis sellos" en Verificar), independiente de si
    * la copia en la galería del sistema (ver saveToSystemGallery, abajo)
    * se pudo guardar o no.
    */
@@ -272,7 +272,7 @@ export default function CaptureScreen() {
       const destinationUri = `${capturesDirUri}${fileName}`;
       // Se usa la API "legacy" de expo-file-system a propósito, NO la
       // nueva (Directory/File/Paths): esta última generó certificados
-      // con la carta sin foto (miniatura vacía/gris) en pruebas reales —
+      // con la carta sin foto (miniatura vacía/gris) en pruebas reales,
       // la copia SÍ se escribía sin errores (nada en consola), pero el
       // `.uri` que devuelve su clase File no siempre resultaba
       // utilizable por <Image>. La API legacy es la que React Native ha
@@ -282,7 +282,7 @@ export default function CaptureScreen() {
       //
       // readAsStringAsync además lee bien URIs content:// problemáticas
       // (ej. video grabado en MIUI, que rechazaba el copy() de la API
-      // nueva con "Missing READ permission") — mismo motivo por el que
+      // nueva con "Missing READ permission"), mismo motivo por el que
       // antes se usaba fetch() en vez de copy(), ahora aplicado acá.
       const base64 = await LegacyFileSystem.readAsStringAsync(uri, { encoding: 'base64' });
       await LegacyFileSystem.writeAsStringAsync(destinationUri, base64, { encoding: 'base64' });
@@ -301,17 +301,17 @@ export default function CaptureScreen() {
    * hasta que no existió el pipeline de EAS Build este MVP solo se
    * probaba en Expo Go. Sin esto, una foto/video sellado con la cámara
    * de Verity nunca podía aparecer en "Verificar → Elegir de mi
-   * galería" — no porque la verificación fallara, sino porque el
+   * galería", no porque la verificación fallara, sino porque el
    * archivo nunca llegaba a existir ahí para empezar.
    *
    * Se pide explícitamente el permiso "write-only" (solo agregar, ver
-   * `true` en requestPermissionsAsync) — Verity no necesita ver ni leer
+   * `true` en requestPermissionsAsync), Verity no necesita ver ni leer
    * el resto de tu galería para esto, solo sumar un archivo.
    *
    * Fire-and-forget a propósito, igual que submitToPublicIndex: el
    * hash ya se calculó ANTES de esto (paso 1 de sealAsset, sobre el
    * archivo original), así que el sello ya es válido pase lo que pase
-   * acá — esto es un beneficio adicional, no un requisito para sellar.
+   * acá, esto es un beneficio adicional, no un requisito para sellar.
    */
   async function saveToSystemGallery(uri: string): Promise<void> {
     try {
@@ -326,11 +326,11 @@ export default function CaptureScreen() {
   /**
    * El trabajo real de sellar UN archivo (hash → detectar duplicado →
    * guardar copia → anclar → guardar certificado), sin tocar ningún
-   * estado de UI de la pantalla — así lo puede usar tanto el flujo de
+   * estado de UI de la pantalla, así lo puede usar tanto el flujo de
    * un solo archivo (processAsset, abajo) como el lote múltiple
    * (processBatch), cada uno decidiendo cómo mostrar el progreso.
    * `onStep` es opcional porque el lote no necesita (ni quiere) mostrar
-   * "Calculando huella..." / "Registrando..." por cada ítem — solo su
+   * "Calculando huella..." / "Registrando..." por cada ítem, solo su
    * barra de progreso general.
    */
   async function sealAsset(
@@ -351,7 +351,7 @@ export default function CaptureScreen() {
       //   fecha de captura real. Antes esto tenía un valor de respaldo
       //   (new Date()) para AMBOS casos, lo que hacía que un archivo sin
       //   ningún metadato terminara igual con "capturedAt" relleno y
-      //   nunca calificara como BAJO — quedaba siempre en MEDIO.
+      //   nunca calificara como BAJO, quedaba siempre en MEDIO.
       const metadata: CaptureMetadata = {
         source,
         capturedAt:
@@ -379,7 +379,7 @@ export default function CaptureScreen() {
       const hashResult = await hashFile(asset.uri);
 
       // 1.5) ¿Ya se selló este mismo archivo antes? Si sí, mostramos el
-      // certificado existente en vez de anclar (y pagar gas) de nuevo —
+      // certificado existente en vez de anclar (y pagar gas) de nuevo,
       // evita terminar con dos certificados distintos para la misma foto
       // sin saberlo.
       const existing = await findCertificateByHash(hashResult.sha256);
@@ -388,21 +388,21 @@ export default function CaptureScreen() {
       }
 
       // 1.6) Esta comprobación SOLO mira el historial de ESTE dispositivo
-      // (AsyncStorage) — dos instalaciones distintas (ej. esta APK y
+      // (AsyncStorage), dos instalaciones distintas (ej. esta APK y
       // Expo Go) no comparten ese almacenamiento, cada una es una app
       // separada para Android. Eso está bien para casi todo, pero NO
       // para esto: el hash, una vez anclado, existe en la blockchain
       // sin importar qué app o wallet lo pregunte. Sin este segundo
       // paso, dos instalaciones distintas podían terminar creando DOS
       // anclajes reales (gastando gas dos veces) para el mismo archivo
-      // exacto — bug real señalado por el usuario, y tenía toda la
+      // exacto, bug real señalado por el usuario, y tenía toda la
       // razón: "es imposible sellar algo que ya existe en la
       // blockchain" debería cumplirse siempre, no solo dentro de la
       // misma instalación.
       //
       // El índice público (Supabase) es justo el mecanismo para
       // preguntar "¿esto ya existe en la cadena?" sin depender del
-      // almacenamiento local de nadie — y solo acepta hashes que ya
+      // almacenamiento local de nadie, y solo acepta hashes que ya
       // verificó contra Polygon Amoy de verdad (ver
       // backend/supabase/functions/submit-certificate/index.ts), así
       // que es una fuente confiable. Fail-open a propósito (mismo
@@ -426,7 +426,7 @@ export default function CaptureScreen() {
             // Igual que un certificado importado de un respaldo: no hay
             // archivo local que mostrar (el anclaje real es de OTRA
             // instalación/wallet), y no debe contar contra el cupo
-            // mensual de este dispositivo — nunca se gastó gas aquí.
+            // mensual de este dispositivo, nunca se gastó gas aquí.
             importedAt: new Date().toISOString(),
           };
           await saveCertificate(crossDeviceCertificate);
@@ -439,7 +439,7 @@ export default function CaptureScreen() {
       // 2) Copiarla a una carpeta propia y permanente de la app, sin
       // importar de dónde vino. Antes esto solo pasaba para la cámara
       // (razonamiento original: "si viene de galería, ya vive en un
-      // lugar persistente del sistema") — pero ese razonamiento era
+      // lugar persistente del sistema"), pero ese razonamiento era
       // incorrecto para el selector de Android: `asset.uri` ahí suele
       // ser una URI temporal (content://) con permiso de lectura
       // acotado, no un archivo estable. Bug real encontrado en pruebas:
@@ -483,7 +483,7 @@ export default function CaptureScreen() {
       submitToPublicIndex(newCertificate);
 
       // Si viene de la cámara, también se guarda en la galería del
-      // sistema (además de la carpeta privada de Verity) — ver
+      // sistema (además de la carpeta privada de Verity), ver
       // saveToSystemGallery. Se hashea ANTES de esto (paso 1, arriba),
       // así que da igual lo que pase acá para la validez del sello; es
       // fire-and-forget por la misma razón que submitToPublicIndex.
@@ -521,19 +521,19 @@ export default function CaptureScreen() {
   }
 
   /**
-   * Sella varios archivos elegidos de golpe en la galería (solo PRO —
+   * Sella varios archivos elegidos de golpe en la galería (solo PRO,
    * ver handleGalleryPick). Se procesan UNO POR UNO, nunca en paralelo:
    * cada sello es su propia transacción en Polygon, y mandarlas todas
    * a la vez arriesgaría un choque de nonce en la wallet del
-   * dispositivo. La UI no bloquea con una confirmación por archivo —
+   * dispositivo. La UI no bloquea con una confirmación por archivo,
    * solo una barra de progreso general, para poder cambiar de pestaña
-   * mientras tanto — y al terminar se avisa con una notificación (ver
+   * mientras tanto, y al terminar se avisa con una notificación (ver
    * notifyBatchComplete), para que el usuario no tenga que quedarse
    * mirando cada uno.
    */
   async function processBatch(assets: ImagePicker.ImagePickerAsset[]) {
     // Si ya hay un lote corriendo, esto NO arranca una corrida nueva en
-    // paralelo (choque de nonce en la wallet) — se suma a la cola de
+    // paralelo (choque de nonce en la wallet), se suma a la cola de
     // ESE lote (ver batchQueueRef) y el total visible crece de
     // inmediato, para que se vea que de verdad se agregó. El bucle de
     // abajo, que ya está corriendo, la recoge sola al llegar al final
@@ -554,7 +554,7 @@ export default function CaptureScreen() {
     // arrancar el lote. Causa real encontrada leyendo el código fuente
     // de react-native-background-actions y sus issues de GitHub (sin
     // necesitar acceso físico al teléfono): faltaba declarar
-    // `foregroundServiceType` en las opciones de arranque — el
+    // `foregroundServiceType` en las opciones de arranque, el
     // AndroidManifest sí lo tenía (ver plugins/withBackgroundActions.js)
     // pero la librería también lo necesita al llamar a start(), y si no
     // coincide, Android 14+ tira una excepción nativa que ningún
@@ -562,7 +562,7 @@ export default function CaptureScreen() {
     await startBackgroundSealing();
 
     // Contadores en variables locales, en paralelo al estado de React
-    // (setBatch, abajo) — así el resumen final y la notificación no
+    // (setBatch, abajo), así el resumen final y la notificación no
     // dependen de leer `prev` desde dentro de un updater de setState,
     // que además de no ser el patrón más limpio, complica saber con
     // certeza el valor justo en el momento en que el lote termina.
@@ -570,7 +570,7 @@ export default function CaptureScreen() {
     let duplicateCount = 0;
     let failedCount = 0;
     let processedCount = 0;
-    // Cola de trabajo real de esta corrida — empieza con lo que se pidió
+    // Cola de trabajo real de esta corrida, empieza con lo que se pidió
     // sellar, y puede crecer en vivo (ver arriba) mientras el bucle
     // sigue corriendo, sin reiniciar nada de lo ya sellado.
     const queue = [...assets];
@@ -593,7 +593,7 @@ export default function CaptureScreen() {
           : `Sellando foto ${i + 1} de ${queue.length}...`;
       setBatch((prev) => (prev ? { ...prev, currentLabel: label } : prev));
       // Misma etiqueta, pero en la notificación de progreso persistente
-      // (barra de estado de Android) — así el usuario ve el avance real
+      // (barra de estado de Android), así el usuario ve el avance real
       // aunque haya salido de Verity, no solo dentro de la app.
       notifyBatchProgress(i, queue.length, label);
       updateBackgroundSealingProgress(label);
@@ -636,7 +636,7 @@ export default function CaptureScreen() {
 
       // ¿Llegaron más archivos a la cola mientras se sellaba este? Se
       // agregan al FINAL de la corrida actual (queue.length crece, el
-      // `for` de arriba sigue sin reiniciarse) — así un lote nuevo
+      // `for` de arriba sigue sin reiniciarse), así un lote nuevo
       // agregado a mitad de camino no interrumpe ni reordena lo que ya
       // estaba en curso.
       if (i === queue.length - 1 && batchQueueRef.current.length > 0) {
@@ -655,7 +655,7 @@ export default function CaptureScreen() {
   }
 
   /**
-   * Agrega más archivos a un lote QUE YA ESTÁ CORRIENDO — a diferencia
+   * Agrega más archivos a un lote QUE YA ESTÁ CORRIENDO, a diferencia
    * de handleGalleryPick (que decide entre sellar 1 o arrancar un lote
    * nuevo), esto siempre pasa por processBatch, incluso para un solo
    * archivo elegido, porque el propio processBatch ya sabe encolarlo en
@@ -669,14 +669,14 @@ export default function CaptureScreen() {
     }
 
     // exif: false a propósito acá (a diferencia del picker de un solo
-    // archivo) — pedir EXIF obliga al selector nativo de Android a leer
+    // archivo), pedir EXIF obliga al selector nativo de Android a leer
     // los metadatos de CADA archivo elegido antes de devolverlos, lo que
     // dispara su propio diálogo de "Preparando el contenido
     // multimedia..." (UI del sistema, no de Verity) y se nota mucho más
     // cuanto más archivos se eligen de golpe. El costo es real pero
     // menor: en lote, "capturedAt" para archivos de galería ya dependía
     // solo del EXIF (nunca hubo respaldo), así que se pierde precisión
-    // de nivel de confianza en fotos de galería sin fecha real —
+    // de nivel de confianza en fotos de galería sin fecha real,
     // aceptable a cambio de un selector de lote fluido.
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images', 'videos'],
@@ -702,7 +702,7 @@ export default function CaptureScreen() {
    * ícono genérico de cámara. Se copia a la carpeta permanente de Verity
    * (el archivo que genera expo-video-thumbnails vive en caché temporal).
    * Si algo falla (formato no soportado, video muy corto, etc.), se
-   * devuelve undefined y MediaThumbnail cae de vuelta al ícono genérico —
+   * devuelve undefined y MediaThumbnail cae de vuelta al ícono genérico,
    * nunca debe tumbar el sellado completo por esto.
    */
   async function generateVideoPreview(videoUri: string, certificateId: string): Promise<string | undefined> {
@@ -719,7 +719,7 @@ export default function CaptureScreen() {
    * `mode` fuerza qué abre la cámara nativa: antes se pedían fotos Y
    * videos a la vez (mediaTypes: ['images','videos']), lo que en la
    * práctica depende de que la app de cámara del teléfono ofrezca un
-   * selector claro de modo o un "mantener presionado" para grabar — en
+   * selector claro de modo o un "mantener presionado" para grabar, en
    * algunas cámaras (ej. MIUI) ese gesto se interpreta como ráfaga de
    * fotos en vez de video, y no hay forma de grabar. Pidiendo un solo
    * tipo (`['videos']` o `['images']`) la cámara nativa abre directo en
@@ -748,7 +748,7 @@ export default function CaptureScreen() {
 
   /**
    * Elegir de galería. Selección múltiple es EXCLUSIVA de PRO: el plan
-   * gratis sigue siendo una foto/video a la vez, como siempre — pedido
+   * gratis sigue siendo una foto/video a la vez, como siempre, pedido
    * real del usuario ("una podría sellar una diaria" fue el
    * razonamiento del límite gratis, no pensado para lotes). No hace
    * falta un aviso aparte para el usuario gratis: el picker
@@ -765,7 +765,7 @@ export default function CaptureScreen() {
     }
 
     const isPro = usage?.isPro ?? false;
-    // exif: false cuando se habilita selección múltiple (PRO) — mismo
+    // exif: false cuando se habilita selección múltiple (PRO), mismo
     // motivo que en handleAddToBatchQueue: con varios archivos elegidos
     // de golpe, pedir EXIF dispara el diálogo nativo de "Preparando el
     // contenido multimedia..." de Android, más notorio cuantos más
@@ -802,7 +802,7 @@ export default function CaptureScreen() {
   }
 
   /**
-   * Encadena un lote nuevo directo desde el resumen del anterior — sin
+   * Encadena un lote nuevo directo desde el resumen del anterior, sin
    * esto, el usuario tenía que tocar "Listo" primero (los botones
    * normales de sellar están ocultos mientras `batch` no sea null,
    * durante el progreso Y mientras se muestra el resumen) para recién
@@ -827,19 +827,19 @@ export default function CaptureScreen() {
       </View>
 
       {/* El estado completo del plan (gratis/PRO, X de 30 este mes) vive
-          en Ajustes — fuente única de verdad, no se repite acá para no
+          en Ajustes, fuente única de verdad, no se repite acá para no
           competir con la acción principal de esta pantalla ("Sellar"
           debe sentirse instantánea). Acá SOLO hay una tira, y es UNA
           sola a la vez (nunca dos apiladas): mientras quedan sellos de
           sobra es una invitación discreta y neutra a hazte PRO ("la
           parte de inicio se ve muy vacía" fue el feedback que la
           motivó); en cuanto quedan 7 o menos, la MISMA tira cambia a
-          tono de aviso (color warning + texto de cuenta regresiva) —
+          tono de aviso (color warning + texto de cuenta regresiva),
           más urgente justo cuando importa, sin sumar una segunda caja. */}
       {usage && !usage.isPro && (() => {
         // Math.max(0, ...) a propósito: `used` puede terminar SIENDO
         // mayor que `limit` en la práctica (ej. sellaste en lote siendo
-        // PRO y después desactivaste el modo prueba) — sin este límite,
+        // PRO y después desactivaste el modo prueba), sin este límite,
         // esta tira llegaba a mostrar "Te quedan -20 sellos gratis este
         // mes", que se ve como un bug aunque el conteo real esté bien.
         const remaining = Math.max(0, usage.limit - usage.used);
@@ -872,7 +872,7 @@ export default function CaptureScreen() {
       })()}
 
       {/* Lote múltiple (PRO): toma el lugar de toda la UI de `step`
-          mientras hay uno en curso o mostrando su resumen — no tiene
+          mientras hay uno en curso o mostrando su resumen, no tiene
           sentido ver los botones de "Tomar foto" detrás de una barra
           de progreso de 12 archivos. */}
       {batch && (
@@ -1038,7 +1038,7 @@ export default function CaptureScreen() {
       )}
     </SafeAreaView>
 
-    {/* Hermano del SafeAreaView (no hijo) — ver nota en CoachMark.tsx
+    {/* Hermano del SafeAreaView (no hijo), ver nota en CoachMark.tsx
         sobre por qué esto es necesario para que el recuadro apunte al
         lugar correcto. */}
     <CoachMark
@@ -1179,7 +1179,7 @@ const styles = StyleSheet.create({
     // Sin esto, un texto corto ("Listo") hacía que el botón se encogiera
     // a su propio ancho de texto en vez de ocupar el ancho de la
     // tarjeta, quedando como un óvalo angosto que no combina con el
-    // resto de botones de la app (todos de ancho completo) — se notaba
+    // resto de botones de la app (todos de ancho completo), se notaba
     // más con "Listo" que con "Sellar otro archivo" (más largo, disimulaba
     // el problema al estirarse solo).
     alignSelf: 'stretch',
@@ -1200,7 +1200,7 @@ const styles = StyleSheet.create({
   // Igual que sealAnotherButton, pero SIN marginTop propio: en la
   // pantalla de resumen del lote, batchBox ya usa gap:12 entre todos
   // sus hijos, y este botón ahora casi siempre tiene otro botón justo
-  // arriba (Sellar otro lote) en vez de solo texto — el marginTop de
+  // arriba (Sellar otro lote) en vez de solo texto, el marginTop de
   // sealAnotherButton duplicaba el espacio en ese caso.
   batchAddMoreButton: {
     flexDirection: 'row',

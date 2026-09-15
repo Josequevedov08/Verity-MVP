@@ -7,17 +7,17 @@
  *
  * El diseño (imagen de fondo + tarjeta que sube desde abajo superpuesta
  * con una insignia grande) sigue una referencia visual que el usuario
- * compartió — adaptada a los componentes reales de la app (React
+ * compartió, adaptada a los componentes reales de la app (React
  * Native puro, sin Tailwind/shadcn: esta app no es web). La imagen del
  * hero (assets/images/paywall-hero.jpg) es del propio usuario, no de un
  * banco de fotos. Encima lleva un degradado con los colores del tema
- * (acento → fondo) para que funcione igual de bien en claro y oscuro —
+ * (acento → fondo) para que funcione igual de bien en claro y oscuro,
  * la foto es fija, pero el degradado se adapta.
  *
  * Ver revenuecatService.ts para el porqué de 'unavailable': hasta que
  * exista un producto de suscripción real en Google Play Console (fase
  * de publicación, deliberadamente pospuesta), tocar "Suscribirme" no
- * puede completar una compra real — se le explica eso al usuario en vez
+ * puede completar una compra real, se le explica eso al usuario en vez
  * de fallar en silencio o fingir una compra que no es real.
  */
 import React, { useState } from 'react';
@@ -47,7 +47,7 @@ export default function PaywallModal({
   visible: boolean;
   usage: SealUsage | null;
   onClose: () => void;
-  /** Se llama cuando la compra se completó de verdad — quien lo use
+  /** Se llama cuando la compra se completó de verdad, quien lo use
    * decide si reintenta la acción que el usuario quería hacer. */
   onPurchased: () => void;
 }) {
@@ -74,7 +74,7 @@ export default function PaywallModal({
   }
 
   /** Para cuando alguien YA pagó antes pero la app dejó de reconocerlo
-   * como PRO (reinstaló, borró datos, etc. — ver revenuecatService.ts).
+   * como PRO (reinstaló, borró datos, etc., ver revenuecatService.ts).
    * Sin esto no hay forma de recuperar la suscripción sin escribirle a
    * soporte. */
   async function handleRestore() {
@@ -99,7 +99,7 @@ export default function PaywallModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.page, { backgroundColor: colors.surface }]}>
         {/* Hero: la foto del usuario, con un degradado de los colores del
-            TEMA encima (no fijo) — así se adapta a claro/oscuro aunque
+            TEMA encima (no fijo), así se adapta a claro/oscuro aunque
             la imagen en sí sea siempre la misma, y se funde limpio con
             la tarjeta de abajo (termina exactamente en colors.surface). */}
         <ImageBackground source={HERO_IMAGE} style={styles.hero} resizeMode="cover">

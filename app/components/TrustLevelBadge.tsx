@@ -4,7 +4,7 @@
  * Insignia visual del nivel de confianza (ALTO/MEDIO/BAJO). Traduce el
  * criterio técnico (ver documentation/technical/verity-protocol.ts) a algo
  * que cualquier usuario entiende de un vistazo. Pastilla con CONTORNO de
- * color (no relleno sólido) — mismo lenguaje visual que la pastilla de
+ * color (no relleno sólido), mismo lenguaje visual que la pastilla de
  * estado del certificado (CertificateDetailModal), para que se vea
  * coherente en toda la app: lista, detalle, resultados de verificación.
  */

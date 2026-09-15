@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * Controla si ya se le mostró al usuario el onboarding de 3 pantallas
  * (por qué Verity necesita tomar la foto dentro de la app). Se guarda en
- * AsyncStorage, no en ningún servidor — se muestra una sola vez por
+ * AsyncStorage, no en ningún servidor, se muestra una sola vez por
  * instalación.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,7 +20,7 @@ export async function markOnboardingSeen(): Promise<void> {
 }
 
 /**
- * Borra la marca de "ya visto" — solo para el botón de pruebas en Ajustes
+ * Borra la marca de "ya visto", solo para el botón de pruebas en Ajustes
  * (ver isDevProOverrideAllowed en SettingsModal.tsx), así se puede volver
  * a ver el onboarding/splash cuantas veces haga falta sin desinstalar la
  * app ni borrar todo el almacenamiento de Expo Go.

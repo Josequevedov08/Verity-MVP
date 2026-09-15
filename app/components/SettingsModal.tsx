@@ -6,12 +6,12 @@
  * dispositivo (copiable) + "Legal y ayuda".
  *
  * Antes era una hoja inferior (bottom sheet) que solo tapaba parte de
- * la pantalla — se sentía como si "se abriera desde abajo" mostrando
+ * la pantalla, se sentía como si "se abriera desde abajo" mostrando
  * parte de la pantalla anterior detrás, y al vivir dentro de un
  * ScrollView anidado en un Pressable de fondo, el gesto de deslizar
  * para hacer scroll a veces no se registraba bien (competía con el
  * Pressable del backdrop). Ahora es una pantalla completa propia,
- * igual que CertificateDetailModal/LegalContentModal — más predecible
+ * igual que CertificateDetailModal/LegalContentModal, más predecible
  * para hacer scroll y visualmente consistente con el resto de la app.
  */
 import React, { useEffect, useState } from 'react';
@@ -49,7 +49,7 @@ import PaywallModal from './PaywallModal';
 import { FREEMIUM_LIMITS } from '../../documentation/technical/verity-protocol';
 
 const APP_ICON = require('../../assets/icons/app-icon.png');
-// Foto propia del usuario (no de un banco de imágenes) — mismo archivo
+// Foto propia del usuario (no de un banco de imágenes), mismo archivo
 // que el hero del paywall, ver PaywallModal.tsx para el detalle.
 const HERO_IMAGE = require('../../assets/images/paywall-hero.jpg');
 // Mantener en sync con la versión de package.json / app.json.
@@ -72,13 +72,13 @@ export default function SettingsModal({
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [openDoc, setOpenDoc] = useState<LegalDocId | null>(null);
-  // Estado del plan (gratis/PRO) — Ajustes es la única pantalla que lo
+  // Estado del plan (gratis/PRO), Ajustes es la única pantalla que lo
   // muestra de forma permanente (ver StatsCard.tsx y CaptureScreen.tsx
   // para el porqué de que ya NO se repita ahí).
   const [usage, setUsage] = useState<SealUsage | null>(null);
   const [paywallVisible, setPaywallVisible] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  // Modo prueba (Expo Go o build "preview") — ver isDevProOverrideAllowed
+  // Modo prueba (Expo Go o build "preview"), ver isDevProOverrideAllowed
   // en revenuecatService.ts. Nunca existe en un build de producción real.
   const [devProOverride, setDevProOverrideState] = useState(false);
   const [syncingIndex, setSyncingIndex] = useState(false);
@@ -92,7 +92,7 @@ export default function SettingsModal({
   /** Ver PaywallModal.tsx / revenuecatService.ts para el porqué de
    * esto: sin cuenta/login, si alguien borra los datos de la app o
    * reinstala, la app deja de reconocerlo como PRO aunque ya haya
-   * pagado — restaurar le pregunta directo a Google Play. */
+   * pagado, restaurar le pregunta directo a Google Play. */
   async function handleRestore() {
     setRestoring(true);
     try {
@@ -113,7 +113,7 @@ export default function SettingsModal({
 
   /**
    * Antes esto solo reiniciaba una bandera en AsyncStorage sin ningún
-   * efecto visible inmediato — la pestaña donde estabas (ej. Sellar)
+   * efecto visible inmediato, la pestaña donde estabas (ej. Sellar)
    * ya estaba montada de antes y no volvía a revisar su propio estado
    * solo porque el dato cambió. resetAllCoachMarks ahora también avisa
    * en memoria a las pantallas ya montadas (ver
@@ -129,7 +129,7 @@ export default function SettingsModal({
   /**
    * A diferencia del recorrido guiado (arriba), el splash + onboarding
    * viven en un estado de App.tsx que este modal no puede tocar
-   * directo (no hay contexto compartido para eso) — así que reiniciar
+   * directo (no hay contexto compartido para eso), así que reiniciar
    * SOLO la marca de "ya visto" en AsyncStorage no alcanza mientras la
    * app siga corriendo con el mismo estado en memoria. DevSettings.reload()
    * fuerza una recarga completa del JS (como presionar "r" en la
@@ -164,7 +164,7 @@ export default function SettingsModal({
   /**
    * Sin esto, si el usuario borra los datos de la app o cambia de
    * teléfono, pierde para siempre la identidad con la que selló antes
-   * (ya le pasó una vez en pruebas reales — ver blockchainService.ts).
+   * (ya le pasó una vez en pruebas reales, ver blockchainService.ts).
    * El archivo generado contiene la clave privada en texto plano: tan
    * sensible como una contraseña, de ahí la advertencia explícita antes
    * de generarlo.
@@ -211,7 +211,7 @@ export default function SettingsModal({
     );
   }
 
-  /** Reemplaza la wallet de este teléfono por la de un respaldo — para
+  /** Reemplaza la wallet de este teléfono por la de un respaldo, para
    * cuando alguien cambió de teléfono y quiere recuperar la identidad
    * con la que ya había sellado antes. */
   async function handleRestoreWallet() {
@@ -257,7 +257,7 @@ export default function SettingsModal({
   /**
    * Registra en el índice público TODO el historial local de este
    * dispositivo, de una sola vez. Existe porque el envío automático al
-   * sellar (ver CaptureScreen.tsx) solo se agregó en la versión 0.3.3 —
+   * sellar (ver CaptureScreen.tsx) solo se agregó en la versión 0.3.3,
    * cualquier cosa sellada ANTES quedó huérfana del índice para siempre
    * sin esto: el archivo no cambió, pero "por archivo" en la página
    * pública de verificación nunca lo iba a encontrar (solo "por número de
@@ -292,10 +292,10 @@ export default function SettingsModal({
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Banner de PRO — lo PRIMERO que se ve al abrir Ajustes, a
+            {/* Banner de PRO, lo PRIMERO que se ve al abrir Ajustes, a
                 propósito. Antes el estado del plan vivía como una fila
                 más entre "Red" y "Wallet del dispositivo", dentro de
-                "Acerca de Verity" — demasiado discreto: "no aparece en
+                "Acerca de Verity", demasiado discreto: "no aparece en
                 ningún lado" fue el comentario real de una prueba. Un
                 banner arriba de todo, siempre visible, no se puede
                 pasar por alto. */}
@@ -365,7 +365,7 @@ export default function SettingsModal({
 
             {/* Visible en Expo Go (__DEV__) y en el build "preview" de
                 EAS (ver isDevProOverrideAllowed en revenuecatService.ts
-                — controlado por una variable de entorno que SOLO se
+               , controlado por una variable de entorno que SOLO se
                 configura en el entorno "preview", nunca en
                 "production"). En el build real que algún día se suba a
                 la tienda, isDevProOverrideAllowed siempre da false, así
@@ -455,7 +455,7 @@ export default function SettingsModal({
               {/* Las dos filas usan una columna de etiqueta de ancho FIJO
                   (styles.aboutRowLabel) para que el valor siempre empiece
                   en la misma X, sin importar si la etiqueta es "Red" o
-                  "Wallet del dispositivo" — antes cada valor se alineaba
+                  "Wallet del dispositivo", antes cada valor se alineaba
                   a la derecha por separado, así que "0x086e..." y
                   "Polygon Amoy" no empezaban en la misma columna. */}
               <View style={[styles.aboutRow, { borderTopColor: colors.border }]}>
@@ -465,7 +465,7 @@ export default function SettingsModal({
 
               {/* Único lugar de la app donde vive el estado del plan de
                   forma permanente (ver notas en CaptureScreen.tsx y
-                  StatsCard.tsx) — tocarlo abre el paywall. */}
+                  StatsCard.tsx), tocarlo abre el paywall. */}
               <Pressable
                 style={[styles.aboutRow, { borderTopColor: colors.border }]}
                 onPress={() => setPaywallVisible(true)}
@@ -528,7 +528,7 @@ export default function SettingsModal({
               El envío automático al índice público (para que "por archivo"
               funcione en{' '}
               <Text style={{ fontWeight: '700' }}>josequevedov08.github.io/Verity-MVP</Text>
-              {' '}sin instalar la app) empezó en la versión 0.3.3 — si sellaste
+              {' '}sin instalar la app) empezó en la versión 0.3.3, si sellaste
               algo antes de eso, tócalo para que aparezca también.
             </Text>
             <View style={[styles.aboutCard, { backgroundColor: colors.background, borderColor: colors.border, padding: 4 }]}>
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   // Círculo con relieve detrás del ícono (fondo blanco translúcido +
-  // sombra propia) — en vez del ícono plano flotando directo sobre el
+  // sombra propia), en vez del ícono plano flotando directo sobre el
   // degradado, que se sentía "plástico"/sin profundidad.
   proBannerBadge: {
     width: 52,

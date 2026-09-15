@@ -1,9 +1,9 @@
 /**
  * StatsCard.tsx
  * ---------------------------------------------------------------------------
- * Resumen rápido del uso de Verity en este teléfono — se muestra arriba
+ * Resumen rápido del uso de Verity en este teléfono, se muestra arriba
  * de "Mis sellos". Solo el conteo real de sellos y su desglose por
- * nivel de confianza — el estado del plan gratis/PRO vive únicamente
+ * nivel de confianza, el estado del plan gratis/PRO vive únicamente
  * en Ajustes (fuente única de verdad), a propósito no se repite aquí.
  */
 import React from 'react';
@@ -15,7 +15,7 @@ import type { VerityCertificate } from '../../documentation/technical/verity-pro
 /**
  * Mismo texto que handleTrustInfo() en CertificateDetailModal.tsx (el
  * ícono (i) que ya existe junto a la insignia de confianza de CADA
- * certificado) — se repite aquí a propósito, no se comparte código: el
+ * certificado), se repite aquí a propósito, no se comparte código: el
  * usuario pidió explícitamente un segundo acceso a esta explicación
  * junto al título "NIVEL DE CONFIANZA" de este resumen, además del que
  * ya existe por certificado, "para doble seguridad y que la gente lea".
@@ -33,7 +33,7 @@ function showTrustLevelInfo() {
 
 /**
  * Abrevia números grandes (198567 → "198.5k") para que la fila de 3
- * cifras nunca reviente el ancho de la tarjeta — con miles de sellos
+ * cifras nunca reviente el ancho de la tarjeta, con miles de sellos
  * (alguien probando la app a fondo, o un futuro sellado en lote) los
  * conteos reales pueden crecer mucho, y un número de 6+ dígitos sin
  * abreviar rompería el layout de la fila.
@@ -79,7 +79,7 @@ export default function StatsCard({ certificates }: { certificates: VerityCertif
 
 /**
  * `label` concuerda en número con `value` a propósito ("5 Altas", no
- * "5 Alta") — es un adjetivo acompañando una cantidad, así que debe
+ * "5 Alta"), es un adjetivo acompañando una cantidad, así que debe
  * pluralizarse igual que "sello/sellos" arriba.
  */
 function StatChip({

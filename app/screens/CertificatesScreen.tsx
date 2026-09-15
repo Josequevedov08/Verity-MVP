@@ -15,8 +15,8 @@
  * respuesta a "¿qué pasa si pierdo el teléfono o desinstalo la app?":
  * sin esto, el historial local (miniaturas, fechas, saber qué ya
  * sellaste) se pierde para siempre, aunque los sellos en sí sigan
- * existiendo en la blockchain. Este respaldo NO contiene fotos — solo
- * hashes y números de sello — así que por sí solo no prueba autoría,
+ * existiendo en la blockchain. Este respaldo NO contiene fotos, solo
+ * hashes y números de sello, así que por sí solo no prueba autoría,
  * solo restaura tu propio índice de "qué sellé y cuándo".
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -222,7 +222,7 @@ export default function CertificatesScreen() {
       />
     </SafeAreaView>
 
-    {/* Hermano del SafeAreaView (no hijo) — ver nota en CoachMark.tsx. */}
+    {/* Hermano del SafeAreaView (no hijo), ver nota en CoachMark.tsx. */}
     <CoachMark
         visible={showTour}
         steps={[
@@ -232,7 +232,7 @@ export default function CertificatesScreen() {
             text: 'Toca aquí para cambiar entre ver tu historial en lista (con detalle) o en grilla (como una galería). El nivel de confianza de cada sello se ve igual en ambas.',
           },
           // Solo si ya hay certificados (StatsCard no se renderiza
-          // vacía) — si no, este paso no tendría nada que medir y la
+          // vacía), si no, este paso no tendría nada que medir y la
           // guía se quedaría trabada esperando un elemento que no existe.
           ...(certificates.length > 0
             ? [
@@ -261,7 +261,7 @@ export default function CertificatesScreen() {
 /**
  * Explica qué significan los íconos de escudo en las miniaturas de la
  * grilla. Se movió a StatsCard.tsx (arriba de todo) para no repetir la
- * misma info dos veces en la misma pantalla — antes existía esta
+ * misma info dos veces en la misma pantalla, antes existía esta
  * leyenda por separado, redundante con el desglose de la tarjeta de
  * estadísticas.
  */

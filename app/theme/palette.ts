@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * Paleta única de colores de Verity, en modo claro y oscuro. Antes cada
  * pantalla tenía sus propios colores sueltos (#fff, #222, #1a73e8...)
- * repetidos y ligeramente distintos entre archivos — esto centraliza todo
+ * repetidos y ligeramente distintos entre archivos, esto centraliza todo
  * en un solo lugar para que la app se sienta como un solo producto, y
  * hace posible el modo oscuro real (no solo un color de fondo distinto).
  *
@@ -50,10 +50,10 @@ export const LIGHT: ThemeColors = {
 // (así quedó definido desde el certificado: página gris clara, tarjeta
 // blanca "flotando" encima). En modo oscuro, para que una tarjeta se
 // siga sintiendo "elevada" (más clara que la página, como espera
-// cualquier UI oscura — Material, iOS, etc.), `background` tiene que
+// cualquier UI oscura, Material, iOS, etc.), `background` tiene que
 // ser el tono más CLARO de los dos y `surface` el más OSCURO. Antes
 // estaban al revés (tarjeta más oscura que la página), por eso el modo
-// oscuro "se veía raro" — un bug real de contraste, no solo de gusto.
+// oscuro "se veía raro", un bug real de contraste, no solo de gusto.
 export const DARK: ThemeColors = {
   background: '#1C1C24',
   surface: '#0B0B0F',

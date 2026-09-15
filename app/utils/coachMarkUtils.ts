@@ -4,7 +4,7 @@
  * Persistencia mínima de "¿ya vio el recorrido guiado de esta pantalla?",
  * una entrada por pantalla (independiente del onboarding de 3 pasos, que
  * es una sola vez para toda la app). Igual que el onboarding, vive en
- * AsyncStorage — no hay servidor.
+ * AsyncStorage, no hay servidor.
  */
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,7 +26,7 @@ export async function markCoachMarkSeen(screenId: CoachMarkScreenId): Promise<vo
  * Aviso en memoria (no AsyncStorage) de "se reinició la guía, revisen
  * de nuevo". Necesario porque las 3 pestañas de React Navigation se
  * quedan MONTADAS de fondo una vez visitadas (no se desmontan al
- * cambiar de pestaña) — su `useEffect` que revisa AsyncStorage al
+ * cambiar de pestaña), su `useEffect` que revisa AsyncStorage al
  * montar ya corrió una sola vez y no vuelve a correr solo. Sin esto,
  * tocar "Ver la guía de nuevo" no tenía ningún efecto visible hasta
  * volver a instalar la app: cambiar el valor en AsyncStorage no hace
@@ -36,7 +36,7 @@ export async function markCoachMarkSeen(screenId: CoachMarkScreenId): Promise<vo
 let resetVersion = 0;
 const listeners = new Set<() => void>();
 
-/** Cada pantalla se suscribe con esto — cuando cambia, vuelve a
+/** Cada pantalla se suscribe con esto, cuando cambia, vuelve a
  * revisar si debe mostrar su recorrido guiado, sin importar si ya
  * estaba montada. */
 export function useCoachMarkResetVersion(): number {

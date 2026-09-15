@@ -18,7 +18,7 @@ interface CameraButtonProps {
   label: string;
   onPress: () => void;
   secondary?: boolean;
-  /** Ícono opcional a la izquierda del texto — útil cuando dos botones
+  /** Ícono opcional a la izquierda del texto, útil cuando dos botones
    * secundarios comparten una fila y hay menos espacio para leer el
    * texto completo (ej. "Grabar video" / "Galería"). */
   icon?: keyof typeof Ionicons.glyphMap;

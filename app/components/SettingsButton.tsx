@@ -10,7 +10,7 @@
  * También es, a propósito, el único lugar donde vive el indicador de PRO
  * fuera de Ajustes: como este botón ya está presente en las 3 pestañas,
  * una insignia pequeña acá se ve en todos lados sin tener que agregar
- * nada nuevo a cada pantalla — pensada para distinguir sin competir con
+ * nada nuevo a cada pantalla, pensada para distinguir sin competir con
  * el contenido (el usuario pidió explícitamente "que no robe la
  * atención pero sí destaque frente al plan gratis").
  */
@@ -33,11 +33,11 @@ export default function SettingsButton({
 }: {
   inline?: boolean;
   /** Se llama al cerrar Ajustes, ADEMÁS del refresco interno de la
-   * insignia PRO de este mismo botón — sin esto, una pantalla que
+   * insignia PRO de este mismo botón, sin esto, una pantalla que
    * también depende de `isPro` (ej. CaptureScreen: gatea la selección
    * múltiple de galería) se queda con un valor viejo hasta que cambias
    * de pestaña, porque Ajustes es un modal por ENCIMA de la pantalla
-   * actual, no una pantalla de navegación distinta — useFocusEffect
+   * actual, no una pantalla de navegación distinta, useFocusEffect
    * nunca se dispara al cerrarlo, solo al cambiar de pestaña de verdad.
    * Bug real encontrado probando "activar Modo prueba y sellar varias
    * sin salir de Sellar". */
@@ -67,7 +67,7 @@ export default function SettingsButton({
     <>
       {/* Envoltorio del tamaño EXACTO del botón (40x40), a propósito
           separado del Pressable: la insignia se posiciona "absolute"
-          relativa a ESTE View, nunca directo dentro del Pressable —
+          relativa a ESTE View, nunca directo dentro del Pressable,
           en pruebas reales (ver captura del usuario) posicionarla como
           hijo del Pressable la dejaba flotando lejos de la esquina en
           vez de pegada, probablemente porque Pressable no garantiza

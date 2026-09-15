@@ -6,7 +6,7 @@
  * usa desde SettingsModal → sección "Legal y ayuda".
  *
  * El contenido de los 3 documentos vive aquí mismo (LEGAL_DOCS), escrito
- * específicamente para lo que Verity realmente hace en este MVP — no es
+ * específicamente para lo que Verity realmente hace en este MVP, no es
  * texto genérico de relleno: sin cuentas, sin servidor propio, todo el
  * historial vive en el teléfono, y lo único que sale del dispositivo es
  * el hash SHA-256 (nunca la foto/video) anclado en Polygon Amoy.

@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * Bug reportado por testers reales (10-11 sept 2026): si el teléfono tiene
  * el tamaño de letra del sistema (Ajustes de accesibilidad de Android) en
- * grande, "muchas cosas se mueven" — la mayoría de los layouts de Verity
+ * grande, "muchas cosas se mueven", la mayoría de los layouts de Verity
  * usan tamaños fijos en píxeles, no relativos, así que un `fontScale` alto
  * hace que el texto no quepa donde se calculó y empuje/tape botones reales.
  *
@@ -11,7 +11,7 @@
  * contenedores flexibles, pero eso es un rediseño grande de casi toda la
  * UI. La mitigación inmediata y estándar en React Native es limitar cuánto
  * puede crecer el texto por accesibilidad con `maxFontSizeMultiplier`, en
- * vez de desactivar el escalado del todo (`allowFontScaling={false}`) —
+ * vez de desactivar el escalado del todo (`allowFontScaling={false}`),
  * así igual se respeta la preferencia de accesibilidad del usuario, solo
  * que acotada a un rango que la UI actual puede absorber sin romperse.
  *

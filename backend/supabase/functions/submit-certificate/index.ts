@@ -8,13 +8,13 @@
 // niveles de confianza inventados.
 //
 // verify_jwt=false a propósito: Verity no tiene login/sesión, así que no hay
-// un JWT de usuario que exigir — la verificación real es la de la cadena.
+// un JWT de usuario que exigir, la verificación real es la de la cadena.
 // Mitigación de "alguien reenvía un anclaje real ajeno con metadatos falsos":
-// sha256 es la llave primaria y el insert es "ON CONFLICT DO NOTHING" — la
+// sha256 es la llave primaria y el insert es "ON CONFLICT DO NOTHING", la
 // PRIMERA vez que se registra un hash gana, cualquier reenvío posterior con
 // datos distintos para el MISMO hash se ignora silenciosamente.
 //
-// Desplegado en el proyecto Supabase "verity-mvp" vía MCP — este archivo es
+// Desplegado en el proyecto Supabase "verity-mvp" vía MCP, este archivo es
 // la copia versionada en el repo para referencia/reproducibilidad; el que
 // corre de verdad se administra desde el dashboard de Supabase.
 
@@ -45,7 +45,7 @@ interface SubmitPayload {
   sealedAt?: string;
 }
 
-/** Llama al RPC público de Amoy con una petición JSON-RPC cruda — no hace
+/** Llama al RPC público de Amoy con una petición JSON-RPC cruda, no hace
  * falta ethers.js para una sola lectura de transacción. */
 async function getTransaction(txHash: string) {
   const res = await fetch(AMOY_RPC_URL, {

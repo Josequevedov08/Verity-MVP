@@ -2,10 +2,10 @@
  * CascadeText.tsx
  * ---------------------------------------------------------------------------
  * Texto que aparece letra por letra, en cascada (cada carácter entra un
- * poco después que el anterior) — mismo espíritu visual que el
+ * poco después que el anterior), mismo espíritu visual que el
  * componente de referencia que compartió el usuario ("HOVER ME"), pero
  * NO es ese componente: ese era React web (Tailwind, DOM, disparado al
- * pasar el mouse) — no aplica directo a una app de React Native. Esta
+ * pasar el mouse), no aplica directo a una app de React Native. Esta
  * es una reconstrucción del efecto con `Animated` de RN, disparada
  * automáticamente (no hay mouse en un celular) vía la prop `play`.
  *
@@ -35,7 +35,7 @@ export default function CascadeText({
   duration?: number;
 }) {
   const chars = text.split('');
-  // Un Animated.Value por letra — se crea una sola vez (no en cada
+  // Un Animated.Value por letra, se crea una sola vez (no en cada
   // render) para que la animación no se reinicie sola.
   const anims = useRef(chars.map(() => new Animated.Value(0))).current;
   const hasPlayed = useRef(false);
@@ -60,7 +60,7 @@ export default function CascadeText({
     <View style={styles.row}>
       {chars.map((char, i) => {
         // Cada letra entra deslizándose desde abajo (traslado) mientras
-        // aparece (opacidad) — el equivalente en RN al truco de
+        // aparece (opacidad), el equivalente en RN al truco de
         // text-shadow + translateY de la referencia web, que no tiene
         // forma directa de traducirse a React Native.
         const translateY = anims[i].interpolate({ inputRange: [0, 1], outputRange: [fontSize * 0.6, 0] });
@@ -90,7 +90,7 @@ export default function CascadeText({
 const styles = StyleSheet.create({
   row: { flexDirection: 'row' },
   // overflow:'hidden' recorta la letra mientras todavía está deslizando
-  // desde abajo del recuadro de su propia línea — sin esto, se vería
+  // desde abajo del recuadro de su propia línea, sin esto, se vería
   // "flotando" fuera de lugar durante la animación en vez de
   // revelarse limpiamente.
   charMask: { overflow: 'hidden', justifyContent: 'flex-end' },

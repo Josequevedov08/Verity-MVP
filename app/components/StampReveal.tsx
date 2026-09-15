@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * Envuelve el certificado recién completado con una animación de "golpe
  * de sello": cae desde arriba, grande y rotado, y aterriza con un rebote
- * en su tamaño normal — más un destello circular detrás (como una onda
+ * en su tamaño normal, más un destello circular detrás (como una onda
  * de impacto) y una vibración en el instante del golpe. Es el momento
  * más importante de toda la app.
  *
@@ -11,7 +11,7 @@
  * (ej. el id del certificado nuevo).
  *
  * Nota: la primera versión de esta animación era demasiado sutil/rápida
- * (~300ms, spring muy rígido) — en la práctica pasaba desapercibida.
+ * (~300ms, spring muy rígido), en la práctica pasaba desapercibida.
  * Esta versión dura ~900ms con un rebote visible y un destello de color,
  * para que sea imposible no notarla.
  */

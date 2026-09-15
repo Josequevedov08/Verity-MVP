@@ -1,7 +1,7 @@
 /**
  * verificationIndexService.ts
  * ---------------------------------------------------------------------------
- * Índice público mínimo de certificados (Supabase, proyecto "verity-mvp" —
+ * Índice público mínimo de certificados (Supabase, proyecto "verity-mvp",
  * ver backend/README.md). Resuelve un límite real del MVP: sin esto, un
  * certificado sellado en OTRO dispositivo solo se puede confirmar si quien
  * lo selló te pasa a mano su número de sello (el hash de la transacción).
@@ -9,11 +9,11 @@
  * digital del archivo, sin importar en qué teléfono se selló.
  *
  * Solo guarda metadatos que YA son públicos en la blockchain una vez
- * anclados (hash, tx, wallet, nivel de confianza, tipo de medio, fecha) —
+ * anclados (hash, tx, wallet, nivel de confianza, tipo de medio, fecha),
  * NUNCA el archivo original ni una miniatura. La escritura pasa por la
  * Edge Function `submit-certificate`, que verifica el anclaje real en
  * Polygon Amoy antes de aceptar cualquier dato (ver su código fuente en
- * backend/supabase/functions/submit-certificate/index.ts) — así nadie
+ * backend/supabase/functions/submit-certificate/index.ts), así nadie
  * puede rellenar el índice con datos inventados.
  */
 import type { TrustLevel, VerityCertificate } from '../../documentation/technical/verity-protocol';
@@ -35,7 +35,7 @@ export interface PublicIndexEntry {
 /**
  * Envía los metadatos públicos de UN certificado al índice. Llamada desde
  * el sellado normal, es deliberadamente "fire and forget" (nunca debe
- * bloquear ni romper el sellado si falla) — pero SÍ devuelve si funcionó,
+ * bloquear ni romper el sellado si falla), pero SÍ devuelve si funcionó,
  * porque también la usa syncAllToPublicIndex(), que necesita saberlo para
  * poder mostrar un resumen real ("18 de 20 sincronizados").
  */
@@ -51,7 +51,7 @@ export async function submitToPublicIndex(certificate: VerityCertificate): Promi
         txHash: certificate.anchor.txHash,
         walletAddress: certificate.anchor.walletAddress,
         // Formateado igual que en pantalla (ver formatSequenceRef en
-        // CertificateDetailModal.tsx) — el campo es un `number` interno,
+        // CertificateDetailModal.tsx), el campo es un `number` interno,
         // pero lo que el índice público guarda es la referencia visible
         // ("#A00001"), no el número crudo.
         sequenceNumber:
@@ -78,7 +78,7 @@ export interface SyncSummary {
 /**
  * Registra en el índice público TODOS los certificados que ya existen en
  * el historial local, uno por uno. Existe porque el envío automático al
- * sellar (submitToPublicIndex, arriba) solo se agregó en 0.3.3 — todo lo
+ * sellar (submitToPublicIndex, arriba) solo se agregó en 0.3.3, todo lo
  * sellado ANTES de esa versión quedó huérfano del índice para siempre, sin
  * esto: el archivo no cambió, pero "por archivo" en la web pública nunca
  * lo iba a encontrar. Se usa desde Ajustes ("Sincronizar con el índice
@@ -96,11 +96,11 @@ export async function syncAllToPublicIndex(certificates: VerityCertificate[]): P
 }
 
 /**
- * Busca un hash en el índice público — se usa en "Verificar" cuando el
+ * Busca un hash en el índice público, se usa en "Verificar" cuando el
  * archivo no aparece en el historial local de ESTE dispositivo, para
  * confirmar si fue sellado desde otro. Solo lectura (RLS permite SELECT a
  * cualquiera; la clave usada aquí es la "anon"/publicable, pensada para
- * exponerse en un cliente — nunca una service key).
+ * exponerse en un cliente, nunca una service key).
  */
 export async function lookupInPublicIndex(sha256: string): Promise<PublicIndexEntry | null> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;

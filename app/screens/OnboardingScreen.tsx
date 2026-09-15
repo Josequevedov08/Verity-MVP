@@ -4,7 +4,7 @@
  * 3 pantallas que se muestran UNA SOLA VEZ (primera vez que se abre la
  * app), explicando por qué Verity necesita tomar la foto dentro de la
  * app en vez de dejar sellar cualquier archivo. La fricción de "abrir
- * la app para tomar la foto" es intencional (ver README) — esto la
+ * la app para tomar la foto" es intencional (ver README), esto la
  * convierte en parte de la historia del producto en vez de una sorpresa
  * molesta.
  *
@@ -19,19 +19,19 @@ import { View, Text, StyleSheet, Pressable, ImageBackground } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Import de subruta (no el paquete completo '@expo/vector-icons') para
 // que solo se empaquete la fuente de Ionicons, no las ~20 familias de
-// íconos del paquete entero — mismo patrón que ya usa CaptureScreen.tsx.
+// íconos del paquete entero, mismo patrón que ya usa CaptureScreen.tsx.
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const ACCENT = '#4C9AFF'; // mismo azul de marca que el ícono de la app y el splash.
 
 // Fotos reales (assets/images/onboarding/, provistas por el usuario en
-// reference/Img/) — se descartó por completo generar imágenes con IA para
+// reference/Img/), se descartó por completo generar imágenes con IA para
 // esto: varios intentos (Canva con queries abstractas, luego prompts
 // fotográficos detallados) salieron genéricos o con conceptos que no
 // comunicaban el mensaje correcto. Un intento intermedio usó capturas de
 // pantalla de la propia app como fondo, pero se veía mal (texto de UI
-// sobre texto de UI, ilegible) — se descartó también.
+// sobre texto de UI, ilegible), se descartó también.
 interface Slide {
   title: string;
   body: string;
@@ -72,14 +72,14 @@ export default function OnboardingScreen({ onDone }: { onDone: () => void }) {
   const slide = SLIDES[index];
 
   return (
-    // La foto ocupa la pantalla COMPLETA (no un recorte arriba) — el
+    // La foto ocupa la pantalla COMPLETA (no un recorte arriba), el
     // primer intento (hero al 42% + tarjeta sólida abajo, calcado del
     // patrón de PaywallModal) se veía como una franja chica de foto y el
     // resto negro liso; no era lo pedido. Acá todo el contenido (botón
     // Saltar, ícono, título, texto, puntos, botón) flota ENCIMA de la
     // foto, con un degradado de abajo hacia arriba (sólido en la base,
     // donde está el texto, transparente arriba para que la foto se vea
-    // completa) — mismo recurso que el banner PRO, pero vertical en vez
+    // completa), mismo recurso que el banner PRO, pero vertical en vez
     // de horizontal, como se pidió.
     <ImageBackground source={slide.image} style={styles.page} resizeMode="cover">
       <LinearGradient

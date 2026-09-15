@@ -1,6 +1,6 @@
 -- Índice público mínimo de certificados de Verity.
 -- Guarda SOLO metadatos públicos ya visibles en la blockchain (el hash, el
--- número de sello, el tx de anclaje, nivel de confianza y tipo de medio) —
+-- número de sello, el tx de anclaje, nivel de confianza y tipo de medio),
 -- NUNCA el archivo original ni una miniatura. Su único propósito: permitir
 -- verificar un archivo sellado desde OTRO dispositivo sin tener que escribir
 -- el número de sello a mano, buscando por el hash calculado localmente.
@@ -16,12 +16,12 @@ create table public.certificates (
 );
 
 comment on table public.certificates is
-  'Índice público de sellos de Verity — solo metadatos, nunca el archivo original. Ver documentation/technical/verity-protocol.ts y backend/README.md.';
+  'Índice público de sellos de Verity, solo metadatos, nunca el archivo original. Ver documentation/technical/verity-protocol.ts y backend/README.md.';
 
 alter table public.certificates enable row level security;
 
 -- Cualquiera puede consultar (es lo que hace posible verificar desde otro
--- dispositivo) — ningún dato sensible vive en esta tabla.
+-- dispositivo), ningún dato sensible vive en esta tabla.
 create policy "Cualquiera puede leer el índice público"
   on public.certificates for select
   to anon, authenticated

@@ -4,11 +4,11 @@
  * El sello literal: un círculo tipo "sello de tinta" (doble anillo, texto
  * "GENUINO · VERITY", inclinado) que aterriza con un golpe sobre la
  * esquina de la tarjeta recién sellada, con un pequeño delay respecto a
- * StampReveal (que anima la caída de toda la tarjeta) — así se siente
+ * StampReveal (que anima la caída de toda la tarjeta), así se siente
  * como si el sello golpeara DESPUÉS de que el documento ya aterrizó, no
  * al mismo tiempo.
  *
- * No dice "confianza" a propósito — eso ya lo dice la insignia de arriba
+ * No dice "confianza" a propósito, eso ya lo dice la insignia de arriba
  * (TrustLevelBadge). Este sello certifica autenticidad/origen ("esto es
  * un sello genuino de Verity"), no el nivel de confianza del contenido.
  *

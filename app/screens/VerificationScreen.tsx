@@ -5,13 +5,13 @@
  *
  * 1) Por ARCHIVO: eliges una foto (de tu galería o de "Mis sellos") y
  *    Verity la hashea y busca sola si coincide con algo en tu historial
- *    local — y si no, también contra el índice público (Supabase, ver
+ *    local, y si no, también contra el índice público (Supabase, ver
  *    verificationIndexService.ts), por si se selló desde OTRO
  *    dispositivo. Responde "¿ya sellé esto?" sin necesitar el número de
  *    sello a mano.
  *
  * 2) Por NÚMERO DE SELLO: escribes un número de sello a mano y tocas
- *    "Buscar". Responde "¿este sello existe?" —
+ *    "Buscar". Responde "¿este sello existe?",
  *      - Si corresponde a un sello de ESTE dispositivo, se muestra el
  *        certificado completo, con foto, igual que en "Mis sellos".
  *      - Si no, se consulta directamente la blockchain: si existe, se
@@ -57,7 +57,7 @@ type FileSearchResult =
   | { status: 'idle' }
   | { status: 'checking' }
   | { status: 'found'; certificate: VerityCertificate }
-  /** Encontrado en el índice público (sellado en OTRO dispositivo) — no
+  /** Encontrado en el índice público (sellado en OTRO dispositivo), no
    * hay foto que mostrar, solo los metadatos ya públicos en la cadena. */
   | { status: 'found-public'; entry: PublicIndexEntry }
   | { status: 'not-found' };
@@ -113,7 +113,7 @@ export default function VerificationScreen() {
         return;
       }
 
-      // No está en ESTE dispositivo — puede haberse sellado desde otro.
+      // No está en ESTE dispositivo, puede haberse sellado desde otro.
       // El índice público (ver verificationIndexService.ts) permite
       // confirmarlo por el hash, sin necesitar el número de sello a mano.
       const publicMatch = await lookupInPublicIndex(sha256);
@@ -147,12 +147,12 @@ export default function VerificationScreen() {
       // respaldo nunca incluye el archivo real (solo hashes y
       // metadatos), así que no hay nada que hashear. Primera versión de
       // este arreglo mostraba una alerta explicando por qué no se podía
-      // verificar — funcionaba, pero desde el punto de vista de
+      // verificar, funcionaba, pero desde el punto de vista de
       // alguien usando la app se sentía como un error sin salida
       // ("veo algo, pero no sé qué falló", feedback real de pruebas).
       //
       // La solución real: no hace falta "verificar" nada en este caso.
-      // El usuario lo eligió DESDE su propio historial local — ya es,
+      // El usuario lo eligió DESDE su propio historial local, ya es,
       // por definición, un certificado válido de este teléfono. Se
       // muestra directo, igual que si se hubiera encontrado por hash:
       // CertificateDetailModal ya sabe mostrar bien un certificado sin
@@ -170,7 +170,7 @@ export default function VerificationScreen() {
 
     // 1) ¿Es un sello hecho en ESTE dispositivo? Si sí, mostramos el
     // certificado completo (con foto), sin necesidad de consultar la
-    // blockchain — ya lo tenemos guardado localmente.
+    // blockchain, ya lo tenemos guardado localmente.
     const localMatch = await findCertificateByTxHash(seal);
     if (localMatch) {
       setHashResult({ status: 'found-local', certificate: localMatch });
@@ -178,7 +178,7 @@ export default function VerificationScreen() {
     }
 
     // 2) No es de este dispositivo. Puede ser un sello real hecho desde
-    // otro teléfono — lo consultamos directo en la blockchain, sin
+    // otro teléfono, lo consultamos directo en la blockchain, sin
     // necesitar ningún archivo para comparar, solo para confirmar que
     // existe.
     const lookup = await lookupAnchorByTxHash(seal);
@@ -200,14 +200,14 @@ export default function VerificationScreen() {
 
   /**
    * Antes, el resultado de una búsqueda anterior se quedaba "pegado" en
-   * pantalla aunque borraras o cambiaras el texto — se sentía roto,
+   * pantalla aunque borraras o cambiaras el texto, se sentía roto,
    * desconectado de lo que había en el campo. Ahora:
    * - Cualquier cambio en el texto limpia el resultado anterior de
    *   inmediato (nunca queda un resultado que no corresponde a lo que
    *   se ve en el campo).
    * - Si lo que queda escrito es un número de sello completo y válido
-   *   (0x + 64 caracteres — lo normal al pegar uno), se busca solo,
-   *   sin tener que tocar "Buscar" — se siente "en vivo".
+   *   (0x + 64 caracteres, lo normal al pegar uno), se busca solo,
+   *   sin tener que tocar "Buscar", se siente "en vivo".
    */
   const sealDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   function handleSealInputChange(text: string) {
@@ -426,7 +426,7 @@ export default function VerificationScreen() {
       </View>
 
       {/* Alguien sin la app instalada (ej. a quien le compartiste un
-          certificado) también puede verificar por su cuenta — la misma
+          certificado) también puede verificar por su cuenta, la misma
           consulta, en una página web pública (ver docs/index.html). */}
       <Pressable onPress={() => Linking.openURL('https://josequevedov08.github.io/Verity-MVP/')}>
         <Text style={[styles.webVerifyLink, { color: colors.textMuted }]}>
@@ -452,7 +452,7 @@ export default function VerificationScreen() {
                 {/* MediaThumbnail (no un <Image> suelto) para que un
                     certificado importado muestre su miniatura de respaldo
                     (ver backupThumbnailBase64) en vez de quedar en blanco
-                    — antes de esto, un historial con varios sellos
+                   , antes de esto, un historial con varios sellos
                     importados se veía como una lista de filas idénticas
                     sin ninguna forma de distinguirlas a simple vista. */}
                 <MediaThumbnail
@@ -484,7 +484,7 @@ export default function VerificationScreen() {
       </Modal>
     </SafeAreaView>
 
-    {/* Hermano del SafeAreaView (no hijo) — ver nota en CoachMark.tsx. */}
+    {/* Hermano del SafeAreaView (no hijo), ver nota en CoachMark.tsx. */}
     <CoachMark
         visible={showTour}
         steps={[

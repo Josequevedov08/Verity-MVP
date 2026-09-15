@@ -2,7 +2,7 @@
  * onesignalService.ts
  * ---------------------------------------------------------------------------
  * Notificaciones push de OneSignal. Uso principal ahora mismo: recordarle a
- * los testers de la prueba cerrada de Google Play que abran la app — Google
+ * los testers de la prueba cerrada de Google Play que abran la app, Google
  * exige testers ACTIVOS a diario durante 14 días seguidos, no solo la
  * instalación inicial, así que un recordatorio simple reduce el riesgo de
  * que alguien se olvide y se caiga del conteo.
@@ -12,7 +12,7 @@
  * revenuecatService.ts para el mismo patrón de "sin cuenta").
  *
  * IMPORTANTE: el push no funciona en Expo Go, hace falta un build real
- * (EAS) — igual que expo-media-library y expo-notifications en este
+ * (EAS), igual que expo-media-library y expo-notifications en este
  * proyecto (ver README, sección "Cómo probar la app").
  */
 import { OneSignal } from 'react-native-onesignal';

@@ -2,7 +2,7 @@
  * HomeScreen.tsx
  * ---------------------------------------------------------------------------
  * Contenedor de las 3 pestañas principales de Verity: Sellar, Mis sellos,
- * Verificar. Sin login, sin menús adicionales — UX minimalista a propósito.
+ * Verificar. Sin login, sin menús adicionales, UX minimalista a propósito.
  *
  * Antes no tenía `tabBarIcon` definido, por lo que React Navigation
  * mostraba su ícono de "falta" (una X) en vez de algo real.

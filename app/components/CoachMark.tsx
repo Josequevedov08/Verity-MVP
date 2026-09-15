@@ -5,27 +5,27 @@
  * vez por pantalla, la primera vez que se entra a ella (ver
  * coachMarkUtils.ts). Resalta un elemento real de la pantalla (medido
  * con `measureInWindow` sobre un ref) con un recorte en el overlay
- * oscuro — no es un ícono decorativo, señala el botón/campo real.
+ * oscuro, no es un ícono decorativo, señala el botón/campo real.
  *
- * IMPORTANTE — dónde se monta este componente: `measureInWindow` da
+ * IMPORTANTE, dónde se monta este componente: `measureInWindow` da
  * coordenadas absolutas de la VENTANA completa (todo el celular, desde
  * arriba del todo). Si este overlay se renderiza ANIDADO dentro del
  * SafeAreaView de la pantalla (que aplica su propio padding por el
  * notch/barra de estado), sus coordenadas locales ya no coinciden con
- * las de `measureInWindow` — el recuadro sale desalineado del botón
+ * las de `measureInWindow`, el recuadro sale desalineado del botón
  * real. Por eso cada pantalla debe renderizar <CoachMark> como
  * HERMANO del SafeAreaView (fuera de él, ambos dentro de un
- * fragmento <>...</>), nunca como hijo suyo — así comparte el mismo
+ * fragmento <>...</>), nunca como hijo suyo, así comparte el mismo
  * origen (0,0) que toda la ventana. (Se probó envolverlo en un
  * <Modal> para resolver esto mismo, pero en Android
  * `statusBarTranslucent` hace que la pantalla de fondo se reacomode
- * al aparecer el Modal, desalineando la medición de otra forma —
+ * al aparecer el Modal, desalineando la medición de otra forma,
  * ser hermano del SafeAreaView evita el problema de raíz sin tocar
  * la barra de estado.)
  *
  * El "recorte" (spotlight) se logra con 4 rectángulos oscuros alrededor
  * del área resaltada (arriba/abajo/izquierda/derecha), en vez de una
- * máscara real — más simple, sin depender de SVG, y visualmente
+ * máscara real, más simple, sin depender de SVG, y visualmente
  * idéntico para un recorte rectangular.
  */
 import React, { useEffect, useState } from 'react';
@@ -38,7 +38,7 @@ const PADDING = 8; // aire alrededor del elemento resaltado
 
 export interface CoachStep {
   /** Ref al elemento a resaltar (envolver el elemento real en un
-   * <View ref={...} collapsable={false}> — collapsable=false es
+   * <View ref={...} collapsable={false}>, collapsable=false es
    * necesario en Android para que el ref se pueda medir). */
   targetRef: React.RefObject<View | null>;
   title: string;
@@ -77,7 +77,7 @@ export default function CoachMark({
     // teléfono el recorte quedaba desalineado del botón real, tapándolo
     // y bloqueando el scroll (los paneles oscuros capturan el toque
     // fuera del recorte). Antes se medía 3 veces a tiempos fijos
-    // (120/350/700ms) y se usaba la última sin verificar nada — en un
+    // (120/350/700ms) y se usaba la última sin verificar nada, en un
     // teléfono más lento, o con una pantalla anterior todavía
     // reacomodándose (ej. texto más grande por accesibilidad tardando
     // más en re-envolver), esa última medición podía seguir siendo
@@ -85,7 +85,7 @@ export default function CoachMark({
     //
     // Ahora se mide en un bucle hasta que dos mediciones seguidas den
     // exactamente el mismo resultado (el layout ya se asentó), con un
-    // tope de intentos por si el elemento nunca llega a medir bien —
+    // tope de intentos por si el elemento nunca llega a medir bien,
     // así nunca depende de adivinar cuántos milisegundos hacen falta.
     let cancelled = false;
     let lastRect: { x: number; y: number; width: number; height: number } | null = null;
@@ -199,7 +199,7 @@ function CoachMarkOverlay({
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      {/* 4 franjas oscuras alrededor del recorte — el "agujero" queda
+      {/* 4 franjas oscuras alrededor del recorte, el "agujero" queda
           transparente porque ninguna franja lo cubre. */}
       <View style={[styles.dark, { top: 0, left: 0, right: 0, height: Math.max(0, highlightTop) }]} />
       <View style={[styles.dark, { top: highlightBottom, left: 0, right: 0, bottom: 0 }]} />
@@ -254,7 +254,7 @@ function CoachMarkOverlay({
         </View>
       </View>
 
-      {/* Saltar el recorrido por completo — siempre visible, arriba. */}
+      {/* Saltar el recorrido por completo, siempre visible, arriba. */}
       <Pressable style={styles.skipButton} onPress={onSkip} hitSlop={8}>
         <Text style={styles.skipText}>Saltar ✕</Text>
       </Pressable>
